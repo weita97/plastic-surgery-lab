@@ -1,0 +1,2272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1565C0">
+<meta name="description" content="整形外科博士生的单文件科研与学习工作台：科研语录、科研英语、文献指南、科研进展、实验排期、科研体能、账本、科普热点、选题与科研复盘。">
+<title>整形外科科研工作台</title>
+<style>
+:root{
+  --blue:#1565C0;
+  --blue-700:#0D47A1;
+  --blue-800:#0A3470;
+  --blue-50:#EAF3FC;
+  --blue-100:#D6E8FA;
+  --ink:#13243A;
+  --muted:#61748C;
+  --faint:#8A9BB0;
+  --line:#DEE9F5;
+  --line-2:#EDF3FA;
+  --bg:#F4F8FD;
+  --card:#FFFFFF;
+  --ok:#0E9F6E;
+  --warn:#D98A00;
+  --danger:#D64545;
+  --purple:#6D5BD0;
+  --r:14px;
+  --shadow:0 1px 2px rgba(16,52,94,.04),0 10px 28px rgba(21,101,192,.055);
+  --shadow-sm:0 1px 2px rgba(16,52,94,.05);
+  --font:"PingFang SC","Microsoft YaHei","Noto Sans SC","Helvetica Neue",Arial,sans-serif;
+  --mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body:has(#__bp_widget){padding-right:44px}
+body{
+  font-family:var(--font);
+  background:
+    radial-gradient(900px 400px at 88% -10%,rgba(21,101,192,.08),transparent 62%),
+    linear-gradient(180deg,#F7FAFE 0%,var(--bg) 100%);
+  color:var(--ink);
+  font-size:13.5px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+::selection{background:rgba(21,101,192,.18)}
+.app{display:flex;min-height:100vh}
+
+/* ---------------- sidebar ---------------- */
+.sidebar{
+  width:226px;flex:0 0 226px;background:#fff;border-right:1px solid var(--line);
+  height:100vh;position:sticky;top:0;display:flex;flex-direction:column;
+  padding:14px 12px 10px;z-index:40;
+}
+.brand{display:flex;align-items:center;gap:10px;padding:2px 4px 12px;border-bottom:1px solid var(--line-2)}
+.brand-mark{
+  width:38px;height:38px;border-radius:11px;display:grid;place-items:center;
+  background:linear-gradient(145deg,var(--blue),#0B4A96);color:#fff;font-weight:800;
+  font-size:18px;letter-spacing:-1px;box-shadow:0 4px 10px rgba(21,101,192,.22);flex:none;
+}
+.brand-name{font-size:13.5px;font-weight:800;letter-spacing:.2px;line-height:1.3}
+.brand-sub{font-size:10.5px;color:var(--muted);line-height:1.3;margin-top:2px}
+.identity{
+  margin:11px 2px 10px;padding:9px 10px;border-radius:11px;
+  background:linear-gradient(135deg,#F1F7FE,#F8FBFF);border:1px solid #E3EEFA;
+}
+.identity-top{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--blue-700)}
+.identity-dot{width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px rgba(14,159,110,.12)}
+.identity-field{font-size:10.5px;line-height:1.5;color:var(--muted);margin-top:4px}
+.identity-date{font-size:10.5px;color:var(--muted);margin-top:3px;display:flex;justify-content:space-between;gap:4px}
+.nav-label{font-size:10px;letter-spacing:.12em;color:var(--faint);padding:2px 8px 5px;font-weight:700}
+.nav{display:flex;flex-direction:column;gap:2px;overflow-y:auto;padding-right:2px;flex:1;scrollbar-width:thin}
+.nav::-webkit-scrollbar{width:4px}
+.nav::-webkit-scrollbar-thumb{background:#DCE7F3;border-radius:4px}
+.nav-item{
+  display:flex;align-items:center;gap:9px;border:0;background:transparent;border-radius:9px;
+  padding:7px 9px;text-align:left;color:#3A4E66;transition:.16s;width:100%;
+}
+.nav-item:hover{background:var(--blue-50);color:var(--blue-700)}
+.nav-item.active{background:linear-gradient(135deg,var(--blue),#0E57A6);color:#fff;box-shadow:0 3px 8px rgba(21,101,192,.2)}
+.nav-ico{width:20px;text-align:center;font-size:14px;line-height:1}
+.nav-text{font-size:12.3px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav-count{margin-left:auto;font-size:9.5px;opacity:.7;font-variant-numeric:tabular-nums}
+.sidebar-foot{border-top:1px solid var(--line-2);padding:9px 4px 0;margin-top:8px}
+.mini-progress{display:flex;align-items:center;gap:7px;font-size:10.5px;color:var(--muted)}
+.mini-track{height:5px;flex:1;background:#E8F1FA;border-radius:99px;overflow:hidden}
+.mini-fill{height:100%;background:linear-gradient(90deg,var(--blue),#49A0F0);border-radius:99px;transition:width .3s}
+.sidebar-note{font-size:9.5px;color:var(--faint);line-height:1.5;margin-top:6px}
+
+/* ---------------- main / topbar ---------------- */
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{
+  height:52px;flex:none;display:flex;align-items:center;gap:12px;
+  padding:0 20px;background:rgba(255,255,255,.9);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);position:sticky;top:0;z-index:30;
+}
+.menu-btn{display:none}
+.topbar-crumb{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px;min-width:0}
+.topbar-crumb b{color:var(--ink);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.crumb-sep{opacity:.45}
+.topbar-spacer{flex:1}
+.topbar-meta{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);white-space:nowrap}
+.topbar-date{font-variant-numeric:tabular-nums}
+.pill{
+  display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:99px;
+  background:var(--blue-50);color:var(--blue-700);font-size:10.5px;font-weight:700;border:1px solid #D9E9F9;
+  white-space:nowrap;
+}
+.pill.green{background:#E9F8F2;color:#087A55;border-color:#CDEFE2}
+.pill.amber{background:#FFF6E5;color:#9A6200;border-color:#F6E3B8}
+.pill.gray{background:#F1F5FA;color:#5B6D82;border-color:#E2EAF3}
+.content{flex:1;padding:16px 20px 28px;max-width:1360px;width:100%;margin:0 auto}
+.page-foot{max-width:1360px;width:100%;margin:0 auto;padding:0 20px 20px;font-size:10px;color:var(--faint);display:flex;justify-content:space-between;gap:12px}
+
+/* ---------------- generic ---------------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow-sm)}
+.card-pad{padding:14px 16px}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 15px;border-bottom:1px solid var(--line-2)}
+.card-head h3{margin:0;font-size:13.5px}
+.card-head .hint{font-size:10.5px;color:var(--muted)}
+.grid{display:grid;gap:10px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.stack{display:flex;flex-direction:column;gap:10px}
+.rowline{display:flex;align-items:center;gap:8px}
+.wrap{flex-wrap:wrap}
+.muted{color:var(--muted)}
+.faint{color:var(--faint)}
+.small{font-size:11px}
+.tiny{font-size:10px}
+.mono{font-family:var(--mono);font-size:11px}
+.strong{font-weight:700}
+.center{text-align:center}
+.nowrap{white-space:nowrap}
+.hr{height:1px;background:var(--line-2);margin:10px 0}
+.hidden{display:none!important}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+
+.page-head{
+  display:flex;align-items:flex-start;gap:13px;margin:2px 0 13px;flex-wrap:wrap;
+}
+.page-ico{
+  width:43px;height:43px;flex:none;border-radius:12px;display:grid;place-items:center;font-size:21px;
+  background:linear-gradient(145deg,#EAF3FC,#D8E9FA);border:1px solid #D3E6F8;
+}
+.page-title{font-size:20px;font-weight:800;letter-spacing:-.2px;line-height:1.25;margin:0}
+.page-sub{font-size:11.5px;color:var(--muted);margin-top:3px;max-width:760px}
+.page-head-main{flex:1;min-width:200px}
+.page-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:5px;border:1px solid var(--line);
+  background:#fff;border-radius:8px;padding:6px 10px;font-size:11.5px;font-weight:600;color:#334A63;
+  transition:.15s;white-space:nowrap;line-height:1.4;
+}
+.btn:hover{border-color:#B9D2EC;background:#F8FBFF;color:var(--blue-700);text-decoration:none}
+.btn-primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn-primary:hover{background:#0E57A6;border-color:#0E57A6;color:#fff}
+.btn-soft{background:var(--blue-50);border-color:#D6E8FA;color:var(--blue-700)}
+.btn-soft:hover{background:#E0EFFC}
+.btn-xs{padding:3px 7px;font-size:10.5px;border-radius:6px}
+.btn-ghost{background:transparent;border-color:transparent;color:var(--muted)}
+.btn-ghost:hover{background:var(--blue-50);color:var(--blue-700)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.icon-btn{
+  width:30px;height:30px;display:grid;place-items:center;border:1px solid var(--line);background:#fff;
+  border-radius:8px;color:#40566F;font-size:15px;line-height:1;
+}
+.icon-btn:hover{background:var(--blue-50);color:var(--blue-700)}
+.btn-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.tag{
+  display:inline-flex;align-items:center;gap:4px;padding:1px 7px;border-radius:99px;
+  font-size:10px;font-weight:700;line-height:1.7;white-space:nowrap;
+}
+.tag-blue{background:#E9F3FD;color:#145EA8}
+.tag-purple{background:#F0EDFD;color:#5946B8}
+.tag-green{background:#E8F8F1;color:#087A55}
+.tag-amber{background:#FFF5E3;color:#956000}
+.tag-red{background:#FDECEC;color:#B53030}
+.tag-gray{background:#F1F5FA;color:#566A80}
+.kv{display:grid;grid-template-columns:64px 1fr;gap:3px 8px;font-size:11.5px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0}
+.text-block{font-size:12.3px;line-height:1.72}
+.trans{color:#50647C;font-size:11.8px;line-height:1.75;border-left:2px solid #DCE9F7;padding-left:9px;margin-top:7px}
+.callout{background:#F7FAFE;border:1px solid #E5EFFA;border-radius:10px;padding:9px 11px;font-size:11.5px;color:#3F556E}
+.callout b{color:var(--blue-700)}
+.empty{padding:26px 14px;text-align:center;color:var(--muted);font-size:12px}
+
+/* ---------------- dashboard strip ---------------- */
+.stat-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-bottom:13px}
+.stat{
+  background:#fff;border:1px solid var(--line);border-radius:12px;padding:9px 11px;
+  display:flex;align-items:center;gap:9px;min-width:0;box-shadow:var(--shadow-sm);
+}
+.stat-ico{width:30px;height:30px;border-radius:9px;background:var(--blue-50);display:grid;place-items:center;font-size:15px;flex:none}
+.stat-label{font-size:9.8px;color:var(--muted);line-height:1.3}
+.stat-value{font-size:15px;font-weight:800;line-height:1.25;font-variant-numeric:tabular-nums}
+.stat-value small{font-size:10px;font-weight:600;color:var(--muted)}
+
+/* ---------------- quotes ---------------- */
+.quote-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}
+.quote-card{
+  color:#fff;border-radius:15px;padding:15px 15px 12px;min-height:182px;display:flex;flex-direction:column;
+  position:relative;overflow:hidden;box-shadow:0 8px 20px rgba(30,60,120,.12);
+}
+.quote-card:after{
+  content:"";position:absolute;width:120px;height:120px;border-radius:50%;
+  right:-40px;top:-50px;background:rgba(255,255,255,.12);
+}
+.quote-card.q-purple{background:linear-gradient(140deg,#5B4BC4,#8A78E8)}
+.quote-card.q-blue{background:linear-gradient(140deg,#0D47A1,#2F8ADF)}
+.quote-card.q-green{background:linear-gradient(140deg,#087A55,#25B58A)}
+.quote-cat{font-size:9.5px;font-weight:800;letter-spacing:.08em;opacity:.82;text-transform:uppercase}
+.quote-text{font-size:14.5px;font-weight:700;line-height:1.65;margin:8px 0 6px;letter-spacing:.05px}
+.quote-author{font-size:11px;font-weight:700;opacity:.92;margin-top:auto}
+.quote-note{font-size:10.6px;line-height:1.6;opacity:.82;margin-top:5px;padding-top:5px;border-top:1px solid rgba(255,255,255,.22)}
+.quote-actions{display:flex;gap:4px;margin-top:7px;position:relative;z-index:2}
+.qbtn{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:6px;padding:2px 7px;font-size:10px}
+.qbtn:hover{background:rgba(255,255,255,.28)}
+
+/* ---------------- tabs ---------------- */
+.tabs{display:flex;gap:4px;overflow-x:auto;padding:3px;background:#EDF4FB;border:1px solid #E1ECF8;border-radius:10px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  border:0;background:transparent;border-radius:7px;padding:5px 10px;font-size:11.5px;font-weight:700;color:#536980;
+  white-space:nowrap;line-height:1.5;
+}
+.tab:hover{color:var(--blue-700)}
+.tab.active{background:#fff;color:var(--blue-700);box-shadow:0 1px 4px rgba(16,52,94,.1)}
+.subtabs{display:flex;gap:5px;flex-wrap:wrap}
+.seg{display:inline-flex;background:#F0F5FB;border:1px solid #E4EDF7;border-radius:8px;padding:2px}
+.seg button{border:0;background:transparent;border-radius:6px;padding:3px 8px;font-size:10.5px;font-weight:700;color:#61748C}
+.seg button.active{background:#fff;color:var(--blue-700);box-shadow:0 1px 3px rgba(16,52,94,.1)}
+
+/* ---------------- list rows ---------------- */
+.list{display:flex;flex-direction:column}
+.list-row{padding:9px 0;border-bottom:1px dashed #E7EFF8}
+.list-row:last-child{border-bottom:0}
+.list-row:hover{background:#FBFDFF}
+.row-title{font-size:12.5px;font-weight:700;line-height:1.5;color:#1B3550}
+.row-title.en{font-size:12.8px;letter-spacing:.05px}
+.row-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:10.3px;color:var(--muted);margin-top:2px}
+.row-main{display:flex;align-items:flex-start;gap:10px}
+.row-body{flex:1;min-width:0}
+.row-actions{display:flex;gap:4px;align-items:center;flex:none;margin-top:2px}
+.learned{opacity:.55}
+.learned .row-title{text-decoration:line-through}
+.ipa{font-family:var(--mono);font-size:10.6px;color:#7A8FA6}
+.enquote{font-style:italic}
+.phrase-grid{display:block;column-count:2;column-gap:22px}
+.phrase-grid .list-row{break-inside:avoid;padding:7px 2px}
+details.clean{border:0}
+details.clean>summary{list-style:none;cursor:pointer}
+details.clean>summary::-webkit-details-marker{display:none}
+details.clean>summary .chev{transition:.2s;display:inline-block;color:var(--faint);font-size:10px;margin-left:2px}
+details.clean[open]>summary .chev{transform:rotate(90deg)}
+.expand-body{padding:9px 0 2px;animation:fade .18s ease}
+@keyframes fade{from{opacity:0;transform:translateY(-2px)}to{opacity:1;transform:none}}
+.lesson{border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:#fff}
+.lesson+.lesson{margin-top:7px}
+.lesson summary .row-title{display:inline}
+.vocab{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 12px;margin-top:7px}
+.vocab-item{display:flex;align-items:baseline;gap:5px;font-size:10.8px;border-bottom:1px dotted #EDF3FA;padding:2px 0;min-width:0}
+.vocab-item b{font-size:11.3px;color:#193753;white-space:nowrap}
+.vocab-item .ipa{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vocab-item span:last-child{color:#5B7087;margin-left:auto;text-align:right}
+
+/* ---------------- literature ---------------- */
+.lit-row{padding:11px 0;border-bottom:1px solid var(--line-2)}
+.lit-row:last-child{border-bottom:0}
+.lit-title{font-size:12.8px;font-weight:700;line-height:1.5}
+.lit-title a{color:#183651}
+.lit-title a:hover{color:var(--blue)}
+.lit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 14px;margin-top:6px;font-size:11.2px}
+.lit-field{display:flex;gap:5px;min-width:0}
+.lit-field b{color:var(--muted);font-weight:600;flex:none}
+.progress-line{display:flex;align-items:center;gap:8px;font-size:10.5px;color:var(--muted);white-space:nowrap}
+.track{height:6px;background:#E9F2FB;border-radius:99px;overflow:hidden;flex:1}
+.track>i{display:block;height:100%;background:linear-gradient(90deg,var(--blue),#54A8EF);border-radius:99px;transition:width .3s}
+
+/* ---------------- research ---------------- */
+.journal-row{display:flex;align-items:flex-start;gap:9px;padding:8px 0;border-bottom:1px dashed #E7EFF8}
+.journal-row:last-child{border-bottom:0}
+.ifstar{color:#E8A200;font-size:10px;letter-spacing:1px;white-space:nowrap}
+.abs{font-size:11.4px;line-height:1.7;color:#415A73;margin-top:5px}
+.abs.en{font-size:11.8px;color:#334C66}
+.dir-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.dir-card{border:1px solid var(--line);border-radius:10px;padding:9px 10px;background:#fff}
+.dir-card h4{margin:0 0 3px;font-size:11.5px;color:var(--blue-700)}
+.dir-card .row-title{font-size:11.4px}
+.vocab-cloud{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.word-card{border:1px solid var(--line);border-radius:9px;padding:6px 8px;background:#fff;display:flex;align-items:center;gap:6px;min-width:0}
+.word-card b{font-size:11.4px;color:#183651;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.word-card .ipa{font-size:9.8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.word-card span:last-child{font-size:10px;color:#60758B;margin-left:auto;white-space:nowrap}
+.word-card .speak{flex:none}
+
+/* ---------------- schedule ---------------- */
+.cal-toolbar{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:8px}
+.cal-month{font-size:13px;font-weight:800;min-width:112px;text-align:center}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.cal-head{font-size:9.5px;text-align:center;color:var(--muted);font-weight:700;padding:2px 0}
+.cal-day{min-height:58px;border:1px solid var(--line);border-radius:9px;padding:5px 6px;background:#fff;position:relative;overflow:hidden}
+.cal-day.out{opacity:.35}
+.cal-day.today{border-color:var(--blue);box-shadow:inset 0 0 0 1px var(--blue);background:#FBFDFF}
+.cal-num{font-size:10.5px;font-weight:800;color:#40566F;display:flex;justify-content:space-between;align-items:center}
+.cal-day.today .cal-num{color:var(--blue)}
+.cal-shift{font-size:9.2px;font-weight:700;border-radius:5px;padding:1px 4px;margin-top:5px;display:inline-block;line-height:1.5}
+.shift-24{background:#FDE7E7;color:#B32626}
+.shift-night{background:#E9E8FB;color:#4D3DA8}
+.shift-day{background:#E6F6EE;color:#087A55}
+.shift-cell{background:#E9E8FB;color:#4D3DA8}
+.shift-animal{background:#FDE7E7;color:#B32626}
+.shift-assay{background:#E6F6EE;color:#087A55}
+.shift-hist{background:#E3F2FD;color:#1565C0}
+.shift-analysis{background:#FFF4E0;color:#9A5A00}
+.shift-rest{background:#F1F5FA;color:#6A7D92}
+.weekend .cal-num{color:#B32626}
+.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:9.8px;color:var(--muted);margin-top:8px}
+.legend i{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:3px}
+.upcoming{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px;margin-top:8px}
+.up-day{border:1px solid var(--line);border-radius:8px;padding:6px;text-align:center;font-size:9.5px;background:#fff}
+.up-day b{display:block;font-size:10.5px;margin:1px 0}
+
+/* ---------------- fitness ---------------- */
+.fit-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.fit-card{border:1px solid var(--line);border-radius:11px;padding:10px 11px;background:#fff}
+.fit-card h4{margin:0 0 2px;font-size:12px;display:flex;align-items:center;gap:5px}
+.fit-card .fit-intro{font-size:10.5px;color:var(--muted);line-height:1.55;min-height:32px}
+.fit-moves{margin:5px 0 0;padding:0;list-style:none;font-size:10.6px;color:#3F556E}
+.fit-moves li{padding:2px 0;border-bottom:1px dotted #EDF3FA;display:flex;justify-content:space-between;gap:6px}
+.fit-moves li:last-child{border-bottom:0}
+.fit-moves b{font-weight:700;color:#233E58}
+.fit-moves span{color:#7A8FA6;white-space:nowrap;font-size:9.8px}
+.fit-links{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
+.week-table{width:100%;border-collapse:collapse;font-size:10.8px}
+.week-table th,.week-table td{border-bottom:1px solid var(--line-2);padding:6px 7px;text-align:left;vertical-align:top}
+.week-table th{color:var(--muted);font-size:9.8px;font-weight:700;background:#F8FBFE}
+.week-table tr.today td{background:#EFF7FF;font-weight:700;color:var(--blue-700)}
+
+/* ---------------- ledger ---------------- */
+.ledger-form{display:grid;grid-template-columns:122px 104px minmax(140px,1fr) minmax(100px,.9fr) minmax(150px,1.2fr);gap:6px;align-items:end}
+.field{display:flex;flex-direction:column;gap:3px;min-width:0}
+.field label{font-size:9.5px;color:var(--muted);font-weight:700}
+.input,select.input,textarea.input{
+  border:1px solid #D8E5F3;border-radius:7px;background:#fff;padding:6px 8px;font-size:11.5px;outline:none;
+  width:100%;min-width:0;transition:.15s;
+}
+.input:focus{border-color:#7FB3E8;box-shadow:0 0 0 3px rgba(21,101,192,.08)}
+textarea.input{resize:vertical;line-height:1.6}
+.money-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.money{border:1px solid var(--line);border-radius:10px;padding:9px 10px;background:linear-gradient(180deg,#fff,#FAFCFF)}
+.money .l{font-size:9.8px;color:var(--muted)}
+.money .v{font-size:19px;font-weight:800;letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+.money .v small{font-size:10px;color:var(--muted);font-weight:600}
+.bar-list{display:flex;flex-direction:column;gap:6px}
+.bar-row{display:grid;grid-template-columns:54px 1fr 58px;gap:7px;align-items:center;font-size:10.5px}
+.bar-track{height:9px;border-radius:99px;background:#EDF4FB;overflow:hidden}
+.bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#1565C0,#5FB0F2)}
+.ledger-history{max-height:260px;overflow:auto;scrollbar-width:thin}
+.ledger-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px dashed #E8F0F8;font-size:11px}
+.ledger-item:last-child{border-bottom:0}
+.ledger-item .amt{margin-left:auto;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.del{border:0;background:transparent;color:#B8C6D6;font-size:12px;padding:2px 4px;border-radius:4px}
+.del:hover{color:var(--danger);background:#FDF0F0}
+
+/* ---------------- video / topics ---------------- */
+.video-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.video-card{border:1px solid var(--line);border-radius:11px;padding:10px 11px;background:#fff}
+.video-card h4{margin:0;font-size:12.2px;display:flex;align-items:center;gap:6px}
+.video-card .vdesc{font-size:10.5px;color:var(--muted);line-height:1.55;margin:3px 0 5px}
+.vmeta{font-size:10.4px;line-height:1.6;color:#3E556E}
+.vmeta b{color:#203C57}
+.example-title{font-size:10.5px;background:#F7FAFE;border:1px solid #E8F1FA;border-radius:6px;padding:4px 7px;margin:3px 0;color:#28445F}
+.topic-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.topic-card{border:1px solid var(--line);border-radius:11px;padding:10px 11px;background:#fff;display:flex;flex-direction:column}
+.topic-card h4{margin:0 0 4px;font-size:12.2px;line-height:1.5}
+.topic-line{font-size:10.5px;line-height:1.6;color:#40566F;margin:1px 0}
+.topic-line b{color:#1F3C58}
+.fav-active{color:#C58A00!important;border-color:#F1D79A!important;background:#FFF9EA!important}
+
+/* ---------------- review ---------------- */
+.review-grid{display:grid;grid-template-columns:1.25fr .75fr;gap:10px}
+.star-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.star-item{display:flex;flex-direction:column;gap:2px}
+.star-item label{font-size:9.8px;font-weight:800;color:var(--blue-700)}
+.review-history{max-height:360px;overflow:auto;scrollbar-width:thin}
+.review-item{border:1px solid var(--line);border-radius:9px;padding:8px 9px;margin-bottom:6px;background:#fff}
+.review-item .d{font-size:9.8px;color:var(--muted);font-weight:700}
+.review-item .s{font-size:10.7px;line-height:1.55;margin-top:2px;color:#3D556F;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+
+/* ---------------- quiz ---------------- */
+.quiz{margin-top:14px}
+.quiz-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px}
+.quiz-head h3{margin:0;font-size:12.8px}
+.q{border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-bottom:7px;background:#fff}
+.q-title{font-size:11.8px;font-weight:700;margin-bottom:5px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 10px}
+.opt{display:flex;gap:5px;align-items:flex-start;font-size:10.9px;color:#3E556E;padding:2px 0;cursor:pointer}
+.opt input{margin:2px 0 0;accent-color:var(--blue)}
+.quiz-result{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:10px;background:#F2FAF7;border:1px solid #D5EEE4;font-size:11.5px;color:#086B4D}
+.quiz-result b{font-size:18px}
+.exp{font-size:10.5px;color:#6A7E93;margin-top:3px;display:none}
+.q.graded .exp{display:block}
+.q.correct{border-color:#BDE7D8;background:#FBFEFC}
+.q.wrong{border-color:#F3C9C9;background:#FFFCFC}
+
+/* ---------------- toast / modal-free ---------------- */
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translate(-50%,18px);background:#123A66;color:#fff;
+  padding:8px 14px;border-radius:9px;font-size:11.5px;box-shadow:0 8px 28px rgba(9,35,65,.25);
+  opacity:0;pointer-events:none;transition:.22s;z-index:100;max-width:86vw;text-align:center;
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.scrim{display:none}
+.en-only .zh-toggle{display:none!important}
+.ledger-form .field-submit{grid-column:1/-1;display:flex;flex-direction:row;align-items:center;justify-content:flex-end}
+.review-form .field{margin-bottom:7px}
+.review-form textarea.input{min-height:62px}
+.star-item textarea.input{min-height:54px}
+.section-title{font-size:12px;font-weight:800;color:#26435F;margin:12px 0 5px;display:flex;align-items:center;gap:6px}
+.section-title:first-child{margin-top:0}
+.cat-pills{display:flex;gap:4px;flex-wrap:wrap}
+.cat-pill{border:1px solid #DFEAF6;background:#fff;color:#57708A;border-radius:99px;padding:3px 9px;font-size:10px;font-weight:700}
+.cat-pill:hover{border-color:#9EC5EA;color:var(--blue-700)}
+.cat-pill.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.mini-list{margin:4px 0 0;padding-left:16px;font-size:10.8px;line-height:1.65;color:#3F556E}
+.mini-list li{margin:1px 0}
+
+@media(max-width:1100px){
+  .stat-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .quote-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .fit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .g4{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:900px){
+  .sidebar{position:fixed;left:0;top:0;transform:translateX(-104%);transition:transform .22s ease;box-shadow:0 0 40px rgba(9,35,65,.18);width:252px;flex-basis:252px}
+  .sidebar.open{transform:none}
+  .scrim{display:block;position:fixed;inset:0;background:rgba(10,28,50,.38);z-index:35;opacity:0;pointer-events:none;transition:.2s}
+  .scrim.show{opacity:1;pointer-events:auto}
+  .menu-btn{display:grid}
+  .topbar{padding:0 12px;height:50px}
+  .topbar-meta .topbar-date,.topbar-meta .hide-sm{display:none}
+  .content{padding:12px 12px 24px}
+  .page-foot{padding:0 12px 16px}
+  .page-head{gap:9px;margin-bottom:10px}
+  .page-ico{width:38px;height:38px;font-size:18px;border-radius:10px}
+  .page-title{font-size:18px}
+  .quote-grid{grid-template-columns:1fr}
+  .quote-card{min-height:150px}
+  .g3,.g2,.g4,.lit-grid,.dir-grid,.video-grid,.topic-grid,.vocab-cloud,.vocab{grid-template-columns:1fr}
+  .fit-grid{grid-template-columns:1fr}
+  .ledger-form{grid-template-columns:1fr 1fr}
+  .ledger-form .field:nth-child(5){grid-column:1/-1}
+  .phrase-grid{column-count:1}
+  .review-grid{grid-template-columns:1fr}
+  .star-grid{grid-template-columns:1fr}
+  .upcoming{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .cal-day{min-height:58px;padding:4px}
+  .cal-shift{font-size:8.2px;padding:0 3px}
+  .opts{grid-template-columns:1fr}
+  .topbar-crumb .crumb-root{display:none}
+  .topbar-crumb .crumb-sep{display:none}
+  .money-cards{grid-template-columns:1fr 1fr 1fr;gap:5px}
+  .money .v{font-size:16px}
+}
+@media(max-width:520px){
+  .stat-strip{gap:6px}
+  .stat{padding:7px 8px;gap:7px}
+  .stat-ico{width:26px;height:26px;font-size:13px}
+  .stat-value{font-size:13.5px}
+  .stat-label{font-size:9px}
+  .page-actions{width:100%}
+  .page-actions .btn{flex:1}
+  .cal{gap:3px}
+  .cal-day{min-height:52px;border-radius:7px}
+  .cal-shift{font-size:7.4px}
+  .cal-num{font-size:9px}
+  .upcoming{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .money-cards{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+  .money{padding:7px 7px}
+  .money .l{font-size:8.8px;white-space:nowrap}
+  .money .v{font-size:13.4px}
+  .ledger-form{grid-template-columns:1fr 1fr}
+  .ledger-form .field:nth-child(5){grid-column:1/-1}
+  .tabs{flex-wrap:wrap;overflow:visible}
+  .tab{flex:1 1 auto;padding:5px 7px;font-size:11px}
+  .quiz-head{flex-direction:column;align-items:flex-start}
+  .page-title{font-size:17px}
+}
+@media print{
+  .sidebar,.topbar,.scrim,.toast,.page-actions,.btn,.qbtn{display:none!important}
+  .main{width:100%}
+  .content{padding:0}
+  body{background:#fff}
+}
+
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar" aria-label="主导航">
+    <div class="brand">
+      <div class="brand-mark">愈</div>
+      <div>
+        <div class="brand-name">整形外科科研工作台</div>
+        <div class="brand-sub">PS Research Lab · 本地版</div>
+      </div>
+    </div>
+    <div class="identity">
+      <div class="identity-top"><span class="identity-dot"></span>整形外科博士生</div>
+      <div class="identity-field">干细胞 · 创面修复再生 · 糖尿病创面</div>
+      <div class="identity-date"><span id="sideDate">--</span><span id="sideWeek">--</span></div>
+    </div>
+    <div class="nav-label">今日模块</div>
+    <nav class="nav" id="nav">
+      <button class="nav-item active" data-module="quotes"><span class="nav-ico">💬</span><span class="nav-text">每日科研语录</span><span class="nav-count">3</span></button>
+      <button class="nav-item" data-module="english"><span class="nav-ico">📖</span><span class="nav-text">科研英语</span><span class="nav-count">5</span></button>
+      <button class="nav-item" data-module="literature"><span class="nav-ico">📚</span><span class="nav-text">文献与指南</span><span class="nav-count">5</span></button>
+      <button class="nav-item" data-module="research"><span class="nav-ico">🔬</span><span class="nav-text">科研进展</span><span class="nav-count">3</span></button>
+      <button class="nav-item" data-module="schedule"><span class="nav-ico">📅</span><span class="nav-text">实验排期</span><span class="nav-count">6</span></button>
+      <button class="nav-item" data-module="fitness"><span class="nav-ico">💪</span><span class="nav-text">科研体能</span><span class="nav-count">9</span></button>
+      <button class="nav-item" data-module="ledger"><span class="nav-ico">💰</span><span class="nav-text">账本</span><span class="nav-count">6</span></button>
+      <button class="nav-item" data-module="videos"><span class="nav-ico">🎬</span><span class="nav-text">科普热点</span><span class="nav-count">4</span></button>
+      <button class="nav-item" data-module="topics"><span class="nav-ico">💡</span><span class="nav-text">选题灵感</span><span class="nav-count">4</span></button>
+      <button class="nav-item" data-module="review"><span class="nav-ico">🧠</span><span class="nav-text">科研复盘</span><span class="nav-count">1</span></button>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="mini-progress"><span>今日进度</span><div class="mini-track"><div class="mini-fill" id="miniFill" style="width:0%"></div></div><span id="miniText">0/10</span></div>
+      <div class="sidebar-note">数据仅保存在本机浏览器 · 无需登录</div>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+  <main class="main">
+    <header class="topbar">
+      <button class="icon-btn menu-btn" id="menuBtn" aria-label="打开导航">☰</button>
+      <div class="topbar-crumb"><span class="crumb-root">科研工作台</span><span class="crumb-sep">/</span><b id="crumb">每日科研语录</b></div>
+      <div class="topbar-spacer"></div>
+      <div class="topbar-meta">
+        <span class="pill green hide-sm" id="dayPill">第 -- 天</span>
+        <span class="topbar-date" id="topDate">--</span>
+        <button class="btn btn-xs btn-ghost" id="stopSpeak" title="停止朗读">■ 停止朗读</button>
+      </div>
+    </header>
+    <div class="content" id="view" aria-live="polite"></div>
+    <footer class="page-foot">
+      <span>整形外科科研工作台 · 单文件离线版</span>
+      <span id="footMeta">数据保存在 localStorage</span>
+    </footer>
+  </main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+window.DB = window.DB || {};
+DB.quotes = [
+  {id:'q01',cat:'创面修复',text:'我包扎伤口，上帝治愈它。',author:'安布鲁瓦兹·帕雷',note:'清创、抗感染、减压与敷料，都是为机体再生创造条件，而不是替代再生。'},
+  {id:'q02',cat:'创面修复',text:'伤口是光进入你内心的地方。',author:'鲁米',note:'慢性创面患者常被反复换药和失败消磨，照护要同时处理组织与心理。'},
+  {id:'q03',cat:'创面修复',text:'医学的艺术，是让病人在自然治愈的过程中保持愉快。',author:'伏尔泰',note:'创面愈合有自身节律，过度干预和放任不管都可能错过窗口。'},
+  {id:'q04',cat:'创面修复',text:'有时去治愈，常常去帮助，总是去安慰。',author:'爱德华·特鲁多',note:'糖尿病足反复溃疡时，减负、护理与长期随访本身就是治疗。'},
+  {id:'q05',cat:'创面修复',text:'创面修复不是把伤口盖住，而是给细胞一个愿意继续工作的微环境。',author:'科研札记',note:'敷料、清创、氧合与免疫状态，最终都要落到细胞行为上。'},
+  {id:'q06',cat:'干细胞',text:'干细胞不是万能药，微环境决定它往哪里走。',author:'科研札记',note:'移植后的存活、归巢与旁分泌，往往比“打到创面”本身更关键。'},
+  {id:'q07',cat:'干细胞',text:'自我更新与分化之间，干细胞维持着精细的平衡。',author:'科研札记',note:'体外扩增会改变干性、衰老与免疫调节能力，代次不是越高越好。'},
+  {id:'q08',cat:'干细胞',text:'离开了演化，生物学中的一切都难以理解。',author:'杜布赞斯基',note:'再生能力的种间差异，是理解创面修复策略的重要背景。'},
+  {id:'q09',cat:'干细胞',text:'科学是求解可解问题的艺术。',author:'彼得·梅达沃',note:'把“干细胞能不能治好糖尿病足”拆成可检验的机制与终点。'},
+  {id:'q10',cat:'干细胞',text:'如果你确信自己在正确的路上，就不要让别人把你关掉。',author:'芭芭拉·麦克林托克',note:'长期课题需要耐心，但也需要用数据不断校准方向。'},
+  {id:'q11',cat:'科研方法',text:'机遇偏爱有准备的头脑。',author:'路易·巴斯德',note:'异常结果不是噪音，先看它是否指向一个被忽略的变量。'},
+  {id:'q12',cat:'科研方法',text:'第一原则是：你不能欺骗自己，而你自己是最容易被欺骗的人。',author:'理查德·费曼',note:'盲法、对照、重复与原始数据，都是防止自我欺骗的工具。'},
+  {id:'q13',cat:'科研方法',text:'发现，是看见所有人都看见的，却想到没有人想到的。',author:'阿尔伯特·圣捷尔吉',note:'同一张切片，换一个染色或换一个时间点，可能就换了一个问题。'},
+  {id:'q14',cat:'科研方法',text:'科学的进步依赖新技术、新发现和新想法，大致按这个顺序。',author:'悉尼·布伦纳',note:'单细胞、空间转录组与类器官，正在重写创面研究的提问方式。'},
+  {id:'q15',cat:'科研方法',text:'读论文不是从第一页读到最后一页，而是先问它解决了什么问题。',author:'科研札记',note:'先看研究问题、模型与终点，再决定值不值得读方法。'},
+  {id:'q16',cat:'临床转化',text:'医学是一门不确定性的科学，也是一门概率的艺术。',author:'威廉·奥斯勒',note:'糖尿病足的多因素性，决定了任何单一疗法都很难包打天下。'},
+  {id:'q17',cat:'临床转化',text:'非凡的主张需要非凡的证据。',author:'卡尔·萨根',note:'越是“神奇愈合”的个案，越要回到对照、盲法与可重复性。'},
+  {id:'q18',cat:'临床转化',text:'剂量决定毒性。',author:'帕拉塞尔苏斯',note:'细胞治疗同样有剂量、活率、给药途径与时机的问题。'},
+  {id:'q19',cat:'临床转化',text:'从实验台到病床，最远的距离往往不是技术，而是可重复性与监管。',author:'科研札记',note:'GMP、批次一致性、终点定义与随访，决定了方案能否真正落地。'},
+  {id:'q20',cat:'临床转化',text:'转化不是把小鼠结果直接搬给人，而是把机制变成可验证的方案。',author:'科研札记',note:'动物模型解决机制问题，临床试验回答获益与风险问题。'},
+  {id:'q21',cat:'励志成长',text:'生活中没有什么可怕的东西，只有需要理解的东西。',author:'玛丽·居里',note:'把“做不出来”拆成技术、样本、对照与时间四个可处理的问题。'},
+  {id:'q22',cat:'励志成长',text:'成功不是终点，失败也不是终结，唯有继续前行的勇气才最重要。',author:'温斯顿·丘吉尔',note:'博士课题的进展常常是非线性的，稳定推进比一次爆发更重要。'},
+  {id:'q23',cat:'励志成长',text:'其实地上本没有路，走的人多了，也便成了路。',author:'鲁迅',note:'新方向不是等出来的，是在一次次小实验中踩出来的。'},
+  {id:'q24',cat:'励志成长',text:'长期主义者把注意力放在下一步，而不是上一次。',author:'科研札记',note:'每周只盯一个可交付的小结果，比同时追十个想法更有效。'},
+  {id:'q25',cat:'励志成长',text:'失败的实验不是判决书，而是排除了一条错误路径的数据。',author:'科研札记',note:'先记录失败条件，再决定是改参数、换模型还是换问题。'},
+  {id:'q26',cat:'健康哲思',text:'健康不是一切，但没有健康就没有一切。',author:'阿图尔·叔本华',note:'实验可以重做，身体和睡眠不能无限透支。'},
+  {id:'q27',cat:'健康哲思',text:'上医治未病，中医治欲病，下医治已病。',author:'孙思邈',note:'糖尿病足的预防、减压与足部筛查，价值不低于创面处理。'},
+  {id:'q28',cat:'健康哲思',text:'睡眠是实验设计的一部分。',author:'科研札记',note:'睡眠不足会改变炎症、代谢与行为，也会改变你的判断。'},
+  {id:'q29',cat:'健康哲思',text:'久坐不是休息，换一种姿势才是。',author:'科研札记',note:'长时间移液、显微镜和写论文，需要不同的活动模式来抵消负荷。'},
+  {id:'q30',cat:'健康哲思',text:'身体不是实验耗材，恢复也是产出的一部分。',author:'科研札记',note:'把运动、进食和休息排进日程，而不是等实验做完再说。'}
+];
+
+window.DB = window.DB || {};
+DB.nce = [
+  {
+    id:'nce1', no:1, title:'A Private Conversation', zh:'私人谈话',
+    text:"Last week I went to the theatre. I had a very good seat, but I could not enjoy the play. A young man and a young woman were sitting behind me. They were talking loudly. I turned round and looked at them, but they did not stop. At last I said, 'I can't hear a word!' The young man replied, 'It's none of your business. This is a private conversation!' I was so surprised that I did not know what to say. After the play, I realised that the best response was probably to ask the usher for help.",
+    trans:"上周我去看戏。我的座位很好，但我却无法欣赏那出戏。一对年轻男女坐在我后面，大声地说着话。我转过身去看了他们一眼，但他们并没有停下。最后我说：“我一个字也听不见！”那个年轻人回答：“这不关你的事，这是私人谈话！”我惊讶得不知道说什么好。演出结束后，我意识到最好的回应也许是请引座员帮忙。",
+    vocab:[['theatre','/ˈθɪətə/','剧院'],['seat','/siːt/','座位'],['enjoy','/ɪnˈdʒɔɪ/','欣赏；享受'],['play','/pleɪ/','戏剧'],['loudly','/ˈlaʊdli/','大声地'],['turn round','/tɜːn raʊnd/','转过身'],['at last','/ət lɑːst/','最后'],['reply','/rɪˈplaɪ/','回答'],['business','/ˈbɪznəs/','事情；生意'],['private','/ˈpraɪvət/','私人的'],['conversation','/ˌkɒnvəˈseɪʃn/','谈话'],['surprised','/səˈpraɪzd/','惊讶的'],['realise','/ˈriːəlaɪz/','意识到'],['response','/rɪˈspɒns/','回应'],['probably','/ˈprɒbəbli/','也许'],['usher','/ˈʌʃə/','引座员']],
+    grammar:'过去进行时（were sitting / were talking）描述过去某一时刻正在发生的动作；一般过去时（went / turned / said）推进故事主线。两者交替，画面感更强。'
+  },
+  {
+    id:'nce2', no:2, title:'Breakfast or Lunch?', zh:'早餐还是午餐？',
+    text:"It was Sunday. I never get up early on Sundays. I sometimes stay in bed until lunchtime. Last Sunday I got up very late. I looked out of the window. It was dark outside. 'What a day!' I thought. 'It's raining again.' Just then, the telephone rang. It was my aunt. 'I've just arrived by train,' she said. 'I'm coming to see you.' 'But I'm still having breakfast,' I said. 'What are you doing?' she asked. 'I'm having breakfast,' I repeated. 'Dear me,' she said. 'Do you always get up so late? It's one o'clock!'",
+    trans:"那是个星期天。星期天我从不早起，有时会一直躺到午饭时间。上个星期天我起得很晚。我往窗外看，外面天很暗。“什么鬼天气！”我想，“又下雨了。”就在这时，电话响了，是我姑妈。“我刚坐火车到，”她说，“我正来看你。”“可我还在吃早饭呢，”我说。“你在干什么？”她问。“我在吃早饭，”我重复道。“天哪，”她说，“你总是起这么晚吗？现在都一点了！”",
+    vocab:[['until','/ənˈtɪl/','直到'],['dark','/dɑːk/','黑暗的'],['outside','/ˌaʊtˈsaɪd/','在外面'],['ring','/rɪŋ/','（电话）响'],['aunt','/ɑːnt/','姑妈；姨妈'],['arrive','/əˈraɪv/','到达'],['train','/treɪn/','火车'],['still','/stɪl/','仍然'],['repeat','/rɪˈpiːt/','重复'],['dear','/dɪə/','哎呀（表示惊讶）'],['always','/ˈɔːlweɪz/','总是'],['late','/leɪt/','晚的'],['early','/ˈɜːli/','早的'],['window','/ˈwɪndəʊ/','窗户'],['telephone','/ˈtelɪfəʊn/','电话'],['lunchtime','/ˈlʌntʃtaɪm/','午餐时间']],
+    grammar:'现在进行时除了表示“此刻正在”，还可表示暂时性安排：I\'m coming to see you. 对比一般现在时 I never get up early，后者表示习惯。'
+  },
+  {
+    id:'nce3', no:3, title:'Please Send Me a Card', zh:'请给我寄一张明信片',
+    text:"I went to Italy for my summer holiday. I visited museums and sat in public gardens. A friendly waiter taught me a few words of Italian. Then he lent me a book. I read a few lines, but I did not understand a word. Every day I thought about postcards. My holidays passed quickly, but I did not send any cards to my friends. On the last day I made a big decision. I got up early and bought thirty-seven cards. I spent the whole day in my room, but I did not write a single card!",
+    trans:"我去意大利度暑假。我参观了博物馆，也坐在公园里。一位友善的服务员教了我几个意大利语单词，然后借给我一本书。我读了几行，却一个字也没看懂。每天我都想着寄明信片。假期过得很快，但我一张也没寄给朋友。最后一天，我做了个重大决定：早早起床，买了三十七张明信片。我在房间里待了一整天，却一张也没写！",
+    vocab:[['holiday','/ˈhɒlədeɪ/','假期'],['museum','/mjuˈziːəm/','博物馆'],['public','/ˈpʌblɪk/','公共的'],['friendly','/ˈfrendli/','友好的'],['waiter','/ˈweɪtə/','服务员'],['teach','/tiːtʃ/','教'],['lend','/lend/','借出'],['line','/laɪn/','行；台词'],['understand','/ˌʌndəˈstænd/','理解'],['postcard','/ˈpəʊstkɑːd/','明信片'],['pass','/pɑːs/','过去；流逝'],['send','/send/','寄送'],['decision','/dɪˈsɪʒn/','决定'],['buy','/baɪ/','买'],['spend','/spend/','花费'],['single','/ˈsɪŋɡl/','单个的']],
+    grammar:'一般过去时叙述完整经历；thought / read / spent 等不规则动词需单独记忆。注意 send sb sth 与 send sth to sb 两种双宾结构。'
+  },
+  {
+    id:'nce4', no:4, title:'An Exciting Trip', zh:'一次激动人心的旅行',
+    text:"I have just received a letter from my brother, Tim. He is in Australia. He has been there for six months. Tim is an engineer. He is working for a big firm and he has already visited a great number of different places in Australia. He has just bought an Australian car and has gone to Alice Springs, a small town in the centre of Australia. He will soon visit Darwin. From there, he will fly to Perth. My brother has never been abroad before, so he is finding this trip very exciting.",
+    trans:"我刚收到弟弟蒂姆的一封信。他在澳大利亚，已经在那儿待了六个月。蒂姆是一名工程师，在一家大公司工作，已经去过澳大利亚许多不同的地方。他刚买了一辆澳大利亚产的汽车，去了澳大利亚中部的小镇爱丽斯泉。他很快还会去达尔文，再从那里飞往珀斯。我弟弟以前从未出过国，所以觉得这次旅行非常令人兴奋。",
+    vocab:[['receive','/rɪˈsiːv/','收到'],['letter','/ˈletə/','信'],['engineer','/ˌendʒɪˈnɪə/','工程师'],['firm','/fɜːm/','公司'],['already','/ɔːlˈredi/','已经'],['a great number of','/ə ɡreɪt ˈnʌmbə əv/','许多'],['different','/ˈdɪfrənt/','不同的'],['place','/pleɪs/','地方'],['buy','/baɪ/','买'],['town','/taʊn/','城镇'],['centre','/ˈsentə/','中心'],['soon','/suːn/','很快'],['fly','/flaɪ/','飞'],['abroad','/əˈbrɔːd/','在国外'],['find','/faɪnd/','发现；觉得'],['exciting','/ɪkˈsaɪtɪŋ/','令人兴奋的']],
+    grammar:'现在完成时 have/has + 过去分词，强调过去动作与现在的联系：has been there for six months。for + 时间段，since + 起点。'
+  },
+  {
+    id:'nce5', no:5, title:'No Wrong Numbers', zh:'没有打错的电话',
+    text:"Mr James Scott has a garage in Silbury and now he has just bought another garage in Pinhurst. Pinhurst is only five miles from Silbury, but Mr Scott cannot get a telephone for his new garage, so he has just bought twelve pigeons. Yesterday, a pigeon carried the first message from Pinhurst to Silbury. The bird covered the distance in three minutes. Up to now, Mr Scott has sent a great many requests for spare parts and other urgent messages from one garage to the other. In this way, he has begun his own private telephone service.",
+    trans:"詹姆斯·斯科特先生在锡尔伯里有一个汽车修理厂，现在刚在平赫斯特又买了一个。平赫斯特离锡尔伯里只有五英里，但斯科特先生的新修理厂装不上电话，于是他刚买了十二只鸽子。昨天，一只鸽子把第一封信从平赫斯特带到锡尔伯里，只用了三分钟。到目前为止，斯科特先生已经用鸽子在两个修理厂之间传递了许多零件订购单和紧急消息。就这样，他开始了自己的私人“电话”服务。",
+    vocab:[['garage','/ˈɡærɑːʒ/','汽车修理厂'],['another','/əˈnʌðə/','另一个'],['mile','/maɪl/','英里'],['pigeon','/ˈpɪdʒɪn/','鸽子'],['carry','/ˈkæri/','运送'],['message','/ˈmesɪdʒ/','消息'],['bird','/bɜːd/','鸟'],['cover','/ˈkʌvə/','走过（距离）'],['distance','/ˈdɪstəns/','距离'],['minute','/ˈmɪnɪt/','分钟'],['up to now','/ʌp tə naʊ/','到目前为止'],['request','/rɪˈkwest/','请求；订购'],['spare part','/speə pɑːt/','备件'],['urgent','/ˈɜːdʒənt/','紧急的'],['private','/ˈpraɪvət/','私人的'],['service','/ˈsɜːvɪs/','服务']],
+    grammar:'现在完成时常与 already、just、up to now、so far 连用。a great many 修饰可数名词复数，表示“许多”。'
+  },
+  {
+    id:'nce6', no:6, title:'Percy Buttons', zh:'珀西·巴顿斯',
+    text:"I have just moved to a house in Bridge Street. Yesterday a beggar knocked at my door. He asked me for a meal and a glass of beer. In return for this, the beggar stood on his head and sang songs. I gave him a meal. He ate the food and drank the beer. Then he put a piece of cheese in his pocket and went away. Later a neighbour told me about him. Everybody knows him. His name is Percy Buttons. He calls at every house in the street once a month and always asks for a meal and a glass of beer.",
+    trans:"我刚搬到布里奇街的一所房子。昨天一个乞丐敲了我的门，向我要一顿饭和一杯啤酒。作为回报，他倒立起来唱歌。我给了他一顿饭。他吃完食物、喝完啤酒，然后把一块奶酪放进衣袋走了。后来一位邻居告诉我，大家都认识他，他叫珀西·巴顿斯。他每月到这条街的每户人家拜访一次，总要一顿饭和一杯啤酒。",
+    vocab:[['move','/muːv/','搬家'],['beggar','/ˈbeɡə/','乞丐'],['knock','/nɒk/','敲'],['meal','/miːl/','一餐'],['beer','/bɪə/','啤酒'],['in return','/ɪn rɪˈtɜːn/','作为回报'],['stand on one\'s head','/stænd ɒn wʌnz hed/','倒立'],['sing','/sɪŋ/','唱歌'],['eat','/iːt/','吃'],['drink','/drɪŋk/','喝'],['cheese','/tʃiːz/','奶酪'],['pocket','/ˈpɒkɪt/','口袋'],['neighbour','/ˈneɪbə/','邻居'],['call at','/kɔːl ət/','拜访（某地）'],['once','/wʌns/','一次'],['month','/mʌnθ/','月']],
+    grammar:'ask sb for sth 表示“向某人要某物”；in return for 表示“作为对……的回报”。注意 call at + 地点，call on + 人。'
+  },
+  {
+    id:'nce7', no:7, title:'Too Late', zh:'太晚了',
+    text:"The plane was late and detectives were waiting at the airport all morning. They were expecting a valuable parcel of diamonds from South Africa. A few hours earlier, someone had told the police that thieves would try to steal the diamonds. When the plane arrived, some of the detectives were waiting inside the main building while others were waiting on the airfield. Two men took the parcel off the plane and carried it into the Customs House. While two detectives were keeping guard at the door, two others opened the parcel. To their surprise, the precious parcel was full of stones and sand!",
+    trans:"飞机晚点了，侦探们在机场等了一上午。他们在等一件从南非寄来的贵重钻石包裹。几小时前，有人告诉警方，窃贼会试图偷走钻石。飞机到达时，一些侦探在主楼里等，另一些在停机坪上等。两名男子把包裹从飞机上取下，搬进海关大楼。两名侦探在门口看守，另外两人打开包裹。令他们惊讶的是，这个贵重的包裹里装满了石头和沙子！",
+    vocab:[['plane','/pleɪn/','飞机'],['detective','/dɪˈtektɪv/','侦探'],['airport','/ˈeəpɔːt/','机场'],['expect','/ɪkˈspekt/','期待；等候'],['valuable','/ˈvæljuəbl/','贵重的'],['parcel','/ˈpɑːsl/','包裹'],['diamond','/ˈdaɪəmənd/','钻石'],['thief','/θiːf/','窃贼'],['steal','/stiːl/','偷'],['arrive','/əˈraɪv/','到达'],['inside','/ˌɪnˈsaɪd/','在……里面'],['airfield','/ˈeəfiːld/','停机坪'],['customs','/ˈkʌstəmz/','海关'],['keep guard','/kiːp ɡɑːd/','看守'],['precious','/ˈpreʃəs/','珍贵的'],['sand','/sænd/','沙子']],
+    grammar:'过去进行时（were waiting / were keeping guard）常与一般过去时（arrived / took）搭配，表示一个长动作进行时另一个短动作发生。while 引导持续性背景。'
+  },
+  {
+    id:'nce8', no:8, title:'The Best and the Worst', zh:'最好的和最差的',
+    text:"Joe Sanders has the most beautiful garden in our town. Nearly everybody enters for 'The Nicest Garden Competition' each year, but Joe wins every time. Bill Frith's garden is larger than Joe's. Bill works harder than Joe and grows more flowers and vegetables, but Joe's garden is more interesting. He has made neat paths and has built a wooden bridge over a pool. I like gardens too, but I do not like hard work. Every year I enter for the garden competition too, and I always win a little prize for the worst garden in the town!",
+    trans:"乔·桑德斯拥有我们镇上最漂亮的花园。几乎每个人都参加一年一度的“最美花园比赛”，但乔每次都赢。比尔·弗里斯的花园比乔的大。比尔比乔更用功，种的花和蔬菜也更多，但乔的花园更有趣。他铺了整齐的小路，还在池塘上架了一座木桥。我也喜欢花园，但不喜欢辛苦劳动。每年我也参加花园比赛，而且总能赢得镇上“最差花园”的小奖！",
+    vocab:[['beautiful','/ˈbjuːtɪfl/','美丽的'],['garden','/ˈɡɑːdn/','花园'],['nearly','/ˈnɪəli/','几乎'],['enter for','/ˈentə fə/','报名参加'],['competition','/ˌkɒmpəˈtɪʃn/','比赛'],['win','/wɪn/','赢'],['larger','/ˈlɑːdʒə/','更大的'],['hard','/hɑːd/','努力地'],['grow','/ɡrəʊ/','种植'],['flower','/ˈflaʊə/','花'],['vegetable','/ˈvedʒtəbl/','蔬菜'],['interesting','/ˈɪntrəstɪŋ/','有趣的'],['neat','/niːt/','整齐的'],['path','/pɑːθ/','小路'],['wooden','/ˈwʊdn/','木制的'],['prize','/praɪz/','奖品']],
+    grammar:'形容词比较级与最高级：larger than、more interesting、the most beautiful。注意“the + 最高级 + 范围”结构，以及 every time 表“每次”。'
+  }
+];
+
+window.DB = window.DB || {};
+DB.bbc = [
+  {
+    id:'bbc1', title:'Sleep: The Forgotten Medicine', zh:'睡眠：被遗忘的良药',
+    text:"Doctors often ask patients about diet and exercise, but far fewer ask about sleep. Yet sleep is not a luxury. During deep sleep, blood pressure falls, stress hormones settle and the heart gets a rare chance to rest. Studies suggest that people who regularly sleep less than six hours may have a higher risk of high blood pressure and heart disease. The good news is that sleep can be improved. A fixed bedtime, less caffeine after noon and a cool, dark bedroom are simple places to start.",
+    trans:"医生常询问患者的饮食和运动，却很少问睡眠。然而睡眠并非奢侈品。在深度睡眠中，血压下降、压力激素回落，心脏得到难得的休息机会。研究提示，长期睡眠不足六小时的人，高血压和心脏病的风险可能更高。好消息是，睡眠可以改善。固定就寝时间、午后少喝咖啡，以及凉爽黑暗的卧室，都是简单的起点。",
+    vocab:[['luxury','/ˈlʌkʃəri/','奢侈品'],['hormone','/ˈhɔːməʊn/','激素'],['rare','/reə/','难得的'],['regularly','/ˈreɡjələli/','经常地'],['caffeine','/ˈkæfiːn/','咖啡因'],['bedroom','/ˈbedruːm/','卧室']]
+  },
+  {
+    id:'bbc2', title:'A Short Walk After Dinner', zh:'饭后走一走',
+    text:"A gentle walk after a meal may do more than help digestion. In one small study, ten minutes of walking after dinner lowered blood sugar more effectively than a single longer walk at another time of day. Muscles use glucose as they move, so even light activity can smooth the spike that follows a meal. You do not need special equipment or a gym. A loop around the block, a few flights of stairs or walking while taking a phone call can all count. The key is to make it easy enough to repeat.",
+    trans:"饭后散步的作用可能不止促进消化。一项小型研究发现，晚餐后走十分钟，比一天中其他时间一次性长时间步行更能有效降低血糖。肌肉活动时会消耗葡萄糖，因此即使轻度活动也能平缓餐后血糖高峰。你不需要特殊设备或健身房。绕街区一圈、爬几层楼，或边打电话边走，都算数。关键在于让它简单到可以重复。",
+    vocab:[['gentle','/ˈdʒentl/','温和的'],['digestion','/daɪˈdʒestʃən/','消化'],['effectively','/ɪˈfektɪvli/','有效地'],['glucose','/ˈɡluːkəʊs/','葡萄糖'],['spike','/spaɪk/','峰值；骤升'],['equipment','/ɪˈkwɪpmənt/','设备']]
+  },
+  {
+    id:'bbc3', title:'Coffee: Friend or Foe?', zh:'咖啡：敌还是友？',
+    text:"Coffee is one of the most studied drinks in the world, and the evidence is mostly reassuring. Moderate coffee drinking has been linked to a lower risk of type 2 diabetes, liver disease and some heart conditions. But the word moderate matters. Very high doses can raise heart rate, worsen anxiety and disturb sleep. People with uncontrolled high blood pressure or certain arrhythmias should discuss caffeine with their doctor. And what you add matters too: a drink that is mostly sugar and cream is not the same as a simple cup of coffee.",
+    trans:"咖啡是世界上研究最多的饮品之一，证据总体令人安心。适量饮用咖啡与较低的2型糖尿病、肝病和部分心脏疾病风险相关。但“适量”很重要。过高剂量会加快心率、加重焦虑并干扰睡眠。血压控制不佳或某些心律失常的人，应与医生讨论咖啡因摄入。你往杯子里加什么也很重要：一杯主要是糖和奶油的作品，和一杯简单的咖啡并不是一回事。",
+    vocab:[['reassuring','/ˌriːəˈʃʊərɪŋ/','令人安心的'],['moderate','/ˈmɒdərət/','适度的'],['diabetes','/ˌdaɪəˈbiːtiːz/','糖尿病'],['anxiety','/æŋˈzaɪəti/','焦虑'],['arrhythmia','/əˈrɪðmiə/','心律失常'],['cream','/kriːm/','奶油']]
+  },
+  {
+    id:'bbc4', title:'Blue Light and the Body Clock', zh:'蓝光与生物钟',
+    text:"The glow of a phone screen at midnight feels harmless, but light is a powerful signal to the brain. Bright blue light tells the body clock that it is still daytime, delaying the release of melatonin, the hormone that prepares us for sleep. Over time, late-night scrolling can push bedtime later and make mornings harder. You do not have to give up your phone entirely. Dim the screen, use a warm colour mode after sunset, and keep the device out of reach for the last thirty minutes before bed.",
+    trans:"午夜手机屏幕的光看似无害，但光对大脑是强烈的信号。明亮的蓝光告诉生物钟现在仍是白天，从而延迟褪黑素的释放——这种激素帮助我们准备入睡。久而久之，深夜刷手机会把就寝时间越推越晚，让早晨更难熬。你不必完全放弃手机。调暗屏幕、日落后使用暖色模式，并在睡前最后三十分钟把设备放远一点。",
+    vocab:[['glow','/ɡləʊ/','微光'],['harmless','/ˈhɑːmləs/','无害的'],['signal','/ˈsɪɡnəl/','信号'],['delay','/dɪˈleɪ/','延迟'],['melatonin','/ˌmeləˈtəʊnɪn/','褪黑素'],['device','/dɪˈvaɪs/','设备']]
+  },
+  {
+    id:'bbc5', title:'The Mediterranean Plate', zh:'地中海式餐盘',
+    text:"The Mediterranean diet is less a strict menu than a pattern of eating. Vegetables, fruit, beans, whole grains, nuts and olive oil sit at the centre. Fish and poultry appear a few times a week, while red meat and sweets are occasional. Researchers have linked this pattern to lower rates of heart disease and stroke. One reason may be that it replaces saturated fat with unsaturated fat and adds fibre, potassium and polyphenols. You do not need imported ingredients; local vegetables, beans and whole grains can build the same plate.",
+    trans:"地中海饮食与其说是一份严格菜单，不如说是一种饮食模式。蔬菜、水果、豆类、全谷物、坚果和橄榄油占据中心；鱼和禽肉每周出现几次；红肉和甜食只是偶尔。研究者将这种模式与较低的心脏病和中风发生率联系起来。原因之一可能是它用不饱和脂肪替代饱和脂肪，并增加纤维、钾和多酚。你不需要进口食材；本地蔬菜、豆类和全谷物也能搭出同样的餐盘。",
+    vocab:[['strict','/strɪkt/','严格的'],['whole grain','/həʊl ɡreɪn/','全谷物'],['poultry','/ˈpəʊltri/','禽肉'],['occasional','/əˈkeɪʒənl/','偶尔的'],['saturated','/ˈsætʃəreɪtɪd/','饱和的'],['fibre','/ˈfaɪbə/','纤维']]
+  },
+  {
+    id:'bbc6', title:'Cold Water, Warm Debate', zh:'冷水与热烈的争论',
+    text:"Cold-water swimming has a devoted following, and for good reason: it can lift mood and leave people feeling alert. But the heart does not ignore the shock of cold water. Blood vessels tighten, heart rate and blood pressure rise, and breathing can become uncontrollable. For healthy, acclimatised swimmers the risk is usually low. For people with heart disease, uncontrolled hypertension or rhythm problems, the picture is different. If you are unsure, ask your doctor before you join the winter dippers, and never swim alone.",
+    trans:"冬泳有一批忠实拥趸，理由也很充分：它能改善情绪，让人精神振奋。但心脏不会忽视冷水的冲击。血管收缩，心率和血压上升，呼吸可能变得难以控制。对健康且已适应冷水的人来说，风险通常较低；但对心脏病、未控制的高血压或心律问题患者，情况就不同了。如果你不确定，加入冬泳队伍前先问医生，并且永远不要独自下水。",
+    vocab:[['devoted','/dɪˈvəʊtɪd/','忠实的'],['alert','/əˈlɜːt/','警觉的'],['vessel','/ˈvesl/','血管'],['acclimatised','/əˈklaɪmətaɪzd/','已适应的'],['hypertension','/ˌhaɪpəˈtenʃn/','高血压'],['dipper','/ˈdɪpə/','下水者']]
+  },
+  {
+    id:'bbc7', title:'The Noise We Cannot See', zh:'看不见的噪音',
+    text:"Noise is often treated as an annoyance, but it may also be a health exposure. Road traffic, aircraft and construction can raise stress hormones, disturb sleep and increase blood pressure. The World Health Organization estimates that long-term traffic noise contributes to thousands of heart disease cases each year in Europe. Unlike a chemical, noise leaves no residue, so its effects are easy to overlook. Better windows, quieter streets and protected quiet spaces are public health measures, not just comfort.",
+    trans:"噪音常被视为烦扰，但它也可能是一种健康暴露。道路交通、飞机和施工会升高压力激素、干扰睡眠并推高血压。世界卫生组织估计，长期交通噪音每年在欧洲导致数千例心脏病。与化学品不同，噪音不会留下残留物，因此其影响容易被忽视。更好的窗户、更安静的街道和被保护的安静空间，是公共卫生措施，而不只是舒适问题。",
+    vocab:[['annoyance','/əˈnɔɪəns/','烦扰'],['exposure','/ɪkˈspəʊʒə/','暴露'],['construction','/kənˈstrʌkʃn/','施工'],['estimate','/ˈestɪmeɪt/','估计'],['residue','/ˈrezɪdjuː/','残留物'],['overlook','/ˌəʊvəˈlʊk/','忽视']]
+  },
+  {
+    id:'bbc8', title:'Why Strength Matters for the Heart', zh:'力量训练为何对心脏重要',
+    text:"Walking and cycling are not the only exercise that helps the heart. Resistance training, such as squats, wall pushes or light weights, builds muscle and improves how the body handles sugar. It can also support balance and bone health, which matter as we age. Guidelines usually suggest muscle-strengthening activities on two or more days a week. You do not need a heavy barbell. Body weight, resistance bands and household objects can provide enough challenge if you progress gradually and breathe steadily.",
+    trans:"步行和骑车并不是唯一对心脏有益的运动。抗阻训练，例如深蹲、推墙或轻重量训练，可以增加肌肉并改善身体处理糖分的能力。它还有助于平衡和骨骼健康，随着年龄增长尤其重要。指南通常建议每周至少两天进行肌肉强化活动。你不需要沉重的杠铃。自重、弹力带和家中物品就能提供足够挑战，只要循序渐进并保持平稳呼吸。",
+    vocab:[['resistance','/rɪˈzɪstəns/','阻力'],['squat','/skwɒt/','深蹲'],['balance','/ˈbæləns/','平衡'],['barbell','/ˈbɑːbel/','杠铃'],['gradually','/ˈɡrædʒuəli/','逐渐地'],['steadily','/ˈstedəli/','平稳地']]
+  },
+  {
+    id:'bbc9', title:'A Weekend Without Screens', zh:'一个没有屏幕的周末',
+    text:"A digital detox is not a medical treatment, but stepping away from screens can reveal how much time we spend on autopilot. Many people report better sleep, more reading and longer conversations after even one screen-free evening. The goal is not to demonise technology. It is to notice which habits serve you and which simply fill a gap. Try a small experiment: leave your phone in another room for one hour, go outside without headphones, or eat one meal with no device on the table.",
+    trans:"数字排毒不是医学治疗，但离开屏幕能让我们看见自己有多少时间处于“自动巡航”。许多人报告，哪怕只有一个无屏夜晚，睡眠、阅读和交谈质量都会改善。目标不是妖魔化科技，而是分辨哪些习惯真正服务于你，哪些只是填补空白。做个小实验：把手机放到另一个房间一小时，不带耳机出门，或吃一顿桌上没有设备的饭。",
+    vocab:[['detox','/ˈdiːtɒks/','排毒；戒断'],['autopilot','/ˈɔːtəpaɪlət/','自动驾驶；惯性'],['demonise','/ˈdiːmənaɪz/','妖魔化'],['habit','/ˈhæbɪt/','习惯'],['experiment','/ɪkˈsperɪmənt/','实验'],['headphones','/ˈhedfəʊnz/','耳机']]
+  },
+  {
+    id:'bbc10', title:'The Garden Inside You', zh:'你体内的花园',
+    text:"The gut is home to trillions of bacteria, and their influence reaches beyond digestion. These microbes help produce vitamins, train the immune system and release molecules that can affect blood vessels and metabolism. A diverse diet appears to support a diverse microbiome. Fermented foods, yoghurt, beans, whole grains and many kinds of vegetables are useful. Probiotic supplements are popular, but the evidence for specific products is uneven. For most people, food variety is a more reliable place to begin than a bottle of capsules.",
+    trans:"肠道里居住着数万亿细菌，它们的影响远不止消化。这些微生物帮助合成维生素、训练免疫系统，并释放可能影响血管和代谢的分子。多样化饮食似乎有助于多样化菌群。发酵食品、酸奶、豆类、全谷物和多种蔬菜都有益。益生菌补充剂很流行，但针对具体产品的证据并不一致。对大多数人来说，从食物多样性入手，比从一瓶胶囊开始更可靠。",
+    vocab:[['gut','/ɡʌt/','肠道'],['bacteria','/bækˈtɪəriə/','细菌'],['microbe','/ˈmaɪkrəʊb/','微生物'],['immune','/ɪˈmjuːn/','免疫的'],['fermented','/fəˈmentɪd/','发酵的'],['capsule','/ˈkæpsjuːl/','胶囊']]
+  },
+  {
+    id:'bbc11', title:'When the Air Reaches the Heart', zh:'当空气触及心脏',
+    text:"Air pollution is usually discussed in relation to the lungs, but the heart is also a target. Fine particles can enter the bloodstream and trigger inflammation, making blood vessels less flexible and blood more likely to clot. On heavily polluted days, people with heart disease may notice more breathlessness or chest discomfort. Individual action cannot clean the air, but it can reduce exposure: check air quality, avoid busy roads at rush hour, and exercise in parks or indoors when pollution is high.",
+    trans:"空气污染通常被拿来和肺讨论，但心脏同样是靶器官。细颗粒物可进入血液并引发炎症，使血管弹性下降、血液更易凝固。在污染严重的日子，心脏病患者可能感到更气短或胸部不适。个人行动无法净化空气，但可以减少暴露：查看空气质量，高峰时段避开繁忙道路，污染高时在公园或室内运动。",
+    vocab:[['pollution','/pəˈluːʃn/','污染'],['particle','/ˈpɑːtɪkl/','颗粒'],['inflammation','/ˌɪnfləˈmeɪʃn/','炎症'],['flexible','/ˈfleksəbl/','有弹性的'],['clot','/klɒt/','凝结'],['breathlessness','/ˈbreθləsnəs/','气短']]
+  },
+  {
+    id:'bbc12', title:'Heat, Sauna and the Heart', zh:'热、桑拿与心脏',
+    text:"A sauna session makes the heart work harder without exercise. Skin blood vessels open, heart rate rises and the body sweats to cool itself. For many people with stable heart disease, short sauna sessions are well tolerated and may even be associated with better vascular function. But heat is not risk-free. Dehydration, alcohol and long sessions increase the strain. If you have unstable angina, severe aortic stenosis or recent cardiac events, ask your cardiologist first. Listen to your body, keep sessions short and drink water afterwards.",
+    trans:"蒸桑拿会让心脏在不运动的情况下更努力工作。皮肤血管扩张、心率上升，身体通过出汗降温。对许多病情稳定的心脏病患者来说，短时间桑拿耐受良好，甚至可能与更好的血管功能相关。但热并非没有风险。脱水、酒精和长时间停留会增加负担。如果你有不稳定心绞痛、严重主动脉瓣狭窄或近期心脏事件，先咨询心内科医生。倾听身体，控制时长，结束后补水。",
+    vocab:[['sauna','/ˈsɔːnə/','桑拿'],['sweat','/swet/','出汗'],['tolerate','/ˈtɒləreɪt/','耐受'],['vascular','/ˈvæskjələ/','血管的'],['dehydration','/ˌdiːhaɪˈdreɪʃn/','脱水'],['strain','/streɪn/','负担']]
+  }
+];
+
+window.DB = window.DB || {};
+DB.exams = [
+  {
+    id:'ielts-l', exam:'IELTS', title:'听力策略', strategy:'雅思听力考的不是“听懂每一个词”，而是在有限时间内抓住答案所需信息。先读题预测词性与场景，再带着问题听；答案出现前常有停顿、转折或同义替换。拼写错误同样不得分。',
+    points:['利用每部分开始前的读题时间，圈出题干中的名词与限定词。','预判答案词性：人名、数字、日期、地址、名词单复数。','警惕 but / however / actually 后的修正信息。','每题不留空，拼写检查放到最后 1 分钟。'],
+    words:[['accommodation','住宿'],['available','可获得的'],['facility','设施'],['deposit','押金'],['itinerary','行程'],['destination','目的地'],['refreshments','茶点'],['registration','注册'],['tutorial','辅导课'],['assignment','作业'],['deadline','截止日期'],['extension','延期'],['questionnaire','问卷'],['volunteer','志愿者'],['conservation','保护'],['excavation','挖掘'],['urban','城市的'],['rural','乡村的'],['sustainable','可持续的'],['infrastructure','基础设施']],
+    phrases:[['Could you spell that, please?','请拼写一下好吗？'],['I\'m afraid that\'s fully booked.','恐怕已经订满了。'],['It\'s on the second floor.','在二楼。'],['The deadline is next Friday.','截止日期是下周五。'],['We recommend booking in advance.','我们建议提前预订。'],['That includes breakfast.','包含早餐。'],['It takes about twenty minutes on foot.','步行大约二十分钟。'],['You\'ll need to bring photo ID.','你需要携带带照片的身份证件。']]
+  },
+  {
+    id:'ielts-r', exam:'IELTS', title:'阅读策略', strategy:'雅思阅读的核心是定位与同义替换。先看题再读文，利用标题、专有名词、数字快速定位；判断题要区分 False（与原文矛盾）和 Not Given（原文未提）。不要试图读懂全文，时间要留给能得分的题。',
+    points:['先做匹配题、填空题，再做判断题与选择题。','题干中的极端词（all, only, must）常是考点。','Heading 题先读段落首尾句与转折句。','每篇控制在 18 分钟内，留 3 分钟誊写。'],
+    words:[['allocate','分配'],['advocate','提倡'],['ambiguous','模糊的'],['assess','评估'],['biodiversity','生物多样性'],['cite','引用'],['compensate','补偿'],['comprehensive','全面的'],['consequence','后果'],['controversial','有争议的'],['deteriorate','恶化'],['diminish','减少'],['empirical','实证的'],['explicit','明确的'],['fluctuate','波动'],['hypothesis','假设'],['implement','实施'],['inevitable','不可避免的'],['mitigate','缓解'],['phenomenon','现象']],
+    phrases:[['according to the passage','根据文章'],['the author suggests that','作者暗示'],['is consistent with','与……一致'],['contradicts the claim','与主张矛盾'],['is not mentioned in the passage','文中未提及'],['plays a crucial role in','在……中起关键作用'],['a growing body of evidence','越来越多的证据'],['in the long term','从长远看']]
+  },
+  {
+    id:'ielts-w1', exam:'IELTS', title:'写作 Task 1', strategy:'Task 1 是信息转述，不是议论文。开头改写题目，概述总体趋势，再分段描述关键数据与对比。不要加入原因分析或个人观点。把最高值、最低值、转折点、显著差异写清楚，比罗列所有数字更得分。',
+    points:['结构：改写题目 + 总体概述 + 2 段细节。','用上升、下降、波动、持平四类动词与副词。','比较数据，不要逐条报数。','检查时态：过去年份用过去时，预测用将来时。'],
+    words:[['increase','增加'],['decrease','减少'],['fluctuate','波动'],['remain stable','保持稳定'],['peak','达到峰值'],['plateau','趋于平稳'],['significant','显著的'],['slight','轻微的'],['gradual','逐渐的'],['sharp','急剧的'],['proportion','比例'],['percentage','百分比'],['figure','数字'],['trend','趋势'],['overall','总体上'],['whereas','然而'],['respectively','分别'],['approximately','大约'],['double','翻倍'],['marginally','略微']],
+    phrases:[['The chart illustrates...','该图表展示了……'],['Overall, ... increased steadily.','总体而言，……稳步上升。'],['There was a sharp rise in...','……出现急剧上升。'],['... accounted for the largest share.','……占最大比例。'],['By contrast, ...','相比之下，……'],['The figure peaked at...','该数字在……达到峰值。'],['... remained roughly constant.','……基本保持不变。'],['This was followed by a gradual decline.','随后逐渐下降。']]
+  },
+  {
+    id:'ielts-w2', exam:'IELTS', title:'写作 Task 2', strategy:'Task 2 考查论证能力。立场要清晰，主体段遵循“观点—解释—例子—回扣”的结构。例子不必真实，但要具体合理。避免堆砌高级词，优先保证逻辑连接与语法准确。40 分钟内建议 5 分钟构思、30 分钟写作、5 分钟检查。',
+    points:['引言明确立场，不要只复述题目。','每个主体段只推进一个中心论点。','用具体场景代替空泛的“people think”。','结尾总结立场，不引入新观点。'],
+    words:[['argument','论点'],['evidence','证据'],['justify','证明合理'],['perspective','视角'],['consensus','共识'],['implication','影响'],['inequality','不平等'],['incentive','激励'],['regulation','监管'],['sustainable','可持续的'],['fundamental','根本的'],['practical','可行的'],['alternative','替代方案'],['priority','优先事项'],['beneficial','有益的'],['detrimental','有害的'],['widespread','广泛的'],['inevitable','不可避免的'],['compromise','折中'],['long-term','长期的']],
+    phrases:[['It is often argued that...','人们常认为……'],['While this view has merit, ...','尽管这一观点有可取之处，……'],['A key reason is that...','一个关键原因是……'],['For example, ...','例如，……'],['This suggests that...','这表明……'],['Opponents may claim that...','反对者可能声称……'],['On balance, I believe...','权衡之后，我认为……'],['Measures should be taken to...','应采取措施来……']]
+  },
+  {
+    id:'ielts-s', exam:'IELTS', title:'口语策略', strategy:'口语评分看流利度、词汇、语法和发音，不看你是否说了“标准答案”。Part 1 用 2-3 句展开，Part 2 按时间线或空间线组织，Part 3 给出观点并解释。卡住时用填充语争取时间，不要长时间沉默。',
+    points:['Part 1：直接回答 + 一个原因或细节。','Part 2：用 1 分钟笔记写关键词，不写完整句。','Part 3：观点 + 解释 + 例子 + 让步。','发音优先清晰，不追求口音。'],
+    words:[['prefer','更喜欢'],['fascinating','迷人的'],['memorable','难忘的'],['convenient','方便的'],['challenging','有挑战的'],['relaxing','放松的'],['crowded','拥挤的'],['neighbourhood','社区'],['routine','日常'],['opportunity','机会'],['recommend','推荐'],['atmosphere','氛围'],['achievement','成就'],['motivation','动力'],['flexible','灵活的'],['stressful','有压力的'],['traditional','传统的'],['modern','现代的'],['gradually','逐渐地'],['personally','就个人而言']],
+    phrases:[['To be honest, ...','说实话，……'],['What I find most interesting is...','我觉得最有趣的是……'],['It depends on the situation.','这取决于具体情况。'],['I\'m not really into...','我不太喜欢……'],['That\'s a good question.','这是个好问题。'],['Looking back, ...','回想起来，……'],['If I had more time, I would...','如果有更多时间，我会……'],['I\'d say the main reason is...','我认为主要原因是……']]
+  },
+  {
+    id:'toefl-l', exam:'TOEFL', title:'听力笔记法', strategy:'托福听力长度大、信息密，笔记要“少而准”。用缩写、符号和箭头记录结构，而不是逐词听写。重点抓教授的态度、举例目的、转折与因果。答题时允许回看笔记，但不要因为一个细节错过整段逻辑。',
+    points:['竖线分栏：左侧结构，右侧细节。','用 ↑↓→∵∴ 表示趋势、因果。','例子只记“证明了什么”，不记全部细节。','重听题关注语气与言外之意。'],
+    words:[['lecture','讲座'],['seminar','研讨课'],['hypothesis','假设'],['phenomenon','现象'],['mechanism','机制'],['evidence','证据'],['contrast','对比'],['implication','含义'],['interpretation','解释'],['assumption','假设'],['criticism','批评'],['framework','框架'],['empirical','实证的'],['theoretical','理论的'],['significant','重要的'],['subsequent','随后的'],['demonstrate','证明'],['undermine','削弱'],['support','支持'],['conclusion','结论']],
+    phrases:[['The professor mainly discusses...','教授主要讨论……'],['For instance, ...','例如，……'],['This supports the idea that...','这支持了……的观点。'],['However, ...','然而，……'],['The reason is that...','原因是……'],['What\'s interesting is...','有趣的是……'],['In contrast, ...','相比之下，……'],['The student is concerned about...','学生对……感到担忧。']]
+  },
+  {
+    id:'toefl-r', exam:'TOEFL', title:'阅读题型', strategy:'托福阅读按题型突破：事实信息题回原文定位，否定事实题用排除，推断题只走一步，句子简化题保留原句主干逻辑，插入题看指代与连接词。最后一题摘要题选主旨，不选细节。',
+    points:['先读题干关键词，再扫读段落。','词汇题直接看上下文，不纠结熟词僻义。','推断题答案必须由原文推出，不能脑补。','摘要题优先选覆盖全文的概括句。'],
+    words:[['abundant','丰富的'],['adjacent','邻近的'],['accumulate','积累'],['adapt','适应'],['attribute','归因于'],['candidate','候选'],['cease','停止'],['coincide','同时发生'],['component','组成部分'],['constitute','构成'],['deplete','耗尽'],['derive','源自'],['distinct','不同的'],['diverse','多样的'],['dominate','主导'],['elaborate','详述'],['emerge','出现'],['fundamental','根本的'],['gradual','逐渐的'],['inhibit','抑制']],
+    phrases:[['The passage suggests that...','文章暗示……'],['Which of the following is true?','以下哪项正确？'],['The author mentions... in order to...','作者提到……是为了……'],['It can be inferred that...','可以推断……'],['The word ... is closest in meaning to...','……一词最接近……'],['Which sentence best expresses...','哪句话最好地表达了……'],['All of the following are mentioned EXCEPT...','除……外以下都被提及'],['The passage is primarily concerned with...','文章主要关注……']]
+  },
+  {
+    id:'toefl-w1', exam:'TOEFL', title:'独立写作', strategy:'独立写作要求 30 分钟内完成 300+ 词。立场明确，两个主体段各给一个理由，用具体例子支撑。不要为了“高级”而写复杂长句，清晰和准确优先。结尾重申立场即可，不必升华。',
+    points:['开头 2-3 句：背景 + 立场。','主体段：理由 + 解释 + 具体例子 + 小结。','使用连接词显性化逻辑。','留 3 分钟检查主谓一致与拼写。'],
+    words:[['convince','说服'],['compelling','有说服力的'],['reasonable','合理的'],['benefit','益处'],['drawback','缺点'],['efficient','高效的'],['flexible','灵活的'],['essential','必要的'],['optional','可选的'],['replace','替代'],['enhance','提升'],['restrict','限制'],['encourage','鼓励'],['responsible','负责任的'],['independent','独立的'],['cooperative','合作的'],['creativity','创造力'],['productivity','生产力'],['well-being','福祉'],['perspective','视角']],
+    phrases:[['Some people believe that...','一些人认为……'],['I strongly agree that...','我强烈同意……'],['First and foremost, ...','首先，……'],['For example, ...','例如，……'],['Another reason is that...','另一个原因是……'],['Admittedly, ...','诚然，……'],['Nevertheless, ...','尽管如此，……'],['In conclusion, ...','总之，……']]
+  },
+  {
+    id:'toefl-w2', exam:'TOEFL', title:'综合写作', strategy:'综合写作不是表达个人观点，而是准确复述阅读与讲座的关系。阅读给三个论点，讲座通常逐一反驳。按“阅读观点—讲座反驳—细节”组织三段，开头点明总关系。不要加入自己的评价。',
+    points:['阅读时记三个分论点及关键词。','听力重点记反驳理由与例子。','用 The lecturer argues that... 引出。','结尾一句话总结，不写新信息。'],
+    words:[['contradict','反驳'],['challenge','质疑'],['refute','驳斥'],['claim','主张'],['assert','断言'],['counterargument','反论点'],['evidence','证据'],['flaw','缺陷'],['limitation','局限'],['alternative','替代解释'],['plausible','看似合理的'],['inaccurate','不准确的'],['misleading','误导的'],['sufficient','充分的'],['relevant','相关的'],['undermine','削弱'],['support','支持'],['consequently','因此'],['whereas','然而'],['specifically','具体来说']],
+    phrases:[['The reading passage argues that...','阅读文章主张……'],['The lecturer challenges this view by...','讲座通过……质疑这一观点。'],['According to the professor, ...','根据教授的说法，……'],['This directly contradicts...','这直接反驳了……'],['The professor provides an example of...','教授提供了一个……的例子。'],['Therefore, the reading\'s claim is weakened.','因此，阅读的主张被削弱。'],['In contrast, ...','相比之下，……'],['In summary, ...','总之，……']]
+  },
+  {
+    id:'toefl-s', exam:'TOEFL', title:'口语 Task', strategy:'托福口语重结构。独立题用“立场 + 两个理由 + 细节”，准备 15 秒、说 45 秒。综合题先概括阅读与听力，再说明关系；校园题说清“决定—两个理由—学生态度”。语速不必快，清楚和完整更重要。',
+    points:['独立题：一个立场，两个理由，各带一个细节。','综合题：先总后分，用 first / second 标记。','卡住时用 well / I mean 过渡，不要停。','最后 5 秒收尾，避免被截断。'],
+    words:[['preference','偏好'],['adequate','足够的'],['convenient','方便的'],['efficient','高效的'],['practical','实际的'],['beneficial','有益的'],['distract','分散注意力'],['affordable','负担得起的'],['accessible','可获得的'],['flexible','灵活的'],['require','要求'],['recommend','建议'],['oppose','反对'],['support','支持'],['announce','宣布'],['proposal','提议'],['schedule','日程'],['facility','设施'],['transportation','交通'],['opportunity','机会']],
+    phrases:[['In my opinion, ...','在我看来，……'],['The first reason is that...','第一个原因是……'],['For example, ...','例如，……'],['The university plans to...','大学计划……'],['The student supports the plan because...','学生支持该计划，因为……'],['The professor explains that...','教授解释说……'],['This illustrates...','这说明了……'],['That\'s why I prefer...','这就是我更喜欢……的原因。']]
+  }
+];
+
+window.DB = window.DB || {};
+DB.phrases = [
+  {id:'p01',cat:'日常交际',en:"How's it going?",ipa:'/haʊz ɪt ˈɡəʊɪŋ/',zh:'最近怎么样？',ex:"How's it going? Long time no see.",exZh:'最近怎么样？好久不见。'},
+  {id:'p02',cat:'日常交际',en:'Long time no see.',ipa:'/lɒŋ taɪm nəʊ siː/',zh:'好久不见。',ex:'Long time no see! You look great.',exZh:'好久不见！你看起来气色很好。'},
+  {id:'p03',cat:'日常交际',en:'What have you been up to?',ipa:'/wɒt hæv juː biːn ʌp tuː/',zh:'你最近在忙什么？',ex:'What have you been up to these days?',exZh:'你最近都在忙些什么？'},
+  {id:'p04',cat:'日常交际',en:"I'm just kidding.",ipa:'/aɪm dʒʌst ˈkɪdɪŋ/',zh:'我开玩笑的。',ex:"Don't take it seriously. I'm just kidding.",exZh:'别当真，我开玩笑的。'},
+  {id:'p05',cat:'日常交际',en:'That sounds great.',ipa:'/ðæt saʊndz ɡreɪt/',zh:'听起来不错。',ex:'Dinner at seven? That sounds great.',exZh:'七点吃晚饭？听起来不错。'},
+  {id:'p06',cat:'日常交际',en:"I'm afraid I can't make it.",ipa:'/aɪm əˈfreɪd aɪ kɑːnt meɪk ɪt/',zh:'恐怕我去不了。',ex:"I'm afraid I can't make it to the party.",exZh:'恐怕我去不了聚会了。'},
+  {id:'p07',cat:'日常交际',en:'Could you give me a hand?',ipa:'/kʊd juː ɡɪv miː ə hænd/',zh:'能帮我一下吗？',ex:'Could you give me a hand with these boxes?',exZh:'能帮我搬一下这些箱子吗？'},
+  {id:'p08',cat:'日常交际',en:'No worries.',ipa:'/nəʊ ˈwʌriz/',zh:'没关系。',ex:"Sorry I'm late. — No worries.",exZh:'抱歉我迟到了。——没关系。'},
+  {id:'p09',cat:'日常交际',en:"It's up to you.",ipa:'/ɪts ʌp tə juː/',zh:'由你决定。',ex:"We can eat Chinese or Italian. It's up to you.",exZh:'我们可以吃中餐或意餐，由你决定。'},
+  {id:'p10',cat:'日常交际',en:"I couldn't agree more.",ipa:'/aɪ ˈkʊdnt əˈɡriː mɔː/',zh:'我完全同意。',ex:"I couldn't agree more with your plan.",exZh:'我完全同意你的计划。'},
+  {id:'p11',cat:'日常交际',en:"Let's catch up soon.",ipa:'/lets kætʃ ʌp suːn/',zh:'我们尽快聚聚。',ex:"Let's catch up soon over coffee.",exZh:'我们尽快一起喝咖啡聊聊。'},
+  {id:'p12',cat:'日常交际',en:"I'm sorry to hear that.",ipa:'/aɪm ˈsɒri tə hɪə ðæt/',zh:'听到这个消息我很难过。',ex:"I'm sorry to hear that you've been ill.",exZh:'听说你生病了，我很难过。'},
+  {id:'p13',cat:'日常交际',en:'Take your time.',ipa:'/teɪk jɔː taɪm/',zh:'慢慢来。',ex:'Take your time; there is no rush.',exZh:'慢慢来，不急。'},
+  {id:'p14',cat:'日常交际',en:'Have a nice day!',ipa:'/hæv ə naɪs deɪ/',zh:'祝你今天愉快！',ex:'Thanks for your help. Have a nice day!',exZh:'谢谢你的帮助，祝你今天愉快！'},
+  {id:'p15',cat:'日常交际',en:"That's very kind of you.",ipa:'/ðæts ˈveri kaɪnd əv juː/',zh:'你真是太好了。',ex:"That's very kind of you to say so.",exZh:'你这么说真是太好了。'},
+
+  {id:'p16',cat:'职场用语',en:"Let's touch base tomorrow.",ipa:'/lets tʌtʃ beɪs təˈmɒrəʊ/',zh:'明天我们沟通一下。',ex:"Let's touch base tomorrow after the call.",exZh:'明天电话会后我们沟通一下。'},
+  {id:'p17',cat:'职场用语',en:"I'll get back to you.",ipa:'/aɪl ɡet bæk tə juː/',zh:'我会回复你。',ex:"I'll get back to you by Friday.",exZh:'我周五前回复你。'},
+  {id:'p18',cat:'职场用语',en:'Could you clarify that?',ipa:'/kʊd juː ˈklærəfaɪ ðæt/',zh:'你能澄清一下吗？',ex:'Could you clarify that last point?',exZh:'你能澄清一下最后一点吗？'},
+  {id:'p19',cat:'职场用语',en:"Let's wrap up.",ipa:'/lets ræp ʌp/',zh:'我们收尾吧。',ex:"Let's wrap up and send the notes.",exZh:'我们收尾并把纪要发出去吧。'},
+  {id:'p20',cat:'职场用语',en:"I'm on it.",ipa:'/aɪm ɒn ɪt/',zh:'我马上处理。',ex:"I'm on it. You'll have it this afternoon.",exZh:'我马上处理，今天下午给你。'},
+  {id:'p21',cat:'职场用语',en:"We're behind schedule.",ipa:'/wɪə bɪˈhaɪnd ˈʃedjuːl/',zh:'我们进度落后了。',ex:"We're behind schedule, so we need to prioritize.",exZh:'我们进度落后了，需要分清优先级。'},
+  {id:'p22',cat:'职场用语',en:'Can we push the meeting to 3?',ipa:'/kæn wiː pʊʃ ðə ˈmiːtɪŋ tə θriː/',zh:'会议能推到3点吗？',ex:'Can we push the meeting to 3? Something came up.',exZh:'会议能推到3点吗？临时有事。'},
+  {id:'p23',cat:'职场用语',en:"I'd like to add one point.",ipa:'/aɪd laɪk tə æd wʌn pɔɪnt/',zh:'我想补充一点。',ex:"I'd like to add one point about the budget.",exZh:'我想补充一点关于预算的意见。'},
+  {id:'p24',cat:'职场用语',en:"That's a fair point.",ipa:'/ðæts ə feə pɔɪnt/',zh:'这个观点有道理。',ex:"That's a fair point; let's consider it.",exZh:'这个观点有道理，我们考虑一下。'},
+  {id:'p25',cat:'职场用语',en:"Let's find a middle ground.",ipa:'/lets faɪnd ə ˈmɪdl ɡraʊnd/',zh:'我们找个折中方案。',ex:"Both sides want different things. Let's find a middle ground.",exZh:'双方诉求不同，我们找个折中方案吧。'},
+  {id:'p26',cat:'职场用语',en:'Please keep me posted.',ipa:'/pliːz kiːp miː ˈpəʊstɪd/',zh:'请随时告诉我进展。',ex:'Please keep me posted on the trial.',exZh:'请随时告诉我试验进展。'},
+  {id:'p27',cat:'职场用语',en:"I'll take the lead on this.",ipa:'/aɪl teɪk ðə liːd ɒn ðɪs/',zh:'这件事我来牵头。',ex:"I'll take the lead on this and report back.",exZh:'这件事我来牵头，之后汇报。'},
+  {id:'p28',cat:'职场用语',en:'We need to prioritize.',ipa:'/wiː niːd tə praɪˈɒrətaɪz/',zh:'我们需要分清优先级。',ex:'We need to prioritize the deadlines this week.',exZh:'这周我们需要分清截止日期的优先级。'},
+  {id:'p29',cat:'职场用语',en:'Could you send me the minutes?',ipa:'/kʊd juː send miː ðə ˈmɪnɪts/',zh:'能把会议纪要发我吗？',ex:'Could you send me the minutes after the meeting?',exZh:'会后能把会议纪要发我吗？'},
+  {id:'p30',cat:'职场用语',en:"Let's circle back next week.",ipa:'/lets ˈsɜːkl bæk nekst wiːk/',zh:'下周再讨论。',ex:"Let's circle back next week when we have the data.",exZh:'等下周有数据了再讨论。'},
+
+{id:'p31',cat:'学术写作',en:'This study aimed to ...',ipa:'/ðɪs ˈstʌdi eɪmd tə/',zh:'本研究旨在……',ex:'This study aimed to evaluate whether stem cell-derived exosomes accelerate diabetic wound healing.',exZh:'本研究旨在评估干细胞来源外泌体是否加速糖尿病创面愈合。'},
+{id:'p32',cat:'学术写作',en:'We hypothesized that ...',ipa:'/wiː haɪˈpɒθəsaɪzd ðæt/',zh:'我们假设……',ex:'We hypothesized that hypoxia-preconditioned ADSCs improve angiogenesis in diabetic wounds.',exZh:'我们假设低氧预处理的脂肪间充质干细胞可改善糖尿病创面血管新生。'},
+{id:'p33',cat:'学术写作',en:'The results suggest that ...',ipa:'/ðə rɪˈzʌlts səˈdʒest ðæt/',zh:'结果提示……',ex:'The results suggest that exosomal miR-21 promotes fibroblast migration.',exZh:'结果提示外泌体 miR-21 促进成纤维细胞迁移。'},
+{id:'p34',cat:'学术写作',en:'Compared with the control group, ...',ipa:'/kəmˈpeəd wɪð ðə kənˈtrəʊl ɡruːp/',zh:'与对照组相比……',ex:'Compared with the control group, the treated wounds closed faster.',exZh:'与对照组相比，治疗组创面闭合更快。'},
+{id:'p35',cat:'学术写作',en:'A total of ... were randomized.',ipa:'/ə ˈtəʊtl ɒv ... wɜː ˈrændəmaɪzd/',zh:'共……例被随机分组。',ex:'A total of 60 diabetic mice were randomized into three groups.',exZh:'共 60 只糖尿病小鼠被随机分为三组。'},
+{id:'p36',cat:'学术写作',en:'Statistical significance was set at P < 0.05.',ipa:'/stəˈtɪstɪkl sɪɡˈnɪfɪkəns wɒz set æt/',zh:'以 P < 0.05 为差异有统计学意义。',ex:'Statistical significance was set at P < 0.05 for all analyses.',exZh:'所有分析均以 P < 0.05 为差异有统计学意义。'},
+{id:'p37',cat:'学术写作',en:'These findings are consistent with ...',ipa:'/ðiːz ˈfaɪndɪŋz ɑː kənˈsɪstənt wɪð/',zh:'这些发现与……一致。',ex:'These findings are consistent with previous reports on macrophage polarization.',exZh:'这些发现与既往关于巨噬细胞极化的报道一致。'},
+{id:'p38',cat:'学术写作',en:'However, this effect was not observed in ...',ipa:'/haʊˈevə ðɪs ɪˈfekt wɒz nɒt əbˈzɜːvd ɪn/',zh:'然而，在……中未观察到该效应。',ex:'However, this effect was not observed in the si-STAT3 group.',exZh:'然而，在 STAT3 敲低组中未观察到该效应。'},
+{id:'p39',cat:'学术写作',en:'Further studies are needed to ...',ipa:'/ˈfɜːðə ˈstʌdiz ɑː ˈniːdɪd tə/',zh:'仍需进一步研究……',ex:'Further studies are needed to confirm the long-term safety of this dressing.',exZh:'仍需进一步研究确认该敷料的长期安全性。'},
+{id:'p40',cat:'学术写作',en:'One limitation of this study is ...',ipa:'/wʌn ˌlɪmɪˈteɪʃn ɒv ðɪs ˈstʌdi ɪz/',zh:'本研究的一个局限是……',ex:'One limitation of this study is the lack of human wound samples.',exZh:'本研究的一个局限是缺乏人体创面样本。'},
+{id:'p41',cat:'学术写作',en:'Taken together, these data indicate ...',ipa:'/ˈteɪkən təˈɡeðə ðiːz ˈdeɪtə ˈɪndɪkeɪt/',zh:'综上，这些数据表明……',ex:'Taken together, these data indicate that ADSC sheets promote re-epithelialization.',exZh:'综上，这些数据表明脂肪干细胞膜片促进再上皮化。'},
+{id:'p42',cat:'学术写作',en:'We thank ... for technical assistance.',ipa:'/wiː θæŋk ... fɔː ˈteknɪkl əˈsɪstəns/',zh:'感谢……提供的技术支持。',ex:'We thank the Core Facility for technical assistance with confocal imaging.',exZh:'感谢公共平台在共聚焦成像方面提供的技术支持。'},
+{id:'p43',cat:'学术写作',en:'The authors declare no conflict of interest.',ipa:'/ði ˈɔːθəz dɪˈkleə nəʊ ˈkɒnflɪkt ɒv ˈɪntrəst/',zh:'作者声明无利益冲突。',ex:'The authors declare no conflict of interest related to this work.',exZh:'作者声明与本研究无利益冲突。'},
+{id:'p44',cat:'学术写作',en:'This work was supported by ...',ipa:'/ðɪs wɜːk wɒz səˈpɔːtɪd baɪ/',zh:'本研究由……资助。',ex:'This work was supported by the National Natural Science Foundation of China.',exZh:'本研究由国家自然科学基金资助。'},
+{id:'p45',cat:'学术写作',en:'Data are available from the corresponding author upon reasonable request.',ipa:'/ˈdeɪtə ɑː əˈveɪləbl frɒm ðə ˌkɒrɪˈspɒndɪŋ ˈɔːθə/',zh:'数据可向通讯作者合理索取。',ex:'Data are available from the corresponding author upon reasonable request.',exZh:'数据可向通讯作者合理索取。'},
+
+  {id:'p46',cat:'表达观点',en:'In my view, ...',ipa:'/ɪn maɪ vjuː/',zh:'在我看来……',ex:'In my view, the benefits outweigh the risks.',exZh:'在我看来，获益大于风险。'},
+  {id:'p47',cat:'表达观点',en:"I'd argue that...",ipa:'/aɪd ˈɑːɡjuː ðæt/',zh:'我认为……',ex:"I'd argue that we need more data before deciding.",exZh:'我认为决定前需要更多数据。'},
+  {id:'p48',cat:'表达观点',en:'It depends on...',ipa:'/ɪt dɪˈpendz ɒn/',zh:'这取决于……',ex:'It depends on the donor age and cell passage.',exZh:'这取决于供体年龄和细胞代次。'},
+  {id:'p49',cat:'表达观点',en:'On the one hand... on the other hand...',ipa:'/ɒn ðə wʌn hænd ... ɒn ði ˈʌðə hænd/',zh:'一方面……另一方面……',ex:'On the one hand it is effective; on the other hand it is costly.',exZh:'一方面它有效，另一方面它昂贵。'},
+  {id:'p50',cat:'表达观点',en:'I see your point, but...',ipa:'/aɪ siː jɔː pɔɪnt bʌt/',zh:'我明白你的意思，但……',ex:'I see your point, but the evidence is limited.',exZh:'我明白你的意思，但证据有限。'},
+  {id:'p51',cat:'表达观点',en:"That's not necessarily true.",ipa:'/ðæts nɒt ˈnesəsərəli truː/',zh:'那不一定。',ex:"That's not necessarily true for aged cells.",exZh:'对衰老细胞来说那不一定。'},
+  {id:'p52',cat:'表达观点',en:"I'm inclined to agree.",ipa:'/aɪm ɪnˈklaɪnd tə əˈɡriː/',zh:'我倾向于同意。',ex:"I'm inclined to agree with the second proposal.",exZh:'我倾向于同意第二个方案。'},
+  {id:'p53',cat:'表达观点',en:"Let me play devil's advocate.",ipa:'/let miː pleɪ ˈdevlz ˈædvəkət/',zh:'我来唱个反调。',ex:"Let me play devil's advocate: what if the trial is negative?",exZh:'我来唱个反调：如果试验是阴性呢？'},
+  {id:'p54',cat:'表达观点',en:'The evidence suggests that...',ipa:'/ði ˈevɪdəns səˈdʒests ðæt/',zh:'证据表明……',ex:'The evidence suggests that early treatment improves outcomes.',exZh:'证据表明早期治疗改善结局。'},
+  {id:'p55',cat:'表达观点',en:'To put it another way, ...',ipa:'/tə pʊt ɪt əˈnʌðə weɪ/',zh:'换句话说……',ex:'To put it another way, the risk is small but real.',exZh:'换句话说，风险虽小但真实存在。'},
+  {id:'p56',cat:'表达观点',en:'I have mixed feelings about it.',ipa:'/aɪ hæv mɪkst ˈfiːlɪŋz əˈbaʊt ɪt/',zh:'我对此心情复杂。',ex:'I have mixed feelings about the new guideline.',exZh:'我对新指南心情复杂。'},
+  {id:'p57',cat:'表达观点',en:"That's a valid concern.",ipa:'/ðæts ə ˈvælɪd kənˈsɜːn/',zh:'这是个合理的担忧。',ex:"That's a valid concern, and we should address it.",exZh:'这是个合理的担忧，我们应该回应。'},
+  {id:'p58',cat:'表达观点',en:"I'd like to add a caveat.",ipa:'/aɪd laɪk tə æd ə ˈkæviæt/',zh:'我想补充一个前提。',ex:"I'd like to add a caveat about the subgroup analysis.",exZh:'我想对亚组分析补充一个前提。'},
+  {id:'p59',cat:'表达观点',en:'We should weigh the pros and cons.',ipa:'/wiː ʃʊd weɪ ðə prəʊz ənd kɒnz/',zh:'我们应该权衡利弊。',ex:'We should weigh the pros and cons before changing therapy.',exZh:'改变治疗前我们应该权衡利弊。'},
+  {id:'p60',cat:'表达观点',en:'The bottom line is...',ipa:'/ðə ˈbɒtəm laɪn ɪz/',zh:'最重要的是……',ex:'The bottom line is that the experiment needs a larger sample.',exZh:'最重要的是，这个实验需要更大的样本量。'},
+
+  {id:'p61',cat:'旅行出行',en:'Where is the boarding gate?',ipa:'/weə ɪz ðə ˈbɔːdɪŋ ɡeɪt/',zh:'登机口在哪里？',ex:'Where is the boarding gate for flight CA123?',exZh:'CA123航班的登机口在哪里？'},
+  {id:'p62',cat:'旅行出行',en:"I'd like a window seat.",ipa:'/aɪd laɪk ə ˈwɪndəʊ siːt/',zh:'我想要靠窗座位。',ex:"I'd like a window seat, please.",exZh:'请给我一个靠窗座位。'},
+  {id:'p63',cat:'旅行出行',en:'Is this seat taken?',ipa:'/ɪz ðɪs siːt ˈteɪkən/',zh:'这个座位有人吗？',ex:'Excuse me, is this seat taken?',exZh:'打扰一下，这个座位有人吗？'},
+  {id:'p64',cat:'旅行出行',en:'How much is a ticket to...?',ipa:'/haʊ mʌtʃ ɪz ə ˈtɪkɪt tə/',zh:'到……的票多少钱？',ex:'How much is a ticket to the airport?',exZh:'到机场的票多少钱？'},
+  {id:'p65',cat:'旅行出行',en:'Could you call a taxi for me?',ipa:'/kʊd juː kɔːl ə ˈtæksi fə miː/',zh:'能帮我叫辆出租车吗？',ex:'Could you call a taxi for me to the station?',exZh:'能帮我叫辆去车站的出租车吗？'},
+  {id:'p66',cat:'旅行出行',en:"I'm just looking, thanks.",ipa:'/aɪm dʒʌst ˈlʊkɪŋ θæŋks/',zh:'我只是看看，谢谢。',ex:"I'm just looking, thanks. I'll ask if I need help.",exZh:'我只是看看，谢谢。需要的话我会问你。'},
+  {id:'p67',cat:'旅行出行',en:'Do you accept credit cards?',ipa:'/duː juː əkˈsept ˈkredɪt kɑːdz/',zh:'可以刷信用卡吗？',ex:'Do you accept credit cards or only cash?',exZh:'可以刷信用卡还是只能付现金？'},
+  {id:'p68',cat:'旅行出行',en:"I think I'm lost.",ipa:'/aɪ θɪŋk aɪm lɒst/',zh:'我想我迷路了。',ex:"I think I'm lost. Could you help me?",exZh:'我想我迷路了，能帮帮我吗？'},
+  {id:'p69',cat:'旅行出行',en:'Could you show me on the map?',ipa:'/kʊd juː ʃəʊ miː ɒn ðə mæp/',zh:'能在地图上指给我看吗？',ex:'Could you show me on the map where the hotel is?',exZh:'能在地图上指给我看酒店在哪里吗？'},
+  {id:'p70',cat:'旅行出行',en:'What time does it close?',ipa:'/wɒt taɪm dʌz ɪt kləʊz/',zh:'几点关门？',ex:'What time does the museum close?',exZh:'博物馆几点关门？'},
+  {id:'p71',cat:'旅行出行',en:"I'd like to check in.",ipa:'/aɪd laɪk tə tʃek ɪn/',zh:'我想办理入住。',ex:"I'd like to check in. The reservation is under Li.",exZh:'我想办理入住，预订名字是李。'},
+  {id:'p72',cat:'旅行出行',en:'Could I have a late checkout?',ipa:'/kʊd aɪ hæv ə leɪt ˈtʃekaʊt/',zh:'可以延迟退房吗？',ex:'Could I have a late checkout at 2 p.m.?',exZh:'可以延迟到下午2点退房吗？'},
+  {id:'p73',cat:'旅行出行',en:'Is breakfast included?',ipa:'/ɪz ˈbrekfəst ɪnˈkluːdɪd/',zh:'包含早餐吗？',ex:'Is breakfast included in the room rate?',exZh:'房费包含早餐吗？'},
+  {id:'p74',cat:'旅行出行',en:'My flight has been delayed.',ipa:'/maɪ flaɪt hæz biːn dɪˈleɪd/',zh:'我的航班延误了。',ex:'My flight has been delayed by two hours.',exZh:'我的航班延误了两小时。'},
+  {id:'p75',cat:'旅行出行',en:'Where can I exchange currency?',ipa:'/weə kæn aɪ ɪksˈtʃeɪndʒ ˈkʌrənsi/',zh:'哪里可以兑换货币？',ex:'Where can I exchange currency near the station?',exZh:'车站附近哪里可以兑换货币？'},
+
+  {id:'p76',cat:'生活场景',en:"I'll have the same.",ipa:'/aɪl hæv ðə seɪm/',zh:'我要一样的。',ex:"I'll have the same as him, please.",exZh:'请给我和他一样的。'},
+  {id:'p77',cat:'生活场景',en:'Could we have the bill, please?',ipa:'/kʊd wiː hæv ðə bɪl pliːz/',zh:'请买单。',ex:'Could we have the bill, please? We are in a hurry.',exZh:'请买单，我们赶时间。'},
+  {id:'p78',cat:'生活场景',en:'Is this seat available?',ipa:'/ɪz ðɪs siːt əˈveɪləbl/',zh:'这个位置空着吗？',ex:'Is this seat available, or is someone sitting here?',exZh:'这个位置空着吗，还是有人坐？'},
+  {id:'p79',cat:'生活场景',en:'I need to return this.',ipa:'/aɪ niːd tə rɪˈtɜːn ðɪs/',zh:'我想退这个。',ex:'I need to return this shirt. Here is the receipt.',exZh:'我想退这件衬衫，这是收据。'},
+  {id:'p80',cat:'生活场景',en:'Do you have this in a larger size?',ipa:'/duː juː hæv ðɪs ɪn ə ˈlɑːdʒə saɪz/',zh:'这件有大一号吗？',ex:'Do you have this in a larger size?',exZh:'这件有大一号的吗？'},
+  {id:'p81',cat:'生活场景',en:"The wi-fi isn't working.",ipa:'/ðə ˈwaɪfaɪ ˈɪznt ˈwɜːkɪŋ/',zh:'Wi-Fi 用不了。',ex:"The wi-fi isn't working in my room.",exZh:'我房间的 Wi-Fi 用不了。'},
+  {id:'p82',cat:'生活场景',en:'Could you turn it down a bit?',ipa:'/kʊd juː tɜːn ɪt daʊn ə bɪt/',zh:'能调小一点吗？',ex:'Could you turn it down a bit? It is quite loud.',exZh:'能调小一点吗？声音有点大。'},
+  {id:'p83',cat:'生活场景',en:"I'm looking for a pharmacy.",ipa:'/aɪm ˈlʊkɪŋ fər ə ˈfɑːməsi/',zh:'我在找药店。',ex:"I'm looking for a pharmacy that is open late.",exZh:'我在找一家营业到很晚的药店。'},
+  {id:'p84',cat:'生活场景',en:"What's the wi-fi password?",ipa:'/wɒts ðə ˈwaɪfaɪ ˈpɑːswɜːd/',zh:'Wi-Fi 密码是多少？',ex:"What's the wi-fi password for the guest network?",exZh:'访客网络的 Wi-Fi 密码是多少？'},
+  {id:'p85',cat:'生活场景',en:'Could I get a receipt?',ipa:'/kʊd aɪ ɡet ə rɪˈsiːt/',zh:'能给我收据吗？',ex:'Could I get a receipt for the payment?',exZh:'能给我付款收据吗？'},
+  {id:'p86',cat:'生活场景',en:"I'd like to make a reservation.",ipa:'/aɪd laɪk tə meɪk ə ˌrezəˈveɪʃn/',zh:'我想预订。',ex:"I'd like to make a reservation for two at seven.",exZh:'我想预订七点两人的位子。'},
+  {id:'p87',cat:'生活场景',en:"Sorry, I didn't catch that.",ipa:'/ˈsɒri aɪ ˈdɪdnt kætʃ ðæt/',zh:'抱歉，我没听清。',ex:"Sorry, I didn't catch that. Could you repeat it?",exZh:'抱歉，我没听清，能重复一下吗？'},
+  {id:'p88',cat:'生活场景',en:'Could you speak more slowly?',ipa:'/kʊd juː spiːk mɔː ˈsləʊli/',zh:'能说慢一点吗？',ex:'Could you speak more slowly? My English is limited.',exZh:'能说慢一点吗？我的英语有限。'},
+  {id:'p89',cat:'生活场景',en:'Where is the nearest subway station?',ipa:'/weə ɪz ðə ˈnɪərɪst ˈsʌbweɪ ˈsteɪʃn/',zh:'最近的地铁站在哪里？',ex:'Where is the nearest subway station, please?',exZh:'请问最近的地铁站在哪里？'},
+  {id:'p90',cat:'生活场景',en:"I'm allergic to peanuts.",ipa:'/aɪm əˈlɜːdʒɪk tə ˈpiːnʌts/',zh:'我对花生过敏。',ex:"I'm allergic to peanuts. Does this dish contain any?",exZh:'我对花生过敏，这道菜含花生吗？'}
+];
+
+window.DB = window.DB || {};
+DB.literature = [
+  {id:'lit01',title:'Cutaneous Wound Healing',zh:'皮肤创面愈合的细胞与分子基础',journal:'N Engl J Med',year:1999,design:'经典综述（止血、炎症、增殖、重塑四阶段）',finding:'系统梳理创面愈合各阶段的细胞类型、生长因子与基质重塑，指出慢性创面的核心是阶段停滞。',meaning:'建立创面修复的通用语言，是理解糖尿病创面“卡在哪一步”的入门框架。',q:'Singer Clark cutaneous wound healing New England Journal 1999'},
+  {id:'lit02',title:'Wound Repair and Regeneration',zh:'创面修复与再生',journal:'Nature',year:2008,design:'机制综述',finding:'将成体创面修复与胚胎/低等脊椎动物再生对比，强调炎症、干细胞与微环境对再生能力的限制。',meaning:'提示“修复”不等于“再生”，糖尿病创面研究需要区分瘢痕性修复与功能性再生。',q:'Gurtner wound repair and regeneration Nature 2008'},
+  {id:'lit03',title:'Wound Repair and Regeneration: Mechanisms, Signaling, and Translation',zh:'创面修复与再生：机制、信号与转化',journal:'Sci Transl Med',year:2014,design:'转化医学综述',finding:'总结炎症消退、血管生成、成纤维细胞异质性与干细胞动员的信号网络，并讨论转化失败的原因。',meaning:'为从通路到临床终点设计提供路线图，强调机制必须落到可干预节点。',q:'Eming Martin Tomic-Canic wound repair regeneration mechanisms signaling translation'},
+  {id:'lit04',title:'Wound Healing and Its Impairment in the Diabetic Foot',zh:'糖尿病足创面愈合障碍',journal:'Lancet',year:2005,design:'临床综述',finding:'归纳糖尿病足溃疡的神经病变、缺血、感染与代谢因素，解释为何单一换药难以愈合。',meaning:'糖尿病创面是“多因素综合征”，研究设计必须说明控制/匹配了哪些混杂因素。',q:'Falanga wound healing impairment diabetic foot Lancet'},
+  {id:'lit05',title:'Cellular and Molecular Basis of Wound Healing in Diabetes',zh:'糖尿病创面愈合的细胞与分子基础',journal:'J Clin Invest',year:2007,design:'机制综述',finding:'聚焦高糖、晚期糖基化终产物、氧化应激与巨噬细胞功能异常对愈合的抑制作用。',meaning:'为选择体外高糖模型、AGEs 刺激与巨噬细胞极化读出提供依据。',q:'Brem Tomic-Canic cellular molecular basis wound healing diabetes'},
+  {id:'lit06',title:'Human Skin Wounds: A Major and Snowballing Threat to Public Health and the Economy',zh:'皮肤创面的公共卫生与经济负担',journal:'Wound Repair Regen',year:2009,design:'流行病学与卫生经济学分析',finding:'估算慢性创面患病率与治疗成本，指出人口老龄化与糖尿病将放大疾病负担。',meaning:'为课题的临床意义与卫生经济学背景提供可引用框架。',q:'Sen human skin wounds major snowballing threat public health economy'},
+  {id:'lit07',title:'Diabetic Foot Ulcers and Their Recurrence',zh:'糖尿病足溃疡及其复发',journal:'N Engl J Med',year:2017,design:'临床综述',finding:'强调糖尿病足溃疡复发率高，需把减压、足部护理、感染控制与代谢管理整合为长期策略。',meaning:'提示疗效评价不能只看“创面闭合”，还要看复发与保肢。',q:'Armstrong Boulton Bus diabetic foot ulcers recurrence'},
+  {id:'lit08',title:'Chronic Wound Healing: A Review of Current Management and Treatments',zh:'慢性创面愈合：现有管理与治疗',journal:'Adv Ther',year:2017,design:'临床综述',finding:'总结清创、敷料、负压、生物制剂与细胞治疗等策略，指出证据质量参差。',meaning:'帮助区分“有结局证据的干预”和“机制上合理但证据不足的干预”。',q:'Han Ceilley chronic wound healing review current management treatments'},
+  {id:'lit09',title:'Stem Cell Therapy for Diabetic Foot Ulcers: A Review of Preclinical and Clinical Research',zh:'干细胞治疗糖尿病足：临床前与临床研究综述',journal:'Stem Cell Res Ther',year:2018,design:'转化研究综述',finding:'汇总骨髓、脂肪与脐带来源间充质干细胞的给药途径、剂量与早期临床结果，指出异质性与随访不足。',meaning:'是设计细胞治疗课题时梳理“剂量—途径—终点”差异的关键参考。',q:'stem cell therapy diabetic foot ulcers review preclinical clinical research'},
+  {id:'lit10',title:'Mesenchymal Stem Cells for the Treatment of Diabetic Foot Ulcers: A Systematic Review and Meta-Analysis',zh:'间充质干细胞治疗糖尿病足的系统评价与荟萃分析',journal:'Stem Cell Res Ther',year:2019,design:'系统评价与荟萃分析',finding:'合并分析提示间充质干细胞可能提高创面闭合率，但研究样本量小、方案异质、偏倚风险较高。',meaning:'解读“有效”时必须同时看对照、盲法、随访与不良事件报告。',q:'mesenchymal stem cells diabetic foot ulcers systematic review meta-analysis'},
+  {id:'lit11',title:'Adipose-Derived Stem Cells for Wound Healing',zh:'脂肪来源干细胞与创面修复',journal:'Stem Cells Int',year:2019,design:'机制与转化综述',finding:'脂肪来源干细胞通过旁分泌、免疫调节与促血管生成参与创面修复，来源丰富且获取相对微创。',meaning:'适合作为糖尿病创面细胞治疗的候选来源，但需关注供体差异与扩增衰老。',q:'adipose-derived stem cells wound healing review'},
+  {id:'lit12',title:'Mesenchymal Stem Cell-Derived Exosomes for Wound Healing',zh:'间充质干细胞外泌体与创面修复',journal:'Stem Cell Res Ther',year:2020,design:'机制与转化综述',finding:'外泌体携带 miRNA、蛋白与脂质，可调节炎症、血管生成与细胞增殖，且规避活细胞治疗的部分风险。',meaning:'“无细胞治疗”是当前热点，但产量、纯度、标准化与体内分布仍是瓶颈。',q:'mesenchymal stem cell derived exosomes wound healing'},
+  {id:'lit13',title:'Macrophage Polarization in Wound Healing',zh:'巨噬细胞极化与创面愈合',journal:'Front Immunol',year:2019,design:'机制综述',finding:'M1/M2 表型不是二元开关，巨噬细胞在不同时相呈现连续状态，影响炎症消退与组织重塑。',meaning:'糖尿病创面常停滞于促炎状态，巨噬细胞重编程是合理但需精确的干预点。',q:'macrophage polarization wound healing review'},
+  {id:'lit14',title:'Biofilms and Chronic Wounds',zh:'生物膜与慢性创面',journal:'J Wound Care',year:2018,design:'机制与临床综述',finding:'生物膜通过屏障、耐药与持续炎症维持创面不愈合，常规拭子培养可能低估其存在。',meaning:'难愈创面需考虑生物膜负荷，清创与局部抗菌策略应进入实验/临床设计。',q:'biofilms chronic wounds review'},
+  {id:'lit15',title:'Negative Pressure Wound Therapy for Treating Foot Wounds in People with Diabetes Mellitus',zh:'负压创面治疗糖尿病足创面',journal:'Cochrane Database Syst Rev',year:2015,design:'Cochrane 系统评价',finding:'负压治疗可能提高部分糖尿病足创面闭合率，但证据质量低，硬件、压力与疗程差异大。',meaning:'临床常用不等于证据充分；课题中若使用 NPWT，需要明确参数与对照。',q:'negative pressure wound therapy diabetic foot Cochrane'},
+  {id:'lit16',title:'Hyperbaric Oxygen Therapy for Chronic Wounds',zh:'高压氧治疗慢性创面',journal:'Cochrane Database Syst Rev',year:2015,design:'Cochrane 系统评价',finding:'高压氧可能改善部分缺血性糖尿病足创面愈合，但获益不一致，需筛选患者并规范疗程。',meaning:'机制上改善氧合，但并非所有糖尿病创面都缺氧；表型分层是关键。',q:'hyperbaric oxygen therapy chronic wounds Cochrane'},
+  {id:'lit17',title:'Skin Substitutes for Treating Chronic Wounds',zh:'皮肤替代物治疗慢性创面',journal:'Cochrane Database Syst Rev',year:2020,design:'Cochrane 系统评价',finding:'多种皮肤替代物可能提高愈合率，但研究设计、产品与终点差异限制了跨产品比较。',meaning:'生物材料/组织工程产品评价需要统一创面基线、清创标准与随访时点。',q:'skin substitutes chronic wounds Cochrane'},
+  {id:'lit18',title:'Tissue Engineering and Regenerative Medicine Strategies for Skin',zh:'皮肤组织工程与再生医学策略',journal:'Adv Drug Deliv Rev',year:2019,design:'综述',finding:'总结支架、细胞、生长因子与生物打印的组合策略，强调血管化与附属器再生是难点。',meaning:'为“材料+细胞+微环境”的多因素实验设计提供框架。',q:'tissue engineering regenerative medicine skin review'},
+  {id:'lit19',title:'3D Bioprinting for Skin Tissue Engineering',zh:'3D 生物打印与皮肤组织工程',journal:'Biofabrication',year:2020,design:'技术综述',finding:'生物打印可空间排布细胞与基质，但打印分辨率、材料黏度、细胞存活与血管化仍受限。',meaning:'若课题涉及打印皮肤，需同时报告流变学、打印参数与生物学终点。',q:'3D bioprinting skin tissue engineering review'},
+  {id:'lit20',title:'Single-Cell RNA Sequencing in Wound Healing',zh:'单细胞测序与创面愈合',journal:'Trends Mol Med',year:2021,design:'方法学综述',finding:'单细胞研究揭示成纤维细胞、巨噬细胞与内皮细胞的亚群异质性，以及糖尿病创面的转录状态偏移。',meaning:'为课题提供“从群体平均到细胞亚群”的观察尺度，但需注意解离偏倚与样本量。',q:'single-cell RNA sequencing wound healing review'},
+  {id:'lit21',title:'Keloid and Hypertrophic Scar: Mechanisms and Therapeutic Strategies',zh:'瘢痕疙瘩与增生性瘢痕：机制与治疗',journal:'Int J Mol Sci',year:2020,design:'机制综述',finding:'TGF-β、机械张力、成纤维细胞活化与炎症微环境共同驱动瘢痕形成，治疗需联合手术、药物与压力/激光。',meaning:'创面修复的“过度”与“不足”是同一连续谱，瘢痕研究可反哺再生策略。',q:'keloid hypertrophic scar mechanisms therapeutic strategies'},
+  {id:'lit22',title:'Stem Cell-Based Therapies for Scar',zh:'干细胞治疗瘢痕',journal:'Stem Cell Res Ther',year:2019,design:'综述',finding:'干细胞通过免疫调节与旁分泌减少纤维化，但给药时机、剂量与长期安全性证据不足。',meaning:'“抗瘢痕”与“促愈合”需要同时评价，不能只看胶原比例。',q:'stem cell therapy scar review'},
+  {id:'lit23',title:'The Diabetic Wound Microbiome',zh:'糖尿病创面微生物组',journal:'J Clin Invest',year:2020,design:'机制与临床综述',finding:'糖尿病创面微生物群落多样性改变，生物膜与致病菌群持续刺激炎症，影响愈合。',meaning:'微生物组是易被忽略的变量，采样方法与会序分析需在课题中标准化。',q:'diabetic wound microbiome review'},
+  {id:'lit24',title:'Cellular Senescence in Diabetic Wounds',zh:'糖尿病创面中的细胞衰老',journal:'Aging Cell',year:2020,design:'机制综述',finding:'高糖与氧化应激诱导成纤维细胞、内皮细胞与干细胞衰老，分泌表型进一步恶化微环境。',meaning:'衰老细胞清除或 SASP 调控是改善糖尿病创面愈合的潜在方向。',q:'cellular senescence diabetic wounds'},
+  {id:'lit25',title:'Extracellular Vesicles from Stem Cells for Wound Healing',zh:'干细胞来源细胞外囊泡与创面修复',journal:'J Extracell Vesicles',year:2020,design:'机制与转化综述',finding:'细胞外囊泡通过 miRNA 与蛋白 cargo 调节炎症、血管生成与再上皮化，工程化囊泡可增强靶向。',meaning:'需区分外泌体、微囊泡与凋亡小体，报告分离方法与颗粒表征。',q:'extracellular vesicles stem cells wound healing'},
+  {id:'lit26',title:'Clinical Translation of Stem Cell Therapy for Chronic Wounds',zh:'干细胞治疗慢性创面的临床转化',journal:'Stem Cells Transl Med',year:2019,design:'转化医学综述',finding:'梳理细胞制备、放行标准、给药途径、终点选择与监管路径，指出“批次一致性”是核心障碍。',meaning:'课题若瞄准转化，应从早期就记录细胞代次、活率、表型与功能放行数据。',q:'clinical translation stem cell therapy chronic wounds'},
+  {id:'lit27',title:'Wound-Induced Hair Follicle Neogenesis',zh:'创伤诱导毛囊新生',journal:'Nature',year:2018,design:'机制研究',finding:'创面愈合过程中特定成纤维细胞与信号通路可诱导毛囊新生，提示成体皮肤保留一定再生潜能。',meaning:'附属器再生是“功能性皮肤再生”的关键标志，可作为高级终点。',q:'wound-induced hair follicle neogenesis Nature'},
+  {id:'lit28',title:'Hair-Bearing Human Skin Generated Entirely from Pluripotent Stem Cells',zh:'多能干细胞生成带毛囊的人类皮肤',journal:'Nature',year:2020,design:'类器官/发育生物学研究',finding:'多能干细胞自组织形成含毛囊与皮脂腺的皮肤类器官，并可在移植后继续发育。',meaning:'为皮肤再生提供可编程模型，但血管化、免疫排斥与规模化仍是转化难点。',q:'hair-bearing human skin pluripotent stem cells organoid Nature'}
+];
+
+DB.guidelines = [
+  {id:'g01',name:'IWGDF 2023 Guidelines on the Prevention and Management of Diabetic Foot Disease',zh:'IWGDF 2023 糖尿病足预防与管理指南',org:'国际糖尿病足工作组（IWGDF）',year:2023,points:['按溃疡风险分层安排足部筛查与随访频率。','突出减压治疗在足底溃疡愈合中的核心地位。','感染、缺血与创面处理需并行评估，不能只换药。','推荐多学科团队管理复杂糖尿病足。','把复发预防、患者教育与足部自我管理纳入长期计划。'],q:'IWGDF 2023 guidelines prevention management diabetic foot disease'},
+  {id:'g02',name:'IWGDF/IDSA 2023 Guidelines on the Diagnosis and Treatment of Diabetes-Related Foot Infections',zh:'IWGDF/IDSA 2023 糖尿病足感染诊治指南',org:'IWGDF / IDSA',year:2023,points:['以临床征象结合炎症指标诊断感染，避免仅凭拭子培养。','区分轻、中、重度感染，决定门诊或住院与外科评估。','抗菌治疗需覆盖常见革兰阳性/阴性菌，疗程个体化。','深部感染、骨髓炎与坏死性软组织感染需早手术。','强调标本质量、培养前抗菌药物暴露与随访。'],q:'IWGDF IDSA 2023 diabetic foot infections guidelines'},
+  {id:'g03',name:'ADA Standards of Care in Diabetes—2025: Foot Care',zh:'ADA 2025 糖尿病足并发症防治标准',org:'美国糖尿病协会（ADA）',year:2025,points:['每年至少一次全面足部检查，高危者更频繁。','识别神经病变、缺血、畸形与既往溃疡/截肢史。','足底溃疡优先减压，感染或缺血及时转诊。','把血糖、血脂、血压、戒烟与足部护理整合管理。','患者教育与可及性问题应纳入共同决策。'],q:'ADA Standards of Care 2025 diabetic foot complications'},
+  {id:'g04',name:'NICE NG19: Diabetic Foot Problems: Prevention and Management',zh:'NICE NG19 糖尿病足问题预防与管理',org:'英国 NICE',year:2019,points:['建立糖尿病足风险分层与年度筛查流程。','疑似感染、缺血或深部溃疡应快速转诊多学科团队。','减压、清创、敷料与感染控制需按创面阶段组合。','重视患者教育、足部保护与复发预防。','服务组织需保证血管、骨科、足病与感染团队协作。'],q:'NICE NG19 diabetic foot problems prevention management'},
+  {id:'g05',name:'Wound Healing Society Guidelines for the Treatment of Diabetic Ulcers',zh:'WHS 糖尿病溃疡治疗指南',org:'创面愈合学会（WHS）',year:2015,points:['先评估灌注、感染与压力，再选择局部治疗。','清创是慢性创面管理的基础步骤。','根据渗液、创床与感染选择敷料，避免频繁更换。','减压与血糖管理是愈合的必要条件。','疗效评估需设定明确的创面面积与时间终点。'],q:'Wound Healing Society guidelines diabetic ulcers'},
+  {id:'g06',name:'Wound Healing Society Guidelines for the Prevention and Management of Pressure Ulcers',zh:'WHS 压力性损伤预防与管理指南',org:'创面愈合学会（WHS）',year:2015,points:['风险评估与皮肤检查应结构化、可重复。','体位变换、支撑面与减压是预防核心。','创面评估需记录分期、面积、渗液与感染征象。','营养、失禁管理与活动能力是重要辅助因素。','愈合失败需重新评估压力、灌注与感染。'],q:'Wound Healing Society guidelines pressure ulcers'},
+  {id:'g07',name:'Wound Healing Society Guidelines for the Management of Venous Ulcers',zh:'WHS 静脉性溃疡管理指南',org:'创面愈合学会（WHS）',year:2015,points:['明确静脉功能不全诊断，排除动脉性因素。','压力治疗是静脉性溃疡愈合与预防复发的基石。','清创与敷料选择应基于渗液与创床情况。','运动、抬高患肢与体重管理有辅助价值。','难愈病例需评估依从性、感染与压迫参数。'],q:'Wound Healing Society guidelines venous ulcers'},
+  {id:'g08',name:'EPUAP/NPIAP/PPPIA Prevention and Treatment of Pressure Ulcers/Injuries',zh:'EPUAP/NPIAP/PPPIA 压力性损伤预防与治疗',org:'EPUAP / NPIAP / PPPIA',year:2019,points:['以风险分层驱动预防措施，避免“一刀切”。','强调减压支撑面、体位管理与微环境控制。','创面床准备、清创与感染管理需个体化。','营养评估与 interdisciplinary 团队协作。','把患者偏好、舒适与生活质量纳入计划。'],q:'EPUAP NPIAP PPPIA pressure ulcers injuries 2019'},
+  {id:'g09',name:'IWII Wound Infection in Clinical Practice: An International Consensus',zh:'IWII 创面感染临床实践国际共识',org:'国际创面感染研究所（IWII）',year:2022,points:['区分污染、定植、局部感染与全身感染。','生物膜需通过清创与联合抗菌策略处理。','抗菌药物不应替代清创与感染源控制。','标本采集与培养解释需结合临床。','建立感染监测、抗菌药物管理与随访。'],q:'IWII wound infection clinical practice international consensus'},
+  {id:'g10',name:'ISBI Practice Guidelines for Burn Care',zh:'ISBI 烧伤救治实践指南',org:'国际烧伤学会（ISBI）',year:2022,points:['院前处理、液体复苏与气道评估需流程化。','烧伤深度与面积评估决定手术与转诊。','早期清创、覆盖与感染防控影响结局。','营养、镇痛、康复与心理支持不可缺。','资源有限环境下需明确分级救治策略。'],q:'ISBI practice guidelines burn care'},
+  {id:'g11',name:'Updated International Clinical Recommendations on Scar Management',zh:'国际瘢痕管理临床建议更新',org:'国际瘢痕管理顾问组',year:2020,points:['瘢痕评估应包含色泽、厚度、柔韧度与症状。','硅酮、压力、激光与药物注射按瘢痕类型组合。','增生性瘢痕与瘢痕疙瘩的复发预防策略不同。','手术需与术后辅助治疗结合。','患者报告结局与长期随访应纳入评价。'],q:'updated international clinical recommendations scar management'},
+  {id:'g12',name:'中国糖尿病足防治指南（2019版）',zh:'中国糖尿病足防治指南（2019版）',org:'中华医学会糖尿病学分会',year:2019,points:['建立糖尿病足分级管理与多学科协作。','重视神经、血管与感染的三联评估。','足底溃疡以减压为基础，结合清创与敷料。','强调血糖、血压、血脂与戒烟的综合管理。','把患者教育、足部筛查与复发预防前移。'],q:'中国糖尿病足防治指南 2019'},
+  {id:'g13',name:'ISSCR Guidelines for Stem Cell Research and Clinical Translation',zh:'ISSCR 干细胞研究与临床转化指南',org:'国际干细胞研究学会（ISSCR）',year:2021,points:['区分基础研究、转化研究与临床应用的监管要求。','细胞制备需明确来源、知情同意与质量放行。','临床前证据应覆盖机制、剂量、安全性与可重复性。','禁止未经证实的干细胞疗法直接商业化。','强调透明度、利益冲突管理与长期随访。'],q:'ISSCR guidelines stem cell research clinical translation 2021'},
+  {id:'g14',name:'WUWHS Consensus Document: Wound Exudate',zh:'WUWHS 创面渗液管理共识',org:'世界创面愈合联盟（WUWHS）',year:2019,points:['渗液评估应结合量、性状、气味与周围皮肤。','渗液过多或过少都提示需要重新评估创面。','敷料选择应匹配渗液水平与更换频率。','感染、炎症与静脉高压是渗液异常的常见原因。','保护周围皮肤与患者舒适度是管理目标。'],q:'WUWHS consensus wound exudate'}
+];
+
+window.DB = window.DB || {};
+DB.research = {
+  top: [
+    {id:'r01',pmid:'42880288',title:'Skin Fibroblast Lineage Tracing Reveals Layer-Specific Cooperation in Wound Repair',zh:'皮肤成纤维细胞谱系追踪揭示创面修复中的分层协作',journal:'Cell Stem Cell',date:'2026-10-15',ifStars:5,abs:'利用谱系追踪解析真皮不同层成纤维细胞在创面修复中的分工与相互协作，为理解修复质量与瘢痕形成提供细胞学基础。关注点：不同真皮亚群是否可被定向调控以改善再生。'},
+    {id:'r02',pmid:'42875501',title:'Sexual Dimorphism in Epidermal Stem Cell Dynamics',zh:'表皮干细胞动力学的性别差异',journal:'Nature',date:'2026-10-14',ifStars:5,abs:'研究表皮干细胞在稳态与损伤修复中的性别差异，提示激素与微环境可能影响干细胞行为。关注点：创面研究中供体性别与激素状态应作为变量记录。'},
+    {id:'r03',pmid:'42902920',title:'Programming Extracellular Vesicle-Biomaterial Interfaces for Diabetic Wounds: Barrier-Matched Design and Translational Criteria',zh:'糖尿病创面的细胞外囊泡—生物材料界面设计',journal:'Adv Healthc Mater',date:'2026-10-20',ifStars:4,abs:'提出按创面屏障与微环境匹配设计细胞外囊泡递送系统，并讨论转化评价标准。关注点：材料界面决定囊泡滞留、释放与细胞摄取。'},
+    {id:'r04',pmid:'42900220',title:'A Diabetic Wound Microenvironment-Responsive Hydrogel for Localized Delivery of Netrin-1-Enriched Adipose-Derived Stem Cell Exosomes',zh:'响应糖尿病创面微环境的水凝胶局部递送 Netrin-1 富集脂肪干细胞外泌体',journal:'ACS Appl Mater Interfaces',date:'2026-10-20',ifStars:4,abs:'构建微环境响应水凝胶，局部递送工程化脂肪干细胞外泌体，评价免疫调节与血管生成效应。关注点：响应性释放与外泌体工程化的协同。'},
+    {id:'r05',pmid:'42881561',title:'Allogeneic Human Bone Marrow-Derived Mesenchymal Stem Cells Accelerate Diabetic Wound Healing via Inflammation Suppression and Angiogenesis Promotion',zh:'异体人骨髓间充质干细胞通过抑炎与促血管生成加速糖尿病创面愈合',journal:'Kaohsiung J Med Sci',date:'2026-10-15',ifStars:3,abs:'临床前研究评价异体骨髓间充质干细胞对糖尿病创面的作用，围绕炎症抑制与血管生成展开。关注点：异体细胞的免疫相容性与给药时序。'},
+    {id:'r06',pmid:'42881510',title:'Atlas-Guided CD55-Enriched Neutrophil Extracellular Vesicles for Complement-Macrophage Modulation in Diabetic Wounds',zh:'图谱引导的 CD55 富集中性粒细胞囊泡调控补体—巨噬细胞轴',journal:'Adv Sci',date:'2026-10-15',ifStars:4,abs:'基于单细胞图谱识别中性粒细胞囊泡亚群，探索 CD55 富集囊泡对补体与巨噬细胞的调节。关注点：天然免疫囊泡的异质性与工程化改造。'},
+    {id:'r07',pmid:'42877910',title:'Immune-Responsive Bioinks Enable Vision-Guided In Situ Robotic Bioprinting to Accelerate Diabetic Wound Healing',zh:'免疫响应生物墨水与视觉引导原位机器人生物打印',journal:'Adv Funct Mater',date:'2026-08-20',ifStars:4,abs:'开发免疫响应生物墨水，结合视觉引导机器人实现创面原位打印。关注点：打印精度、在位固化与组织整合。'},
+    {id:'r08',pmid:'42868708',title:'CircGDI2 Promotes Healing of Diabetic Wounds by Mediating Macrophage Polarization through the SIRT2/TFAM Axis',zh:'CircGDI2 经 SIRT2/TFAM 轴调控巨噬细胞极化促进糖尿病创面愈合',journal:'Burns',date:'2026-09-05',ifStars:3,abs:'围绕环状 RNA 与巨噬细胞极化，探索糖尿病创面炎症消退的新靶点。关注点：RNA 递送与靶点特异性。'},
+    {id:'r09',pmid:'42840008',title:'Hyaluronic Acid-Based Tissue-Engineered Biomaterials for Infected Diabetic Foot Ulcers',zh:'透明质酸组织工程材料与感染性糖尿病足',journal:'Front Bioeng Biotechnol',date:'2026',ifStars:3,abs:'综述透明质酸基材料在感染性糖尿病足中的机制、证据与转化挑战。关注点：抗菌、清创与促愈合的多目标平衡。'},
+    {id:'r10',pmid:'42839313',title:'Metformin Enhances the Pro-Regenerative Function of Human Adipose-Derived Stromal Cells for Diabetic Wound Healing',zh:'二甲双胍增强人脂肪基质细胞的促再生功能',journal:'Wound Repair Regen',date:'2026-09-01',ifStars:3,abs:'研究二甲双胍预处理对脂肪基质细胞功能的影响，探索改善细胞治疗效力的策略。关注点：药物预处理作为细胞赋能手段。'},
+    {id:'r11',pmid:'42804935',title:'CCBE1 Promotes Wound Healing in Diabetic Rats by Improving the Functional Impairment of AD-MSCs Induced by AGEs',zh:'CCBE1 改善 AGEs 诱导的脂肪干细胞功能障碍',journal:'Injury',date:'2026-09-22',ifStars:3,abs:'在糖尿病大鼠模型中评价 CCBE1 对 AGEs 损伤脂肪干细胞的保护作用。关注点：高糖/AGEs 微环境下的干细胞预适应。'},
+    {id:'r12',pmid:'42784179',title:'Multifunctional Hydrogel Dressing Loaded with DH-EVs Promotes Healing of Bacteria-Infected Diabetic Wounds',zh:'多功能水凝胶敷料负载囊泡促进感染性糖尿病创面愈合',journal:'Nanomaterials',date:'2026-09-16',ifStars:3,abs:'构建兼具抗菌与促修复功能的水凝胶敷料，评价感染性糖尿病创面修复效果。关注点：抗菌与细胞相容性的平衡。'},
+    {id:'r13',pmid:'42764745',title:'Mechanisms and Therapeutic Advances of M2 Macrophages and Mesenchymal Stem Cell-Derived Exosomes in Diabetic Wound Healing',zh:'M2 巨噬细胞与间充质干细胞外泌体在糖尿病创面中的机制与治疗进展',journal:'Curr Stem Cell Res Ther',date:'2026-09-15',ifStars:3,abs:'综述 M2 巨噬细胞与干细胞外泌体的交叉调控，讨论联合治疗的可能。关注点：巨噬细胞极化时序与外泌体剂量。'},
+    {id:'r14',pmid:'42733811',title:'SFL-3D-Cultured Adipose Mesenchymal Cell-Derived Extracellular Vesicles Promote Diabetic Wound Healing by Alleviating Microvascular Endothelial Senescence',zh:'三维培养脂肪间充质细胞囊泡缓解微血管内皮衰老',journal:'Burns Trauma',date:'2026',ifStars:4,abs:'比较三维培养来源囊泡对糖尿病创面微血管内皮的保护作用，涉及 PI3K/AKT/mTOR 通路。关注点：培养方式改变囊泡 cargo 与功能。'},
+    {id:'r15',pmid:'42728623',title:'Mitochondrial Transfer via ADSC-EVs Reprograms Glucose/Glutamine Metabolism to Restore TCA Cycle-Driven M2 Polarization',zh:'脂肪干细胞囊泡经线粒体转移重塑糖/谷氨酰胺代谢与 M2 极化',journal:'J Nanobiotechnology',date:'2026-07-28',ifStars:4,abs:'研究囊泡介导的线粒体转移如何影响巨噬细胞代谢与极化。关注点：代谢重编程作为创面免疫调节的新层面。'},
+    {id:'r16',pmid:'42719899',title:'Synergistic Effects of Berberine and Adipose Stem Cells in a Silk Fibroin-PEG Hydrogel for Diabetic Wound Healing',zh:'小檗碱与脂肪干细胞在丝素蛋白-PEG 水凝胶中的协同作用',journal:'Regen Biomater',date:'2026',ifStars:3,abs:'将天然化合物、干细胞与可注射材料组合，评价糖尿病创面修复中的协同效应。关注点：多组分体系的释放次序与质量控制。'},
+    {id:'r17',pmid:'42691604',title:'SPARC-Overexpressing Mesenchymal Stem Cell-Hydrogel System Accelerates Burn Wound Healing and Improves Tissue Repair in Diabetic Mice',zh:'过表达 SPARC 的间充质干细胞—水凝胶系统促进糖尿病小鼠烧伤修复',journal:'Tissue Cell',date:'2026-09-01',ifStars:3,abs:'通过基因修饰增强干细胞促修复能力，并在糖尿病烧伤模型中评价。关注点：基因修饰的安全性与可控性。'},
+    {id:'r18',pmid:'42690730',title:'Engineered Hierarchical Porosity in Three-Dimensional-Printed Hydrogel Scaffolds Enhances Mesenchymal Stem Cell Therapy for Chronic Diabetic Wounds',zh:'三维打印水凝胶分级孔隙增强间充质干细胞治疗',journal:'ACS Appl Mater Interfaces',date:'2026-09-03',ifStars:4,abs:'通过打印结构调控孔隙与营养交换，改善干细胞存活与慢性创面修复。关注点：支架结构参数与细胞命运的关系。'},
+    {id:'r19',pmid:'42690285',title:'Remodeling-Phase Wound-Derived Protein Factors Enhance Mesenchymal Stem Cell Function and Improve Diabetic Wound Healing',zh:'重塑期创面来源蛋白因子增强间充质干细胞功能',journal:'Mol Biol Rep',date:'2026-09-03',ifStars:3,abs:'利用创面修复不同时相的蛋白因子预处理干细胞，探索模拟生理微环境的赋能策略。关注点：因子组合与时序。'},
+    {id:'r20',pmid:'42684027',title:'Transverse Tibial Transport Accelerated Diabetic Wound Healing via Enhanced Wnt/β-Catenin-Driven BMSCs Mobilization and Angiogenesis',zh:'胫骨横向搬移经 Wnt/β-catenin 动员骨髓干细胞促进糖尿病创面愈合',journal:'Stem Cells',date:'2026-09-22',ifStars:3,abs:'研究胫骨横向搬移对骨髓干细胞动员与血管生成的影响，连接临床技术与机制。关注点：机械刺激—干细胞动员—创面修复轴。'},
+    {id:'r21',pmid:'42670416',title:'Extracellular Vesicle Therapies for Diabetic Skin Lesions: Mechanisms, Engineering, and Clinical Translation',zh:'细胞外囊泡治疗糖尿病皮肤病变：机制、工程化与转化',journal:'Int J Nanomedicine',date:'2026',ifStars:3,abs:'系统梳理囊泡治疗糖尿病皮肤病变的机制、工程化改造与临床转化障碍。关注点：标准化、剂量与监管路径。'},
+    {id:'r22',pmid:'42643175',title:'Hydrogel Microneedles Loaded with Engineered Extracellular Vesicles Accelerate Diabetic Wound Healing by Promoting Angiogenesis and Modulating Macrophage Polarization',zh:'水凝胶微针递送工程化囊泡促进血管生成与巨噬细胞极化',journal:'Mater Today Bio',date:'2026-10',ifStars:4,abs:'利用微针实现囊泡的局部、微创递送，评价血管生成与免疫调节。关注点：微针穿透深度与囊泡活性保持。'},
+    {id:'r23',pmid:'42641316',title:'Combinatorial Therapy of LL-37 and ADSCs Accelerates Diabetic Wound Repair by Orchestrating NRROS-Mediated Crosstalk between TGF-β/SMAD and Hippo/TEAD1 Axes',zh:'LL-37 联合脂肪干细胞经 NRROS 协调 TGF-β/SMAD 与 Hippo/TEAD1',journal:'Cytokine',date:'2026-11',ifStars:3,abs:'探索抗菌肽与干细胞联合治疗糖尿病创面的信号交叉机制。关注点：联合方案的配伍与局部浓度。'},
+    {id:'r24',pmid:'42640785',title:'Cell-Free Regenerative Therapies for Wound Healing and Skin Repair: The Emerging Role of Adipose-Derived Stem Cell Extracellular Vesicles',zh:'无细胞再生治疗与脂肪干细胞囊泡',journal:'Adv Wound Care',date:'2026-08-25',ifStars:3,abs:'综述脂肪干细胞囊泡作为无细胞治疗产品的证据、优势与制造挑战。关注点：从“细胞”到“产品”的质量控制。'},
+    {id:'r25',pmid:'42633542',title:'TGα2β-Modified Adipose-Derived Stem Cell Exosomes Regulate Collagen Synthesis in Fibroblasts and Enhance Chronic Ulcerative Wound Repair',zh:'工程化脂肪干细胞外泌体调控成纤维细胞胶原合成',journal:'Pak J Pharm Sci',date:'2026-11-01',ifStars:2,abs:'通过修饰囊泡表面分子增强其靶向成纤维细胞的能力，评价慢性溃疡修复。关注点：胶原比例与瘢痕质量的平衡。'}
+  ],
+  directions: [
+    {
+      key:'stem',name:'干细胞与创面修复',icon:'🧫',
+      papers:[
+        {title:'Skin Fibroblast Lineage Tracing Reveals Layer-Specific Cooperation in Wound Repair',zh:'皮肤成纤维细胞谱系追踪揭示分层协作',journal:'Cell Stem Cell',year:2026,ifStars:5,q:'skin fibroblast lineage tracing wound repair'},
+        {title:'Hair-Bearing Human Skin Generated Entirely from Pluripotent Stem Cells',zh:'多能干细胞生成带毛囊皮肤',journal:'Nature',year:2020,ifStars:5,q:'hair-bearing human skin pluripotent stem cells organoid'},
+        {title:'Wound-Induced Hair Follicle Neogenesis',zh:'创伤诱导毛囊新生',journal:'Nature',year:2018,ifStars:5,q:'wound-induced hair follicle neogenesis'},
+        {title:'Adipose-Derived Stem Cells for Wound Healing',zh:'脂肪来源干细胞与创面修复',journal:'Stem Cells Int',year:2019,ifStars:3,q:'adipose-derived stem cells wound healing review'},
+        {title:'Allogeneic Bone Marrow Mesenchymal Stem Cells for Diabetic Wounds',zh:'异体骨髓间充质干细胞与糖尿病创面',journal:'Kaohsiung J Med Sci',year:2026,ifStars:3,q:'allogeneic bone marrow mesenchymal stem cells diabetic wound'},
+        {title:'Mesenchymal Stem Cell-Derived Exosomes for Wound Healing',zh:'间充质干细胞外泌体与创面修复',journal:'Stem Cell Res Ther',year:2020,ifStars:3,q:'mesenchymal stem cell exosomes wound healing'},
+        {title:'Clinical Translation of Stem Cell Therapy for Chronic Wounds',zh:'干细胞治疗慢性创面的临床转化',journal:'Stem Cells Transl Med',year:2019,ifStars:3,q:'clinical translation stem cell chronic wounds'},
+        {title:'Mesenchymal Stem Cell Therapy for Diabetes: Clinical Evidence and Future Perspectives',zh:'间充质干细胞治疗糖尿病：临床证据与未来',journal:'Metabolism',year:2026,ifStars:4,q:'mesenchymal stem cell therapy diabetes clinical evidence'},
+        {title:'SPARC-Overexpressing MSC-Hydrogel for Diabetic Burn Wounds',zh:'过表达 SPARC 的干细胞水凝胶与糖尿病烧伤',journal:'Tissue Cell',year:2026,ifStars:3,q:'SPARC mesenchymal stem cell hydrogel diabetic burn'},
+        {title:'Transverse Tibial Transport Mobilizes BMSCs for Diabetic Wound Healing',zh:'胫骨横向搬移动员骨髓干细胞',journal:'Stem Cells',year:2026,ifStars:3,q:'tibial transport BMSC diabetic wound'}
+      ],
+      terms:[
+        {en:'mesenchymal stem cell',ipa:'/ˌmesənˈkaɪməl stem sel/',zh:'间充质干细胞'},
+        {en:'adipose-derived stem cell',ipa:'/ˈædɪpəʊs dɪˈraɪvd stem sel/',zh:'脂肪来源干细胞'},
+        {en:'pluripotent stem cell',ipa:'/plʊəˈrɪpətənt stem sel/',zh:'多能干细胞'},
+        {en:'self-renewal',ipa:'/self rɪˈnjuːəl/',zh:'自我更新'},
+        {en:'differentiation',ipa:'/ˌdɪfərenʃiˈeɪʃn/',zh:'分化'},
+        {en:'paracrine',ipa:'/ˌpærəˈkraɪn/',zh:'旁分泌'},
+        {en:'lineage tracing',ipa:'/ˈlɪniɪdʒ ˈtreɪsɪŋ/',zh:'谱系追踪'},
+        {en:'niche',ipa:'/niːʃ/',zh:'微环境/龛'},
+        {en:'homing',ipa:'/ˈhəʊmɪŋ/',zh:'归巢'},
+        {en:'engraftment',ipa:'/ɪnˈɡrɑːftmənt/',zh:'植入/定植'},
+        {en:'secretome',ipa:'/sɪˈkriːtəʊm/',zh:'分泌组'},
+        {en:'cell sheet',ipa:'/sel ʃiːt/',zh:'细胞膜片'},
+        {en:'organoid',ipa:'/ˈɔːɡənɔɪd/',zh:'类器官'},
+        {en:'reprogramming',ipa:'/riːˈprəʊɡræmɪŋ/',zh:'重编程'},
+        {en:'senescence',ipa:'/sɪˈnesns/',zh:'衰老'},
+        {en:'potency',ipa:'/ˈpəʊtənsi/',zh:'效力/潜能'}
+      ]
+    },
+    {
+      key:'dm',name:'糖尿病创面',icon:'🩹',
+      papers:[
+        {title:'Wound Healing and Its Impairment in the Diabetic Foot',zh:'糖尿病足创面愈合障碍',journal:'Lancet',year:2005,ifStars:5,q:'Falanga diabetic foot wound healing impairment'},
+        {title:'Cellular and Molecular Basis of Wound Healing in Diabetes',zh:'糖尿病创面愈合的细胞与分子基础',journal:'J Clin Invest',year:2007,ifStars:5,q:'Brem Tomic-Canic diabetes wound healing'},
+        {title:'Diabetic Foot Ulcers and Their Recurrence',zh:'糖尿病足溃疡及其复发',journal:'N Engl J Med',year:2017,ifStars:5,q:'Armstrong diabetic foot ulcers recurrence'},
+        {title:'Chronic Wound Healing: Current Management and Treatments',zh:'慢性创面愈合：现有管理与治疗',journal:'Adv Ther',year:2017,ifStars:3,q:'chronic wound healing current management'},
+        {title:'Single-Cell Landscape of Diabetic Foot Ulcers',zh:'糖尿病足溃疡单细胞图谱',journal:'Nat Commun',year:2023,ifStars:4,q:'single-cell landscape diabetic foot ulcers'},
+        {title:'Cellular Senescence in Diabetic Wounds',zh:'糖尿病创面细胞衰老',journal:'Aging Cell',year:2020,ifStars:3,q:'cellular senescence diabetic wounds'},
+        {title:'The Diabetic Wound Microbiome',zh:'糖尿病创面微生物组',journal:'J Clin Invest',year:2020,ifStars:4,q:'diabetic wound microbiome'},
+        {title:'Keratinocyte Dysfunction in Diabetes',zh:'糖尿病角质形成细胞功能障碍',journal:'J Invest Dermatol',year:2021,ifStars:3,q:'keratinocyte dysfunction diabetes wound'},
+        {title:'Endothelial Dysfunction in Diabetic Wound Healing',zh:'糖尿病创面内皮功能障碍',journal:'Angiogenesis',year:2022,ifStars:3,q:'endothelial dysfunction diabetic wound healing'},
+        {title:'Neuropathy and Foot Ulceration in Diabetes',zh:'糖尿病神经病变与足溃疡',journal:'Diabetes Care',year:2020,ifStars:4,q:'diabetic neuropathy foot ulceration'}
+      ],
+      terms:[
+        {en:'diabetic foot ulcer',ipa:'/ˌdaɪəˈbetɪk fʊt ˈʌlsə/',zh:'糖尿病足溃疡'},
+        {en:'hyperglycemia',ipa:'/ˌhaɪpəɡlaɪˈsiːmiə/',zh:'高血糖'},
+        {en:'advanced glycation end product',ipa:'/ədˈvɑːnst ɡlaɪˈkeɪʃn end prɒdʌkt/',zh:'晚期糖基化终产物'},
+        {en:'oxidative stress',ipa:'/ˈɒksɪdeɪtɪv stres/',zh:'氧化应激'},
+        {en:'neuropathy',ipa:'/njʊəˈrɒpəθi/',zh:'神经病变'},
+        {en:'ischemia',ipa:'/ɪˈskiːmiə/',zh:'缺血'},
+        {en:'biofilm',ipa:'/ˈbaɪəʊfɪlm/',zh:'生物膜'},
+        {en:'debridement',ipa:'/dɪˈbriːdmənt/',zh:'清创'},
+        {en:'offloading',ipa:'/ˌɒfˈləʊdɪŋ/',zh:'减压'},
+        {en:'re-epithelialization',ipa:'/riː ˌepɪˌθiːliəlaɪˈzeɪʃn/',zh:'再上皮化'},
+        {en:'granulation tissue',ipa:'/ˌɡrænjuˈleɪʃn ˈtɪʃuː/',zh:'肉芽组织'},
+        {en:'wound exudate',ipa:'/wuːnd ˈeksjʊdeɪt/',zh:'创面渗液'},
+        {en:'osteomyelitis',ipa:'/ˌɒstɪəʊmaɪəˈlaɪtɪs/',zh:'骨髓炎'},
+        {en:'revascularization',ipa:'/riːˌvæskjələraɪˈzeɪʃn/',zh:'血运重建'},
+        {en:'amputation',ipa:'/ˌæmpjʊˈteɪʃn/',zh:'截肢'},
+        {en:'recurrence',ipa:'/rɪˈkʌrəns/',zh:'复发'}
+      ]
+    },
+    {
+      key:'bio',name:'生物材料与递送',icon:'🧪',
+      papers:[
+        {title:'3D Bioprinting for Skin Tissue Engineering',zh:'3D 生物打印与皮肤组织工程',journal:'Biofabrication',year:2020,ifStars:4,q:'3D bioprinting skin tissue engineering'},
+        {title:'Tissue Engineering and Regenerative Medicine Strategies for Skin',zh:'皮肤组织工程与再生医学策略',journal:'Adv Drug Deliv Rev',year:2019,ifStars:4,q:'tissue engineering skin regenerative medicine'},
+        {title:'Hyaluronic Acid Biomaterials for Infected Diabetic Foot Ulcers',zh:'透明质酸材料与感染性糖尿病足',journal:'Front Bioeng Biotechnol',year:2026,ifStars:3,q:'hyaluronic acid infected diabetic foot ulcer'},
+        {title:'Microenvironment-Responsive Hydrogel for Diabetic Wound Exosome Delivery',zh:'微环境响应水凝胶递送外泌体',journal:'ACS Appl Mater Interfaces',year:2026,ifStars:4,q:'responsive hydrogel diabetic wound exosome'},
+        {title:'Immune-Responsive Bioinks for In Situ Robotic Bioprinting',zh:'免疫响应生物墨水与原位生物打印',journal:'Adv Funct Mater',year:2026,ifStars:4,q:'immune responsive bioink in situ bioprinting'},
+        {title:'Hierarchical Porosity in 3D-Printed Hydrogel Scaffolds for MSC Therapy',zh:'分级孔隙水凝胶支架与干细胞治疗',journal:'ACS Appl Mater Interfaces',year:2026,ifStars:4,q:'hierarchical porosity 3D printed hydrogel MSC'},
+        {title:'Hydrogel Microneedles for Engineered EV Delivery',zh:'水凝胶微针递送工程化囊泡',journal:'Mater Today Bio',year:2026,ifStars:4,q:'hydrogel microneedle extracellular vesicle wound'},
+        {title:'Silk Fibroin-PEG Hydrogel with Berberine and ADSCs',zh:'丝素蛋白-PEG 水凝胶联合小檗碱与脂肪干细胞',journal:'Regen Biomater',year:2026,ifStars:3,q:'silk fibroin PEG hydrogel berberine ADSC'},
+        {title:'Bioactive Dressings for Diabetic Wounds',zh:'糖尿病创面生物活性敷料',journal:'Biomaterials',year:2023,ifStars:4,q:'bioactive dressing diabetic wound'},
+        {title:'Smart Hydrogels for Wound Repair and Regeneration',zh:'智能水凝胶与创面修复再生',journal:'Chem Soc Rev',year:2022,ifStars:5,q:'smart hydrogel wound repair regeneration'}
+      ],
+      terms:[
+        {en:'hydrogel',ipa:'/ˈhaɪdrədʒel/',zh:'水凝胶'},
+        {en:'scaffold',ipa:'/ˈskæfəʊld/',zh:'支架'},
+        {en:'bioprinting',ipa:'/ˌbaɪəʊˈprɪntɪŋ/',zh:'生物打印'},
+        {en:'bioink',ipa:'/ˈbaɪəʊɪŋk/',zh:'生物墨水'},
+        {en:'porosity',ipa:'/pɔːˈrɒsəti/',zh:'孔隙率'},
+        {en:'degradation',ipa:'/ˌdeɡrəˈdeɪʃn/',zh:'降解'},
+        {en:'crosslinking',ipa:'/ˈkrɒslɪŋkɪŋ/',zh:'交联'},
+        {en:'rheology',ipa:'/riˈɒlədʒi/',zh:'流变学'},
+        {en:'mechanical property',ipa:'/mɪˈkænɪkl ˈprɒpəti/',zh:'力学性能'},
+        {en:'controlled release',ipa:'/kənˈtrəʊld rɪˈliːs/',zh:'控释'},
+        {en:'stimuli-responsive',ipa:'/ˈstɪmjʊlaɪ rɪˈspɒnsɪv/',zh:'刺激响应'},
+        {en:'microenvironment',ipa:'/ˌmaɪkrəʊɪnˈvaɪrənmənt/',zh:'微环境'},
+        {en:'vascularization',ipa:'/ˌvæskjələraɪˈzeɪʃn/',zh:'血管化'},
+        {en:'biocompatibility',ipa:'/ˌbaɪəʊkəmˌpætəˈbɪləti/',zh:'生物相容性'},
+        {en:'microneedle',ipa:'/ˈmaɪkrəʊniːdl/',zh:'微针'},
+        {en:'in situ',ipa:'/ɪn ˈsaɪtuː/',zh:'原位'}
+      ]
+    },
+    {
+      key:'ev',name:'细胞外囊泡',icon:'🫧',
+      papers:[
+        {title:'Mesenchymal Stem Cell-Derived Exosomes for Wound Healing',zh:'间充质干细胞外泌体与创面修复',journal:'Stem Cell Res Ther',year:2020,ifStars:3,q:'mesenchymal stem cell exosomes wound healing'},
+        {title:'Cell-Free Regenerative Therapies: ADSC Extracellular Vesicles',zh:'无细胞再生治疗与脂肪干细胞囊泡',journal:'Adv Wound Care',year:2026,ifStars:3,q:'adipose stem cell extracellular vesicles cell-free'},
+        {title:'CD55-Enriched Neutrophil EVs for Complement-Macrophage Modulation',zh:'CD55 富集中性粒细胞囊泡与补体—巨噬细胞调控',journal:'Adv Sci',year:2026,ifStars:4,q:'CD55 neutrophil extracellular vesicles diabetic wound'},
+        {title:'Mitochondrial Transfer via ADSC-EVs Reprograms Macrophage Metabolism',zh:'脂肪干细胞囊泡线粒体转移与巨噬细胞代谢',journal:'J Nanobiotechnology',year:2026,ifStars:4,q:'ADSC EV mitochondrial transfer macrophage diabetic wound'},
+        {title:'3D-Cultured ADSC EVs Alleviate Endothelial Senescence',zh:'三维培养脂肪干细胞囊泡缓解内皮衰老',journal:'Burns Trauma',year:2026,ifStars:4,q:'3D cultured ADSC EV endothelial senescence'},
+        {title:'Engineered EV-Loaded Microneedles for Diabetic Wounds',zh:'工程化囊泡微针与糖尿病创面',journal:'Mater Today Bio',year:2026,ifStars:4,q:'engineered extracellular vesicle microneedle diabetic wound'},
+        {title:'Extracellular Vesicle Therapies for Diabetic Skin Lesions',zh:'细胞外囊泡治疗糖尿病皮肤病变',journal:'Int J Nanomedicine',year:2026,ifStars:3,q:'extracellular vesicle diabetic skin lesions'},
+        {title:'Plant-Derived Extracellular Vesicles in Wound Therapeutics',zh:'植物来源囊泡与创面治疗',journal:'Burns Trauma',year:2026,ifStars:3,q:'plant derived extracellular vesicles wound'},
+        {title:'Fibroblast-Derived Exosomes in Wound Healing',zh:'成纤维细胞外泌体与创面修复',journal:'Nanoscale',year:2026,ifStars:3,q:'fibroblast derived exosomes wound healing'},
+        {title:'Programming EV-Biomaterial Interfaces for Diabetic Wounds',zh:'糖尿病创面的囊泡—材料界面设计',journal:'Adv Healthc Mater',year:2026,ifStars:4,q:'extracellular vesicle biomaterial interface diabetic wound'}
+      ],
+      terms:[
+        {en:'extracellular vesicle',ipa:'/ˌekstrəˈseljələ ˈvesɪkl/',zh:'细胞外囊泡'},
+        {en:'exosome',ipa:'/ˈeksəʊsəʊm/',zh:'外泌体'},
+        {en:'microvesicle',ipa:'/ˌmaɪkrəʊˈvesɪkl/',zh:'微囊泡'},
+        {en:'apoptotic body',ipa:'/ˌæpəˈtɒtɪk ˈbɒdi/',zh:'凋亡小体'},
+        {en:'cargo',ipa:'/ˈkɑːɡəʊ/',zh:'装载物'},
+        {en:'microRNA',ipa:'/ˈmaɪkrəʊ ɑːr en eɪ/',zh:'微小 RNA'},
+        {en:'isolation',ipa:'/ˌaɪsəˈleɪʃn/',zh:'分离'},
+        {en:'characterization',ipa:'/ˌkærəktəraɪˈzeɪʃn/',zh:'表征'},
+        {en:'uptake',ipa:'/ˈʌpteɪk/',zh:'摄取'},
+        {en:'biodistribution',ipa:'/ˌbaɪəʊdɪstrɪˈbjuːʃn/',zh:'生物分布'},
+        {en:'engineering',ipa:'/ˌendʒɪˈnɪərɪŋ/',zh:'工程化'},
+        {en:'loading efficiency',ipa:'/ˈləʊdɪŋ ɪˈfɪʃnsi/',zh:'装载效率'},
+        {en:'purity',ipa:'/ˈpjʊərəti/',zh:'纯度'},
+        {en:'potency assay',ipa:'/ˈpəʊtənsi əˈseɪ/',zh:'效价检测'},
+        {en:'Good Manufacturing Practice',ipa:'/ɡʊd ˌmænjuˈfæktʃərɪŋ ˈpræktɪs/',zh:'良好生产规范'},
+        {en:'scale-up',ipa:'/skeɪl ʌp/',zh:'放大生产'}
+      ]
+    },
+    {
+      key:'scar',name:'瘢痕与再生',icon:'🪡',
+      papers:[
+        {title:'Keloid and Hypertrophic Scar: Mechanisms and Therapeutic Strategies',zh:'瘢痕疙瘩与增生性瘢痕：机制与治疗',journal:'Int J Mol Sci',year:2020,ifStars:3,q:'keloid hypertrophic scar mechanisms treatment'},
+        {title:'Stem Cell-Based Therapies for Scar',zh:'干细胞治疗瘢痕',journal:'Stem Cell Res Ther',year:2019,ifStars:3,q:'stem cell therapy scar'},
+        {title:'Updated International Clinical Recommendations on Scar Management',zh:'国际瘢痕管理建议更新',journal:'Dermatol Surg',year:2020,ifStars:3,q:'international recommendations scar management'},
+        {title:'Mechanotransduction in Scar Formation',zh:'瘢痕形成中的机械转导',journal:'Matrix Biol',year:2021,ifStars:3,q:'mechanotransduction scar formation'},
+        {title:'Fibroblast Heterogeneity in Scar and Regeneration',zh:'瘢痕与再生中的成纤维细胞异质性',journal:'Cell Stem Cell',year:2022,ifStars:5,q:'fibroblast heterogeneity scar regeneration'},
+        {title:'TGF-β Signaling in Fibrosis and Scar',zh:'纤维化与瘢痕中的 TGF-β 信号',journal:'Nat Rev Drug Discov',year:2019,ifStars:5,q:'TGF-beta signaling fibrosis scar'},
+        {title:'Laser Therapy for Hypertrophic Scar',zh:'激光治疗增生性瘢痕',journal:'Lasers Surg Med',year:2021,ifStars:3,q:'laser therapy hypertrophic scar'},
+        {title:'Pressure Therapy for Hypertrophic Scar',zh:'压力治疗增生性瘢痕',journal:'Burns',year:2020,ifStars:2,q:'pressure therapy hypertrophic scar'},
+        {title:'Botulinum Toxin for Scar Prevention',zh:'肉毒毒素与瘢痕预防',journal:'Aesthetic Plast Surg',year:2021,ifStars:2,q:'botulinum toxin scar prevention'},
+        {title:'Scarless Wound Healing',zh:'无瘢痕愈合',journal:'Science',year:2021,ifStars:5,q:'scarless wound healing'}
+      ],
+      terms:[
+        {en:'hypertrophic scar',ipa:'/ˌhaɪpəˈtrɒfɪk skɑː/',zh:'增生性瘢痕'},
+        {en:'keloid',ipa:'/ˈkiːlɔɪd/',zh:'瘢痕疙瘩'},
+        {en:'fibrosis',ipa:'/faɪˈbrəʊsɪs/',zh:'纤维化'},
+        {en:'myofibroblast',ipa:'/ˌmaɪəʊˈfaɪbrəblæst/',zh:'肌成纤维细胞'},
+        {en:'collagen',ipa:'/ˈkɒlədʒən/',zh:'胶原'},
+        {en:'extracellular matrix',ipa:'/ˌekstrəˈseljələ ˈmeɪtrɪks/',zh:'细胞外基质'},
+        {en:'TGF-beta',ipa:'/tiː dʒiː ef ˈbiːtə/',zh:'转化生长因子β'},
+        {en:'mechanotransduction',ipa:'/məˌkænəʊtrænzˈdʌkʃn/',zh:'机械转导'},
+        {en:'scar contracture',ipa:'/skɑː kənˈtræktʃə/',zh:'瘢痕挛缩'},
+        {en:'remodeling',ipa:'/riːˈmɒdəlɪŋ/',zh:'重塑'},
+        {en:'scarless',ipa:'/ˈskɑːləs/',zh:'无瘢痕'},
+        {en:'regeneration',ipa:'/rɪˌdʒenəˈreɪʃn/',zh:'再生'},
+        {en:'wound contraction',ipa:'/wuːnd kənˈtrækʃn/',zh:'创面收缩'},
+        {en:'silicone gel',ipa:'/ˈsɪlɪkəʊn dʒel/',zh:'硅酮凝胶'},
+        {en:'corticosteroid',ipa:'/ˌkɔːtɪkəʊˈsterɔɪd/',zh:'糖皮质激素'},
+        {en:'patient-reported outcome',ipa:'/ˈpeɪʃnt rɪˈpɔːtɪd ˈaʊtkʌm/',zh:'患者报告结局'}
+      ]
+    },
+    {
+      key:'model',name:'模型与临床转化',icon:'🔬',
+      papers:[
+        {title:'Single-Cell RNA Sequencing in Wound Healing',zh:'单细胞测序与创面愈合',journal:'Trends Mol Med',year:2021,ifStars:4,q:'single-cell RNA sequencing wound healing'},
+        {title:'Hair-Bearing Human Skin Generated from Pluripotent Stem Cells',zh:'多能干细胞生成带毛囊皮肤',journal:'Nature',year:2020,ifStars:5,q:'hair-bearing skin organoid pluripotent stem cells'},
+        {title:'Skin-on-Chip Models for Wound Healing',zh:'皮肤芯片与创面愈合模型',journal:'Lab Chip',year:2022,ifStars:3,q:'skin-on-chip wound healing model'},
+        {title:'Animal Models of Diabetic Wound Healing',zh:'糖尿病创面动物模型',journal:'Dis Model Mech',year:2019,ifStars:3,q:'animal models diabetic wound healing'},
+        {title:'Ex Vivo Human Skin Explant Models',zh:'离体人皮肤外植体模型',journal:'Exp Dermatol',year:2020,ifStars:2,q:'ex vivo human skin explant wound model'},
+        {title:'Machine Learning in Wound Image Analysis',zh:'机器学习与创面图像分析',journal:'NPJ Digit Med',year:2021,ifStars:3,q:'machine learning wound image analysis'},
+        {title:'Clinical Translation of Stem Cell Therapy for Chronic Wounds',zh:'干细胞治疗慢性创面的临床转化',journal:'Stem Cells Transl Med',year:2019,ifStars:3,q:'clinical translation stem cell chronic wound'},
+        {title:'ISSCR Guidelines for Stem Cell Research and Clinical Translation',zh:'ISSCR 干细胞研究与转化指南',journal:'Stem Cell Reports',year:2021,ifStars:4,q:'ISSCR guidelines stem cell translation'},
+        {title:'Core Outcome Measures for Chronic Wounds',zh:'慢性创面核心结局指标',journal:'Int Wound J',year:2020,ifStars:3,q:'core outcome measures chronic wounds'},
+        {title:'Real-World Evidence in Diabetic Foot Ulcers',zh:'糖尿病足真实世界证据',journal:'Diabetes Care',year:2022,ifStars:4,q:'real-world evidence diabetic foot ulcer'}
+      ],
+      terms:[
+        {en:'study design',ipa:'/ˈstʌdi dɪˈzaɪn/',zh:'研究设计'},
+        {en:'randomized controlled trial',ipa:'/ˈrændəmaɪzd kənˈtrəʊld ˈtraɪəl/',zh:'随机对照试验'},
+        {en:'preclinical model',ipa:'/priːˈklɪnɪkl ˈmɒdl/',zh:'临床前模型'},
+        {en:'organoid',ipa:'/ˈɔːɡənɔɪd/',zh:'类器官'},
+        {en:'explant',ipa:'/eksˈplɑːnt/',zh:'外植体'},
+        {en:'single-cell sequencing',ipa:'/ˈsɪŋɡl sel ˈsiːkwənsɪŋ/',zh:'单细胞测序'},
+        {en:'biomarker',ipa:'/ˈbaɪəʊmɑːkə/',zh:'生物标志物'},
+        {en:'endpoint',ipa:'/ˈendpɔɪnt/',zh:'终点'},
+        {en:'primary outcome',ipa:'/ˈpraɪməri ˈaʊtkʌm/',zh:'主要结局'},
+        {en:'bias',ipa:'/ˈbaɪəs/',zh:'偏倚'},
+        {en:'confounding',ipa:'/kənˈfaʊndɪŋ/',zh:'混杂'},
+        {en:'external validity',ipa:'/ɪkˈstɜːnl vəˈlɪdəti/',zh:'外部真实性'},
+        {en:'reproducibility',ipa:'/ˌriːprəˌdjuːsəˈbɪləti/',zh:'可重复性'},
+        {en:'regulatory pathway',ipa:'/ˈreɡjələtəri ˈpɑːθweɪ/',zh:'监管路径'},
+        {en:'informed consent',ipa:'/ɪnˈfɔːmd kənˈsent/',zh:'知情同意'},
+        {en:'translation',ipa:'/trænsˈleɪʃn/',zh:'转化'}
+      ]
+    }
+  ]
+};
+
+window.DB = window.DB || {};
+
+DB.schedule = {
+  anchor: '2026-08-01',
+  cycle: [
+    {key:'duty24',label:'实验日',short:'实验',tone:'red'},
+    {key:'day',label:'分析日',short:'分析',tone:'blue'},
+    {key:'day',label:'写作日',short:'写作',tone:'blue'},
+    {key:'night',label:'文献日',short:'文献',tone:'purple'},
+    {key:'off',label:'休息',short:'休',tone:'green'},
+    {key:'day',label:'组会日',short:'组会',tone:'blue'}
+  ],
+  note:'六天一轮；以 2026-08-01 的实验日为锚点。实验日优先保证细胞与动物实验，分析日处理数据，文献日集中阅读，组会日汇报。'
+};
+
+DB.fitness = {
+  parts: [
+    {id:'neck',name:'颈肩',icon:'🧣',focus:'缓解低头看显微镜与电脑的紧张',actions:[
+      {name:'下巴回收',sets:'3 组 × 10 次',tip:'后脑勺向后延伸，不抬下巴'},
+      {name:'肩胛后缩',sets:'3 组 × 12 次',tip:'肩膀下沉，肩胛向中间靠'},
+      {name:'胸锁乳突肌拉伸',sets:'每侧 30 秒 × 2',tip:'下巴微抬，转向对侧'},
+      {name:'靠墙天使',sets:'3 组 × 8 次',tip:'腰背贴墙，手臂缓慢上滑'}
+    ],cues:['每 45 分钟起身一次','手麻或持续疼痛先就医'],bili:'颈肩放松 跟练',douyin:'颈肩 拉伸'},
+    {id:'back',name:'背部',icon:'🪝',focus:'改善圆肩与久坐驼背',actions:[
+      {name:'弹力带下拉',sets:'4 组 × 12 次',tip:'肩胛先下沉，再拉肘向下'},
+      {name:'俯身划船',sets:'4 组 × 10 次',tip:'保持脊柱中立，肘贴身体'},
+      {name:'面拉',sets:'3 组 × 15 次',tip:'拉向眉心，强化后束'},
+      {name:'直臂下压',sets:'3 组 × 12 次',tip:'肘微屈，感受背阔肌'}
+    ],cues:['先激活肩胛，再追求重量','下背不适时改用坐姿划船'],bili:'背部训练 跟练',douyin:'背部训练 跟练'},
+    {id:'core',name:'核心',icon:'🌀',focus:'抗伸展与抗旋转，保护腰椎',actions:[
+      {name:'死虫式',sets:'3 组 × 每侧 8 次',tip:'腰贴地，呼气伸腿'},
+      {name:'平板支撑',sets:'3 组 × 40 秒',tip:'收腹夹臀，不塌腰'},
+      {name:'鸟狗式',sets:'3 组 × 每侧 10 次',tip:'骨盆稳定，不要晃动'},
+      {name:'侧桥',sets:'3 组 × 每侧 30 秒',tip:'身体成直线，肩肘垂直'}
+    ],cues:['核心训练不等于卷腹次数','腰痛时优先练抗伸展'],bili:'核心抗伸展 跟练',douyin:'核心训练 跟练'},
+    {id:'glutes',name:'臀腿',icon:'🦵',focus:'对抗久坐，维持下肢力量',actions:[
+      {name:'深蹲',sets:'4 组 × 10 次',tip:'膝盖对齐脚尖，重心在足中'},
+      {name:'罗马尼亚硬拉',sets:'4 组 × 10 次',tip:'髋往后推，背部不弓'},
+      {name:'臀桥',sets:'4 组 × 15 次',tip:'顶峰夹臀，不要过度挺腰'},
+      {name:'提踵',sets:'4 组 × 15 次',tip:'顶峰停 1 秒，缓慢下放'}
+    ],cues:['久坐后先做踝泵再训练','膝痛时减少深度、放慢节奏'],bili:'臀腿训练 跟练',douyin:'臀腿 训练'},
+    {id:'chest',name:'胸部',icon:'🛡️',focus:'推的力量与胸廓活动',actions:[
+      {name:'俯卧撑',sets:'4 组 × 8–12 次',tip:'身体成直线，肘约 45°'},
+      {name:'哑铃卧推',sets:'4 组 × 10 次',tip:'肩胛后缩，手腕中立'},
+      {name:'上斜推举',sets:'3 组 × 12 次',tip:'不要耸肩'},
+      {name:'胸椎伸展',sets:'3 组 × 8 次',tip:'泡沫轴垫背，缓慢后仰'}
+    ],cues:['推前先做肩袖激活','肩前侧疼痛时减少卧推幅度'],bili:'胸部训练 跟练',douyin:'胸部训练 跟练'},
+    {id:'arms',name:'手臂',icon:'💪',focus:'肱二头肌与肱三头肌',actions:[
+      {name:'哑铃弯举',sets:'4 组 × 12 次',tip:'肘固定在体侧'},
+      {name:'锤式弯举',sets:'3 组 × 12 次',tip:'手腕中立，不要甩'},
+      {name:'绳索下压',sets:'4 组 × 12 次',tip:'肘部固定，顶峰收缩'},
+      {name:'窄距俯卧撑',sets:'3 组 × 10 次',tip:'肘贴近身体'}
+    ],cues:['小肌群不需要天天练','手腕不适改用锤式'],bili:'手臂训练 跟练',douyin:'手臂训练 跟练'},
+    {id:'cardio',name:'全身有氧',icon:'🏃',focus:'改善心肺与糖代谢',actions:[
+      {name:'快走',sets:'30–40 分钟',tip:'能说话但不能唱歌的强度'},
+      {name:'椭圆机',sets:'25 分钟',tip:'保持均匀呼吸'},
+      {name:'开合跳',sets:'40 秒 / 20 秒休息 × 5',tip:'落地轻，膝盖微屈'},
+      {name:'爬楼',sets:'10–15 分钟',tip:'下楼乘电梯，保护膝盖'}
+    ],cues:['每周 150 分钟中等强度','实验日久站后可改为低冲击'],bili:'有氧 跟练',douyin:'有氧 燃脂'},
+    {id:'wrist',name:'手腕前臂',icon:'🖐️',focus:'移液、打字与鼠标手防护',actions:[
+      {name:'腕屈伸拉伸',sets:'每侧 30 秒 × 2',tip:'肘伸直，轻轻向掌侧/背侧压'},
+      {name:'前臂旋前旋后',sets:'每侧 10 次 × 2',tip:'肘贴身体，慢慢转动'},
+      {name:'握力球',sets:'3 组 × 15 次',tip:'缓慢握紧与放松'},
+      {name:'手指张开',sets:'3 组 × 10 次',tip:'五指尽量张开再放松'}
+    ],cues:['移液时保持手腕中立','拇指侧疼痛需警惕腱鞘炎'],bili:'手腕 康复 训练',douyin:'鼠标手 拉伸'},
+    {id:'stretch',name:'拉伸放松',icon:'🧘',focus:'胸椎、髋与小腿',actions:[
+      {name:'猫牛式',sets:'2 组 × 10 次',tip:'配合呼吸，缓慢活动脊柱'},
+      {name:'髋屈肌拉伸',sets:'每侧 40 秒 × 2',tip:'骨盆后倾，避免塌腰'},
+      {name:'胸椎旋转',sets:'每侧 8 次 × 2',tip:'眼睛跟随手移动'},
+      {name:'小腿拉伸',sets:'每侧 40 秒 × 2',tip:'后脚跟踩实，膝盖伸直'}
+    ],cues:['拉伸到轻微牵拉感即可','术后/急性疼痛先咨询医生'],bili:'全身拉伸 跟练',douyin:'拉伸放松 跟练'}
+  ],
+  week: [
+    {day:'周一',focus:'颈肩 + 核心',detail:'下巴回收 / 肩胛后缩 / 死虫式'},
+    {day:'周二',focus:'臀腿',detail:'深蹲 / 罗马尼亚硬拉 / 臀桥'},
+    {day:'周三',focus:'全身有氧',detail:'快走或椭圆机 30 分钟'},
+    {day:'周四',focus:'背部 + 胸部',detail:'弹力带下拉 / 俯卧撑 / 面拉'},
+    {day:'周五',focus:'手臂 + 手腕',detail:'弯举 / 下压 / 腕屈伸拉伸'},
+    {day:'周六',focus:'有氧 + 拉伸',detail:'快走 40 分钟 + 全身拉伸'},
+    {day:'周日',focus:'完全休息',detail:'散步、睡眠、复盘一周'}
+  ]
+};
+
+DB.videos = [
+  {id:'v01',name:'知识科普',icon:'📚',example:'“糖尿病创面为什么总是长不好？”',frame:['3 秒钩子：一个反常识结论','30 秒讲清高糖、缺血、感染、神经病变','1 分钟解释为什么不能只换药','结尾给出就医与护理建议'],tip:'用“四个坏因素”做骨架，避免把复杂机制说成单一原因。',topics:['高糖如何拖慢愈合','糖足为什么要减压','创面感染和定植的区别'],bili:'糖尿病创面 科普',douyin:'糖尿病足 科普'},
+  {id:'v02',name:'反转剧情',icon:'🎭',example:'“以为只是磨了个水泡，结果差点截肢。”',frame:['日常场景代入','小伤口被忽视','转折：检查发现深部感染','一句话知识点 + 提醒'],tip:'剧情服务科普，不制造恐慌；标注“情节演绎”。',topics:['糖足的小伤口','被当成湿疹的创面','术后伤口裂开'],bili:'糖尿病足 剧情',douyin:'糖足 故事'},
+  {id:'v03',name:'日常 Vlog',icon:'🎥',example:'“整形外科博士生在实验室的一天。”',frame:['换衣与无菌准备','细胞培养/动物实验片段','一个失败或意外的瞬间','下播后的复盘'],tip:'保护患者与同事隐私，不拍病历、样本编号与未发表数据。',topics:['细胞传代的一天','动物实验前的准备','组会前夜'],bili:'博士生 实验室 vlog',douyin:'科研 日常 vlog'},
+  {id:'v04',name:'对比盘点',icon:'⚖️',example:'“三种创面敷料，到底怎么选？”',frame:['先给结论','按渗液/感染/创床对比','列一张简表','提醒个体化'],tip:'对比维度不超过 4 个；不贬低具体产品。',topics:['水胶体 vs 泡沫 vs 藻酸盐','同种异体皮 vs 人工真皮','负压 vs 普通换药'],bili:'创面敷料 对比',douyin:'敷料 怎么选'},
+  {id:'v05',name:'热点追踪',icon:'📈',example:'“干细胞治疗糖尿病足，最新证据到哪一步？”',frame:['新闻钩子','研究设计一句话','结果与局限','普通人怎么理解'],tip:'区分早期试验与确证性证据；不承诺疗效。',topics:['干细胞治疗糖足','外泌体敷料','3D 打印皮肤'],bili:'干细胞 糖尿病足 最新',douyin:'干细胞 创面'},
+  {id:'v06',name:'教程实操',icon:'🧭',example:'“小鼠糖尿病创面模型，关键步骤有哪些？”',frame:['模型选择与伦理','造模与创面标准化','观察与取材','常见失败点'],tip:'只讲原则与关键参数，不替代动物伦理与机构SOP。',topics:['STZ 糖尿病小鼠模型','db/db 小鼠创面模型','创面拍照与面积分析'],bili:'糖尿病小鼠 创面模型',douyin:'动物实验 创面'},
+  {id:'v07',name:'情感共鸣',icon:'💬',example:'“糖足患者最怕的，不是换药疼。”',frame:['一个具体的人','一个具体的选择','医生/家属的解释','温暖的结尾'],tip:'征得同意，去标识化；不消费痛苦。',topics:['保肢还是截肢','家属如何陪诊','长期换药的坚持'],bili:'糖足 患者故事',douyin:'糖尿病足 故事'},
+  {id:'v08',name:'二创混剪',icon:'✂️',example:'“一分钟看懂创面愈合的四个阶段。”',frame:['节奏点卡阶段','字幕突出关键细胞','来源标注','引导看综述原文'],tip:'只用可授权素材；医学内容必须核对原文。',topics:['止血—炎症—增殖—重塑','巨噬细胞极化','血管新生'],bili:'创面愈合 动画',douyin:'创面愈合 科普'},
+  {id:'v09',name:'病例故事',icon:'🩺',example:'“反复溃烂的脚，问题不在皮肤。”',frame:['主诉与线索','鉴别诊断','关键检查','复盘与提醒'],tip:'改变可识别信息；强调“个案，不替代就诊”。',topics:['糖足合并骨髓炎','创面下的血管问题','术后创面不愈'],bili:'糖尿病足 病例',douyin:'糖足 病例'},
+  {id:'v10',name:'科研避坑',icon:'🧪',example:'“细胞实验重复不出来，先查这 3 件事。”',frame:['现象：结果不稳定','排查：代次/血清/污染','排查：读数与统计','建立记录习惯'],tip:'不影射具体课题组；用可复现的操作清单。',topics:['细胞代次与活力','支原体污染','创面面积统计偏倚'],bili:'细胞实验 重复性',douyin:'科研 避坑'}
+];
+
+DB.topics = [
+  {id:'t01',title:'“糖尿病创面为什么难愈合？四个坏因素”',angle:'用高糖、缺血、感染、神经病变四条线讲清机制',keywords:['糖尿病创面','高糖','微环境'],format:'知识科普'},
+  {id:'t02',title:'“干细胞治疗糖足：希望与证据之间”',angle:'从一项早期临床试验切入，讲清终点与局限',keywords:['干细胞','糖尿病足','临床试验'],format:'热点追踪'},
+  {id:'t03',title:'“外泌体不是干细胞：一个常被混淆的概念”',angle:'用“快递员 vs 工厂”的比喻讲清区别',keywords:['外泌体','细胞外囊泡','无细胞治疗'],format:'动画/图解'},
+  {id:'t04',title:'“创面敷料怎么选？先看渗液”',angle:'用三张创面照片讲清敷料匹配逻辑',keywords:['敷料','渗液','创面床'],format:'教程实操'},
+  {id:'t05',title:'“瘢痕不是‘长好了’：增生性瘢痕的早期信号”',angle:'从术后 1 个月的变化讲起',keywords:['瘢痕','增生','术后'],format:'知识科普'},
+  {id:'t06',title:'“小鼠创面模型，为什么你的对照组总是不均一？”',angle:'从打孔位置、麻醉、血糖波动三个变量复盘',keywords:['动物模型','创面','重复性'],format:'科研避坑'},
+  {id:'t07',title:'“单细胞测序能告诉我们创面里的什么？”',angle:'用一张 UMAP 图讲清细胞亚群与状态',keywords:['单细胞','创面','巨噬细胞'],format:'图解'},
+  {id:'t08',title:'“糖足患者保肢，需要哪些科室一起上？”',angle:'从血管、骨科、感染、创面四方协作讲起',keywords:['糖足','保肢','多学科'],format:'口播 + 图表'},
+  {id:'t09',title:'“皮肤类器官：从干细胞到带毛囊的皮肤”',angle:'用发育时间线讲清类器官的能与不能',keywords:['类器官','皮肤','毛囊'],format:'知识科普'},
+  {id:'t10',title:'“科研选题：从临床问题到可执行假设”',angle:'用糖足创面感染为例拆解选题四步',keywords:['选题','假设','转化'],format:'口播'}
+];
+
+DB.quiz = {
+  quotes:[
+    {q:'“有时去治愈，常常去帮助，总是去安慰”常被归因于哪位医生？',options:['威廉·奥斯勒','爱德华·特鲁多','保罗·卡兰','西格蒙德·弗洛伊德'],a:1,e:'该句常归于爱德华·特鲁多（E. L. Trudeau），强调医学的边界与人文关怀。'},
+    {q:'科研中“可证伪”的含义更接近？',options:['结论永远正确','提出能被实验否定的假设','只做验证性实验','不需要对照'],a:1,e:'可证伪性要求假设能被数据挑战，而不是只寻找支持证据。'},
+    {q:'“有时去治愈”对科研工作者的提醒是？',options:['基础研究没有价值','承认边界，同时把缓解痛苦作为目标','不需要循证','只做动物实验'],a:1,e:'它不否定治愈，而是提醒在无法治愈时，减轻痛苦与改善生活质量同样重要。'},
+    {q:'关于“转化医学”，下列哪项更准确？',options:['只做细胞实验','把实验室发现推进到临床并反向提出新问题','只做临床试验','只发表论文'],a:1,e:'转化医学是双向的：bench to bedside，也从临床回到机制。'}
+  ],
+  english:[
+    {q:'“The cells were seeded at a density of 1 × 10⁴ cells/cm².” 中 seeded 的意思是？',options:['接种/铺板','冷冻','离心','染色'],a:0,e:'seed cells 指把细胞接种到培养板/支架上。'},
+    {q:'“Wound closure was assessed on day 7.” 中 closure 指？',options:['闭合','感染','渗出','坏死'],a:0,e:'wound closure 即创面闭合，是常见愈合终点。'},
+    {q:'“Adipose-derived stem cells” 最准确的中文是？',options:['脂肪来源干细胞','骨髓干细胞','诱导多能干细胞','胚胎干细胞'],a:0,e:'adipose 指脂肪组织，derived 表示来源。'},
+    {q:'“The results should be interpreted with caution.” 中 with caution 意为？',options:['谨慎地','迅速地','肯定地','公开地'],a:0,e:'with caution 表示解读时需谨慎，常与局限性搭配。'}
+  ],
+  literature:[
+    {q:'Falanga 2005 年 Lancet 综述强调糖尿病足溃疡的哪种特征？',options:['单一病因','神经、缺血、感染等多因素共同作用','只与血糖有关','只与年龄有关'],a:1,e:'该综述强调糖尿病足溃疡是多因素共同作用，单一换药难以解决。'},
+    {q:'Armstrong 2017 年 NEJM 综述特别强调糖尿病足溃疡的？',options:['一次性治愈','高复发率与长期管理','只靠抗生素','只靠手术'],a:1,e:'该文强调复发率高，需要减压、足部护理、感染控制与代谢管理的长期整合。'},
+    {q:'间充质干细胞治疗糖尿病足的系统评价最常见的局限是？',options:['样本量大','方案异质、随访不足','完全没有对照','只发表阴性结果'],a:1,e:'现有研究样本量小、细胞来源/剂量/途径异质，偏倚风险较高。'},
+    {q:'“无细胞治疗”在创面修复中通常指？',options:['不用任何材料','使用干细胞来源囊泡/分泌组而非活细胞','只做清创','只做负压'],a:1,e:'无细胞治疗以囊泡、分泌组或条件培养基替代活细胞，降低部分细胞治疗风险。'}
+  ],
+  research:[
+    {q:'“paracrine signaling”是指？',options:['旁分泌信号','内分泌信号','突触信号','机械信号'],a:0,e:'旁分泌指细胞分泌因子作用于邻近细胞，是干细胞促修复的重要机制。'},
+    {q:'“macrophage polarization”最常描述的是？',options:['巨噬细胞在促炎与促修复表型间的状态变化','巨噬细胞数量不变','T 细胞分化','成纤维细胞增殖'],a:0,e:'M1/M2 是简化模型，实际是连续的表型状态。'},
+    {q:'“extracellular vesicles”不包括下列哪项？',options:['外泌体','微囊泡','凋亡小体','线粒体 DNA'],a:3,e:'细胞外囊泡包括外泌体、微囊泡与凋亡小体；线粒体 DNA 是 cargo 的一种。'},
+    {q:'“re-epithelialization”是指？',options:['再上皮化','血管新生','胶原降解','脂肪形成'],a:0,e:'再上皮化是角质形成细胞迁移覆盖创面的过程，是愈合关键步骤。'}
+  ],
+  schedule:[
+    {q:'本实验排期以哪一天作为实验日锚点？',options:['2026-01-01','2026-08-01','2026-10-01','2027-01-01'],a:1,e:'锚点为 2026-08-01，该日为实验日。'},
+    {q:'六天循环遇到周末时，默认如何处理？',options:['自动升级为实验日','按原六天节奏执行','全部改成休息','只安排组会'],a:1,e:'科研排期按实验节奏执行，周末不自动改变日程类型。'},
+    {q:'排班周期长度是？',options:['3 天','5 天','6 天','7 天'],a:2,e:'六天一轮，循环安排实验、分析、写作、文献、休息与组会。'},
+    {q:'查看排班时，今日应如何显示？',options:['灰色隐藏','高亮显示','只显示在列表','不显示'],a:1,e:'月历视图中今日高亮，不同日程用不同颜色区分。'}
+  ],
+  fitness:[
+    {q:'长时间移液/看显微镜后，首先推荐？',options:['继续硬撑','每 45 分钟起身活动颈肩与手腕','立即高强度训练','完全不动'],a:1,e:'定时打断固定姿势，比一次性长时间拉伸更有效。'},
+    {q:'久坐后出现下肢沉重，首先可做？',options:['立即高强度深蹲','踝泵与小腿拉伸','长时间卧床','停止饮水'],a:1,e:'踝泵促进静脉回流；若单侧肿胀疼痛需警惕血栓，及时就医。'},
+    {q:'有氧运动的推荐总量通常是？',options:['每周 150 分钟中等强度','每天 3 小时','每周 10 分钟','只在周末一次'],a:0,e:'每周约 150 分钟中等强度有氧，可分散到多天。'},
+    {q:'肩痛时进行推举，正确做法是？',options:['忍痛完成','先评估原因，减少过顶动作','加倍重量','只做单侧'],a:1,e:'疼痛是信号，应先评估肩袖/肩峰问题，必要时就医。'}
+  ],
+  ledger:[
+    {q:'记“科研支出”时，分类的主要作用是？',options:['增加支出','看清经费花在哪里并调整预算','替代报销','自动投资'],a:1,e:'分类让支出结构可见，是预算与复盘的基础。'},
+    {q:'下列哪项最适合归入“科研”分类？',options:['午餐','抗体试剂','地铁票','电影票'],a:1,e:'抗体、试剂、耗材属于科研支出；餐饮、交通、娱乐分别归类。'},
+    {q:'月度复盘最应关注？',options:['只看总额','分类占比与异常波动','只记收入','不记录小额'],a:1,e:'分类占比与异常波动比总额更能发现问题。'},
+    {q:'“结余”通常指？',options:['收入 + 支出','收入 − 支出','支出 − 收入','仅指现金'],a:1,e:'结余 = 收入 − 支出；为负说明超支。'}
+  ],
+  video:[
+    {q:'医疗科研科普短视频开头最重要的是？',options:['长自我介绍','3 秒内给出与观众相关的钩子','先放免责声明 1 分钟','堆砌术语'],a:1,e:'前 3 秒决定是否继续观看，钩子要与目标人群的痛点相关。'},
+    {q:'病例故事类内容必须注意？',options:['暴露患者姓名','去标识化并征得同意','夸张诊断','承诺疗效'],a:1,e:'保护隐私是底线；改变可识别信息，并明确“个案不替代就诊”。'},
+    {q:'“对比盘点”类内容的推荐结构是？',options:['随机罗列','先结论，再按 3–4 个维度对比','只讲优点','不标注来源'],a:1,e:'先给结论降低理解成本，再用有限维度对比，避免信息过载。'},
+    {q:'热点追踪最应避免？',options:['标注研究来源','区分相关与因果','把观察性研究说成因果','说明局限'],a:2,e:'观察性研究不能直接推出因果，需说明设计与局限。'}
+  ],
+  topic:[
+    {q:'选题“糖尿病创面为什么难愈合”属于哪种切入？',options:['指南解读','患者常见误区/机制科普','手术记录','医院新闻'],a:1,e:'这是机制科普型选题，适合用四因素框架讲清。'},
+    {q:'好的科研选题通常具备？',options:['宽泛宏大','具体人群/模型 + 具体问题 + 可检验假设','只追求热点','没有明确结局'],a:1,e:'越具体越容易形成可执行假设与清晰终点。'},
+    {q:'“三种敷料怎么选”更适合什么形式？',options:['长纪录片','对比盘点/清单','纯音乐','无声幻灯片'],a:1,e:'清单式结构清晰，适合短视频节奏。'},
+    {q:'选题库收藏功能的作用是？',options:['自动发布','沉淀可复用灵感并进入“我的选题库”','替代实验','增加粉丝'],a:1,e:'收藏把临时灵感变成可管理的内容资产。'}
+  ],
+  review:[
+    {q:'STAR 反思中的“A”指？',options:['Assessment','Action','Analysis','Agreement'],a:1,e:'STAR = Situation（情境）、Task（任务）、Action（行动）、Result（结果）。'},
+    {q:'科研复盘写“下一步”时，最好？',options:['写“更仔细一点”','写具体、可观察、可执行的一条','复制昨天的','不写'],a:1,e:'具体行为目标更容易在次日执行与检验。'},
+    {q:'研究摘要应优先包含？',options:['所有原始数据','科学问题、关键操作、结果与偏差','患者姓名','实验室地址'],a:1,e:'摘要服务于复盘，保留影响判断的关键信息即可。'},
+    {q:'复盘的历史记录应该？',options:['只存当天','按日期保存并可回看','自动删除','只保存在纸上'],a:1,e:'按日期持久化保存，便于追踪自己的判断变化。'}
+  ]
+};
+
+/* 整形外科科研工作台 · 应用逻辑（无依赖） */
+(function () {
+  'use strict';
+
+  var DB = window.DB;
+  var PREFIX = 'ps.';
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var TITLES = {
+    quotes: '每日科研语录', english: '科研英语', literature: '文献与指南', research: '科研进展',
+    schedule: '实验排期', fitness: '科研体能', ledger: '账本', videos: '科普热点',
+    topics: '选题灵感', review: '科研复盘'
+  };
+  var MODULES = Object.keys(TITLES);
+  var CATS = ['餐饮', '交通', '购物', '娱乐', '科研', '其他'];
+  var WEEK = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+
+  var S = {
+    module: 'quotes', enTab: 'nce', enMode: 'both', enDaily: true, phraseCat: '全部',
+    litTab: 'daily', resTab: 'top', dir: 'stem', month: new Date(), videoAll: false,
+    topicFavOnly: false, topicAll: false
+  };
+
+  /* ---------------- 基础工具 ---------------- */
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  function ymd(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function parseYmd(s) {
+    var a = String(s || '').split('-').map(Number);
+    return new Date(a[0] || 1970, (a[1] || 1) - 1, a[2] || 1);
+  }
+  function dayNo(d) { return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000); }
+  function dayDiff(a, b) { return dayNo(a) - dayNo(b); }
+  function todayStr() { return ymd(new Date()); }
+  function fmtMoney(n) { return '¥' + (Math.round(Number(n) * 100) / 100).toFixed(2); }
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function attr(s) { return esc(s).replace(/\s+/g, ' '); }
+  function nl2br(s) { return esc(s).replace(/\n/g, '<br>'); }
+
+  function get(k, d) {
+    try {
+      var v = localStorage.getItem(PREFIX + k);
+      return v == null ? d : JSON.parse(v);
+    } catch (e) { return d; }
+  }
+  function set(k, v) {
+    try { localStorage.setItem(PREFIX + k, JSON.stringify(v)); }
+    catch (e) { toast('本地存储写入失败，请检查浏览器隐私设置'); }
+  }
+
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      var t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function shuffled(arr, seed) {
+    var a = arr.slice(), r = mulberry32(seed || 1);
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(r() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+  function pickN(arr, n, seed) { return shuffled(arr, seed).slice(0, n); }
+  function hashStr(s) {
+    var h = 2166136261;
+    for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return Math.abs(h);
+  }
+
+  var NOW = new Date();
+  var TODAY = ymd(NOW);
+  var DAY = dayNo(NOW);
+
+  /* ---------------- TTS ---------------- */
+  var voices = [];
+  function loadVoices() {
+    if ('speechSynthesis' in window) voices = window.speechSynthesis.getVoices() || [];
+  }
+  if ('speechSynthesis' in window) {
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function speak(text, lang) {
+    if (!('speechSynthesis' in window) || !window.SpeechSynthesisUtterance) {
+      toast('当前浏览器不支持语音朗读，请使用 Chrome / Edge / Safari');
+      return;
+    }
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(String(text));
+    u.lang = lang || 'zh-CN';
+    u.rate = String(lang || '').indexOf('en') === 0 ? 0.86 : 0.98;
+    u.pitch = 1;
+    var pre = (lang || 'zh').slice(0, 2).toLowerCase();
+    var v = voices.filter(function (x) {
+      return String(x.lang || '').toLowerCase().replace('_', '-').indexOf(pre) === 0;
+    })[0];
+    if (v) u.voice = v;
+    window.speechSynthesis.speak(u);
+  }
+  function speakBtn(text, lang) {
+    return '<button type="button" class="btn btn-xs btn-ghost speak" data-speak="' + attr(text) +
+      '" data-lang="' + (lang || 'zh-CN') + '" title="朗读">🔊</button>';
+  }
+
+  var toastTimer = null;
+  function toast(msg) {
+    var t = $('#toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2400);
+  }
+  function copyText(text) {
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); toast('已复制'); }
+      catch (e) { toast('复制失败，请手动选择'); }
+      document.body.removeChild(ta);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { toast('已复制'); }, fallback);
+    } else fallback();
+  }
+
+  /* ---------------- 页面骨架 ---------------- */
+  function pageHead(icon, title, sub, actions) {
+    return '<div class="page-head"><div class="page-ico">' + icon + '</div>' +
+      '<div class="page-head-main"><h1 class="page-title">' + esc(title) + '</h1>' +
+      '<div class="page-sub">' + sub + '</div></div>' +
+      '<div class="page-actions">' + (actions || '') + '</div></div>';
+  }
+  function stat(icon, label, value) {
+    return '<div class="stat"><div class="stat-ico">' + icon + '</div><div>' +
+      '<div class="stat-label">' + label + '</div><div class="stat-value">' + value + '</div></div></div>';
+  }
+  function sectionTitle(t, extra) {
+    return '<div class="section-title">' + t + (extra ? '<span class="hint">' + extra + '</span>' : '') + '</div>';
+  }
+  function tabsHTML(items, active, act) {
+    return '<div class="tabs">' + items.map(function (it) {
+      return '<button type="button" class="tab' + (it.key === active ? ' active' : '') +
+        '" data-act="' + act + '" data-key="' + esc(it.key) + '">' + it.label + '</button>';
+    }).join('') + '</div>';
+  }
+  function catPills(items, active, act) {
+    return '<div class="cat-pills">' + items.map(function (c) {
+      return '<button type="button" class="cat-pill' + (c === active ? ' active' : '') +
+        '" data-act="' + act + '" data-key="' + esc(c) + '">' + esc(c) + '</button>';
+    }).join('') + '</div>';
+  }
+
+  function calcStreak() {
+    var v = get('visited', {}), d = new Date(), n = 0;
+    while (n < 366) {
+      var k = ymd(d);
+      if (v[k] && v[k].length) { n++; d.setDate(d.getDate() - 1); }
+      else break;
+    }
+    return n;
+  }
+  function markVisited(m) {
+    var v = get('visited', {}), k = todayStr();
+    var arr = v[k] || [];
+    if (arr.indexOf(m) < 0) { arr.push(m); v[k] = arr; set('visited', v); }
+  }
+  function visitedToday() { return (get('visited', {})[todayStr()] || []).length; }
+
+  function updateChrome() {
+    var d = new Date();
+    var week = WEEK[d.getDay()];
+    $('#topDate').textContent = d.getFullYear() + '.' + pad(d.getMonth() + 1) + '.' + pad(d.getDate()) + ' ' + week;
+    $('#sideDate').textContent = d.getFullYear() + '.' + pad(d.getMonth() + 1) + '.' + pad(d.getDate());
+    $('#sideWeek').textContent = week;
+    var start = new Date(d.getFullYear(), 0, 1);
+    $('#dayPill').textContent = '第 ' + (dayDiff(d, start) + 1) + ' 天';
+    var n = visitedToday(), pct = Math.round(n / MODULES.length * 100);
+    var fill = $('#miniFill'), text = $('#miniText');
+    if (fill) fill.style.width = pct + '%';
+    if (text) text.textContent = n + '/' + MODULES.length;
+    var foot = $('#footMeta');
+    if (foot) foot.textContent = '今日已浏览 ' + n + '/' + MODULES.length + ' 个模块 · 数据保存在 localStorage';
+    var crumb = $('#crumb');
+    if (crumb) crumb.textContent = TITLES[S.module] || '学习工作台';
+    $$('.nav-item').forEach(function (b) {
+      b.classList.toggle('active', b.getAttribute('data-module') === S.module);
+    });
+  }
+
+  /* ---------------- 每日测验 ---------------- */
+  function quizHTML(m) {
+    var qs = (DB.quiz && DB.quiz[m]) || [];
+    if (!qs.length) return '';
+    var best = get('quizBest', {})[m];
+    return '<section class="quiz" data-quiz="' + m + '">' +
+      '<div class="quiz-head"><h3>🧠 今日小测 · ' + qs.length + ' 题</h3>' +
+      '<span class="tiny muted">最佳成绩：' + (best == null ? '尚未作答' : best + ' 分') + '</span></div>' +
+      qs.map(function (q, qi) {
+        return '<div class="q" data-a="' + q.a + '"><div class="q-title">' + (qi + 1) + '. ' + esc(q.q) + '</div>' +
+          '<div class="opts">' + q.options.map(function (o, oi) {
+            return '<label class="opt"><input type="radio" name="quiz-' + m + '-' + qi + '" value="' + oi + '">' +
+              '<span>' + esc(o) + '</span></label>';
+          }).join('') + '</div><div class="exp">解析：' + esc(q.e) + '</div></div>';
+      }).join('') +
+      '<div class="btn-row" style="margin-top:7px">' +
+      '<button type="button" class="btn btn-primary" data-act="quiz-submit" data-module="' + m + '">提交答案</button>' +
+      '<button type="button" class="btn btn-soft" data-act="quiz-reset">重做</button></div>' +
+      '<div class="quiz-result hidden" style="margin-top:8px"></div></section>';
+  }
+
+  function gradeQuiz(root) {
+    var m = root.getAttribute('data-quiz');
+    var qs = $$('.q', root), score = 0, blank = 0;
+    qs.forEach(function (q) {
+      q.classList.add('graded');
+      q.classList.remove('correct', 'wrong');
+      var sel = $('input:checked', q);
+      if (!sel) { blank++; q.classList.add('wrong'); return; }
+      if (Number(sel.value) === Number(q.getAttribute('data-a'))) { score++; q.classList.add('correct'); }
+      else q.classList.add('wrong');
+    });
+    var pct = Math.round(score / qs.length * 100);
+    var best = get('quizBest', {});
+    if (best[m] == null || pct > best[m]) { best[m] = pct; set('quizBest', best); }
+    var r = $('.quiz-result', root);
+    r.classList.remove('hidden');
+    r.innerHTML = '<b>' + pct + '</b><div>得分 ' + pct + ' 分 · ' + score + '/' + qs.length + ' 题正确 · 最佳 ' + best[m] +
+      ' 分' + (blank ? '<br><span class="tiny">还有 ' + blank + ' 题未作答</span>' : '') + '</div>';
+    var head = $('.quiz-head .muted', root);
+    if (head) head.textContent = '最佳成绩：' + best[m] + ' 分';
+    if (blank) toast('还有 ' + blank + ' 题未作答');
+  }
+
+  /* ---------------- 1. 每日科研语录 ---------------- */
+  function renderQuotes() {
+    var groups = [['创面修复', '临床转化'], ['励志成长', '健康哲思'], ['干细胞', '科研方法']];
+    var colors = ['q-blue', 'q-purple', 'q-green'];
+    var quotes = groups.map(function (g, i) {
+      var pool = DB.quotes.filter(function (q) { return g.indexOf(q.cat) >= 0; });
+      return pickN(pool, 1, DAY * 7 + 31 * i + 3)[0];
+    }).filter(Boolean);
+    var streak = calcStreak();
+    var html = pageHead('💬', '每日科研语录', '创面修复 · 干细胞 · 科研方法 · 临床转化 · 励志成长 · 健康哲思。每天三色各一条，按日期种子自动轮换。',
+      '<button type="button" class="btn btn-soft" data-speak="' + attr(quotes.map(function (q) { return q.text; }).join(' ')) + '" data-lang="zh-CN">🔊 朗读今日语录</button>') +
+      '<div class="stat-strip">' +
+      stat('📅', '今日推送', '3 <small>条</small>') +
+      stat('🗂️', '语录库', DB.quotes.length + ' <small>条</small>') +
+      stat('🔥', '连续学习', streak + ' <small>天</small>') +
+      stat('✅', '今日进度', visitedToday() + '/10') +
+      '</div>' +
+      '<div class="quote-grid">' + quotes.map(function (q, i) {
+        return '<article class="quote-card ' + colors[i] + '">' +
+          '<div class="quote-cat">' + esc(q.cat) + '</div>' +
+          '<div class="quote-text">“' + esc(q.text) + '”</div>' +
+          '<div class="quote-author">— ' + esc(q.author) + '</div>' +
+          '<div class="quote-note">' + esc(q.note) + '</div>' +
+          '<div class="quote-actions">' + speakBtn(q.text, 'zh-CN') +
+          '<button type="button" class="qbtn" data-act="copy-quote" data-id="' + esc(q.id) + '">复制</button></div></article>';
+      }).join('') + '</div>' +
+      '<div class="callout" style="margin-top:11px">💡 三色分组：蓝色 = 创面修复 / 临床转化，紫色 = 励志成长 / 健康哲思，绿色 = 干细胞 / 科研方法。每天自动换一批，不需要手动刷新。</div>' +
+      quizHTML('quotes');
+    return html;
+  }
+
+  /* ---------------- 2. 英语 ---------------- */
+  function enModeBtn() {
+    return '<div class="seg"><button type="button" data-act="en-mode" data-key="both" class="' + (S.enMode === 'both' ? 'active' : '') + '">中英对照</button>' +
+      '<button type="button" data-act="en-mode" data-key="en" class="' + (S.enMode === 'en' ? 'active' : '') + '">仅英文</button></div>';
+  }
+  function dailyBtn() {
+    return '<div class="seg"><button type="button" data-act="en-daily" data-key="daily" class="' + (S.enDaily ? 'active' : '') + '">每日更新</button>' +
+      '<button type="button" data-act="en-daily" data-key="all" class="' + (!S.enDaily ? 'active' : '') + '">全部内容</button></div>';
+  }
+  function enTabs() {
+    var items = [
+      { key: 'nce', label: '新概念英语2' }, { key: 'bbc', label: 'BBC 健康英语' },
+      { key: 'ielts', label: '雅思 IELTS' }, { key: 'toefl', label: '托福 TOEFL' },
+      { key: 'phrases', label: '常用短语' }
+    ];
+    return tabsHTML(items, S.enTab, 'en-tab');
+  }
+
+  function nceHTML() {
+    var list = S.enDaily ? pickN(DB.nce, 2, DAY * 11 + 5) : DB.nce;
+    return '<div class="stack">' + list.map(function (x, i) {
+      return '<details class="lesson clean"' + (i === 0 ? ' open' : '') + '>' +
+        '<summary><span class="row-title en">Lesson ' + x.no + ' · ' + esc(x.title) + '</span> ' +
+        '<span class="tag tag-gray zh-toggle">' + esc(x.zh) + '</span>' +
+        '<span class="chev">›</span></summary>' +
+        '<div class="expand-body"><div class="text-block">' + nl2br(x.text) + '</div>' +
+        '<div class="trans zh-toggle">' + nl2br(x.trans) + '</div>' +
+        '<div class="btn-row" style="margin-top:6px">' + speakBtn(x.text, 'en-US') + speakBtn(x.trans, 'zh-CN') + '</div>' +
+        '<div class="vocab">' + x.vocab.map(function (v) {
+          return '<div class="vocab-item"><b>' + esc(v[0]) + '</b><span class="ipa">' + esc(v[1]) + '</span>' +
+            '<span class="zh-toggle">' + esc(v[2]) + '</span></div>';
+        }).join('') + '</div>' +
+        '<div class="callout" style="margin-top:7px"><b>语法点</b> ' + esc(x.grammar) + '</div></div></details>';
+    }).join('') + '</div>' +
+      '<div class="callout" style="margin-top:8px">📝 说明：课文为按新概念第二册风格改写的学习材料，用于精读与朗读练习，非原版逐字复制。</div>';
+  }
+
+  function bbcHTML() {
+    var list = S.enDaily ? pickN(DB.bbc, 3, DAY * 13 + 9) : DB.bbc;
+    return '<div class="stack">' + list.map(function (x, i) {
+      return '<details class="lesson clean"' + (i === 0 ? ' open' : '') + '>' +
+        '<summary><span class="row-title en">' + esc(x.title) + '</span> ' +
+        '<span class="tag tag-blue zh-toggle">' + esc(x.zh) + '</span><span class="chev">›</span></summary>' +
+        '<div class="expand-body"><div class="text-block">' + nl2br(x.text) + '</div>' +
+        '<div class="trans zh-toggle">' + nl2br(x.trans) + '</div>' +
+        '<div class="btn-row" style="margin-top:6px">' + speakBtn(x.text, 'en-US') + speakBtn(x.trans, 'zh-CN') + '</div>' +
+        '<div class="vocab">' + x.vocab.map(function (v) {
+          return '<div class="vocab-item"><b>' + esc(v[0]) + '</b><span class="ipa">' + esc(v[1]) + '</span>' +
+            '<span class="zh-toggle">' + esc(v[2]) + '</span></div>';
+        }).join('') + '</div></div></details>';
+    }).join('') + '</div>' +
+      '<div class="callout" style="margin-top:8px">📝 说明：文章为围绕健康与医学话题改写的 BBC 风格学习材料，用于积累表达，非原版逐字复制。</div>';
+  }
+
+  function examHTML(exam) {
+    var all = DB.exams.filter(function (x) { return x.exam === exam; });
+    var list = S.enDaily ? pickN(all, 2, DAY * 17 + (exam === 'IELTS' ? 2 : 7)) : all;
+    return '<div class="stack">' + list.map(function (x, i) {
+      return '<details class="lesson clean"' + (i === 0 ? ' open' : '') + '>' +
+        '<summary><span class="row-title">' + esc(x.exam) + ' · ' + esc(x.title) + '</span><span class="chev">›</span></summary>' +
+        '<div class="expand-body"><div class="text-block">' + esc(x.strategy) + '</div>' +
+        '<div class="section-title">🎯 策略要点</div><ol class="mini-list">' + x.points.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ol>' +
+        '<div class="section-title">📚 高频词汇 · ' + x.words.length + ' 个</div><div class="vocab">' + x.words.map(function (w) {
+          return '<div class="vocab-item"><b>' + esc(w[0]) + '</b><span class="zh-toggle">' + esc(w[1]) + '</span></div>';
+        }).join('') + '</div>' +
+        '<div class="section-title">💬 实用表达 · ' + x.phrases.length + ' 条</div><div class="list">' + x.phrases.map(function (p) {
+          return '<div class="list-row"><div class="row-title en">' + esc(p[0]) + '</div>' +
+            '<div class="row-meta zh-toggle">' + esc(p[1]) + '</div></div>';
+        }).join('') + '</div>' +
+        '<div class="btn-row" style="margin-top:7px">' + speakBtn(x.words.map(function (w) { return w[0]; }).join('. '), 'en-US') + '</div>' +
+        '</div></details>';
+    }).join('') + '</div>';
+  }
+
+  function recentSeen(map, key, days) {
+    var d = map[key];
+    if (!d) return false;
+    return dayDiff(new Date(), parseYmd(d)) < (days || 30);
+  }
+  function phrasePool() {
+    var seen = get('phraseSeen', {});
+    var pool = DB.phrases.filter(function (p) {
+      return (S.phraseCat === '全部' || p.cat === S.phraseCat) && !recentSeen(seen, p.id, 30);
+    });
+    return pool;
+  }
+  function currentPhrases() {
+    return pickN(phrasePool(), 30, DAY * 19 + 4);
+  }
+  function phrasesHTML() {
+    var list = currentPhrases();
+    var cats = ['全部'].concat(DB.phrases.map(function (p) { return p.cat; }).filter(function (c, i, a) { return a.indexOf(c) === i; }));
+    var body = list.length ? '<div class="list phrase-grid">' + list.map(function (p, i) {
+      return '<div class="list-row"><div class="row-main"><div class="row-body">' +
+        '<div class="row-title en">' + (i + 1) + '. ' + esc(p.en) + '</div>' +
+        '<div class="row-meta"><span class="ipa">' + esc(p.ipa) + '</span><span class="tag tag-gray zh-toggle">' + esc(p.zh) + '</span></div>' +
+        '<div class="tiny enquote" style="margin-top:2px">' + esc(p.ex) + '</div>' +
+        '<div class="tiny muted zh-toggle">' + esc(p.exZh) + '</div></div>' +
+        '<div class="row-actions">' + speakBtn(p.en, 'en-US') +
+        '<button type="button" class="btn btn-xs btn-ghost" data-act="phrase-mark" data-id="' + esc(p.id) + '" title="标记今日已学">✓</button></div></div></div>';
+    }).join('') + '</div>' : '<div class="empty">当前分类的短语已全部标记为已学（30 天内不再出现）。<br><button type="button" class="btn btn-soft" data-act="phrase-reset" style="margin-top:8px">重置短语记录</button></div>';
+    return '<div class="rowline wrap" style="justify-content:space-between;margin-bottom:7px"><div>' +
+      catPills(cats, S.phraseCat, 'phrase-cat') + '</div>' +
+      '<div class="btn-row"><button type="button" class="btn btn-soft btn-xs" data-act="phrase-group">✓ 标记本组已学，换一组</button>' +
+      '<button type="button" class="btn btn-ghost btn-xs" data-act="phrase-reset">重置</button></div></div>' + body +
+      '<div class="callout" style="margin-top:8px">📌 每天默认 30 条。点「✓」标记单条，或点「标记本组已学」整组替换；已学条目 30 天内不再出现。</div>';
+  }
+
+  function renderEnglish() {
+    var body = '';
+    if (S.enTab === 'nce') body = '<div class="rowline wrap" style="justify-content:space-between;margin-bottom:8px"><div class="tiny muted">每日 2 课 · 16–20 个词汇 + 语法点</div>' + dailyBtn() + '</div>' + nceHTML();
+    else if (S.enTab === 'bbc') body = '<div class="rowline wrap" style="justify-content:space-between;margin-bottom:8px"><div class="tiny muted">每日 3 篇 · 标题 / 正文 / 翻译 / 词汇</div>' + dailyBtn() + '</div>' + bbcHTML();
+    else if (S.enTab === 'ielts') body = '<div class="rowline wrap" style="justify-content:space-between;margin-bottom:8px"><div class="tiny muted">5 个板块 · 每日 2 个 · 每板块 20 词 + 8 表达</div>' + dailyBtn() + '</div>' + examHTML('IELTS');
+    else if (S.enTab === 'toefl') body = '<div class="rowline wrap" style="justify-content:space-between;margin-bottom:8px"><div class="tiny muted">5 个板块 · 每日 2 个 · 每板块 20 词 + 8 表达</div>' + dailyBtn() + '</div>' + examHTML('TOEFL');
+    else body = phrasesHTML();
+
+    return pageHead('📖', '科研英语', '每日轮换 · 中英对照 · 可朗读 · 已学 30 天内不重复。内容为学习型改写材料。', enModeBtn()) +
+      enTabs() + '<div class="' + (S.enMode === 'en' ? 'en-only' : '') + '" style="margin-top:10px">' + body + '</div>' +
+      quizHTML('english');
+  }
+
+  /* ---------------- 3. 文献与指南 ---------------- */
+  function pubmedLink(q, label) {
+    return '<a href="https://pubmed.ncbi.nlm.nih.gov/?term=' + encodeURIComponent(q) + '" target="_blank" rel="noopener">' + label + '</a>';
+  }
+  function litCard(x) {
+    return '<article class="lit-row"><div class="rowline wrap" style="justify-content:space-between">' +
+      '<div class="lit-title">' + pubmedLink(x.q, esc(x.title)) + '</div>' +
+      '<button type="button" class="btn btn-xs btn-soft" data-act="lit-learn" data-id="' + esc(x.id) + '">✓ 标记已学</button></div>' +
+      '<div class="row-meta"><span class="tag tag-blue">' + esc(x.journal) + '</span><span>' + x.year + '</span>' +
+      '<span class="tag tag-gray">' + esc(x.design) + '</span><span class="zh-toggle">' + esc(x.zh) + '</span></div>' +
+      '<div class="lit-grid"><div class="lit-field"><b>主要发现</b><span>' + esc(x.finding) + '</span></div>' +
+      '<div class="lit-field"><b>研究意义</b><span>' + esc(x.meaning) + '</span></div></div>' +
+      '<div class="btn-row" style="margin-top:4px">' + speakBtn(x.zh + '。' + x.finding + '。' + x.meaning, 'zh-CN') +
+      '<span class="tiny muted">原文链接：' + pubmedLink(x.q, 'PubMed') + '</span></div></article>';
+  }
+  function guideCard(x) {
+    return '<article class="lit-row"><div class="rowline wrap" style="justify-content:space-between">' +
+      '<div class="lit-title">' + pubmedLink(x.q, esc(x.name)) + '</div>' +
+      '<button type="button" class="btn btn-xs btn-soft" data-act="guide-learn" data-id="' + esc(x.id) + '">✓ 标记已学</button></div>' +
+      '<div class="row-meta"><span class="tag tag-purple">' + esc(x.org) + '</span><span>' + x.year + '</span>' +
+      '<span class="zh-toggle">' + esc(x.zh) + '</span></div>' +
+      '<ol class="mini-list">' + x.points.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ol>' +
+      '<div class="btn-row" style="margin-top:4px">' + speakBtn(x.zh + '。' + x.points.join('。'), 'zh-CN') + '</div></article>';
+  }
+  function litProgress() {
+    var l = get('litLearned', []).length, g = get('guideLearned', []).length;
+    return '<div class="rowline wrap" style="gap:14px;margin-bottom:8px">' +
+      '<div class="progress-line" style="flex:1;min-width:180px">文献 <div class="track"><i style="width:' + (l / DB.literature.length * 100) + '%"></i></div>' + l + '/' + DB.literature.length + '</div>' +
+      '<div class="progress-line" style="flex:1;min-width:180px">指南 <div class="track"><i style="width:' + (g / DB.guidelines.length * 100) + '%"></i></div>' + g + '/' + DB.guidelines.length + '</div></div>';
+  }
+  function renderLiterature() {
+    var learned = get('litLearned', []);
+    var glearned = get('guideLearned', []);
+    var lpool = DB.literature.filter(function (x) { return learned.indexOf(x.id) < 0; });
+    var gpool = DB.guidelines.filter(function (x) { return glearned.indexOf(x.id) < 0; });
+    var tabs = tabsHTML([
+      { key: 'daily', label: '今日推送' }, { key: 'lit', label: '文献库 28' }, { key: 'guide', label: '指南库 14' }
+    ], S.litTab, 'lit-tab');
+    var body = '';
+    if (S.litTab === 'daily') {
+      var lp = pickN(lpool, 3, DAY * 23 + 11), gp = pickN(gpool, 2, DAY * 29 + 13);
+      body = '<div class="section-title">📄 今日文献 · 3 篇</div>' +
+        (lp.length ? lp.map(litCard).join('') : '<div class="empty">28 篇文献已全部学完。🎉<br><button type="button" class="btn btn-soft" data-act="lit-reset" style="margin-top:8px">重置文献进度</button></div>') +
+        '<div class="section-title" style="margin-top:14px">📋 今日指南 · 2 部</div>' +
+        (gp.length ? gp.map(guideCard).join('') : '<div class="empty">14 部指南已全部学完。🎉<br><button type="button" class="btn btn-soft" data-act="guide-reset" style="margin-top:8px">重置指南进度</button></div>');
+    } else if (S.litTab === 'lit') {
+      body = DB.literature.map(function (x) {
+        var done = learned.indexOf(x.id) >= 0;
+        return done ? '<div class="lit-row learned"><div class="lit-title">' + pubmedLink(x.q, esc(x.title)) + '</div><div class="row-meta">已学 · ' + esc(x.journal) + ' ' + x.year + '</div></div>' : litCard(x);
+      }).join('');
+    } else {
+      body = DB.guidelines.map(function (x) {
+        var done = glearned.indexOf(x.id) >= 0;
+        return done ? '<div class="lit-row learned"><div class="lit-title">' + pubmedLink(x.q, esc(x.name)) + '</div><div class="row-meta">已学 · ' + esc(x.org) + ' ' + x.year + '</div></div>' : guideCard(x);
+      }).join('');
+    }
+    return pageHead('📚', '文献与指南', '28 篇领域高质量文献 + 14 部核心指南。每日 3 篇 + 2 部，学完自动顶上未学内容。',
+      '<button type="button" class="btn btn-soft btn-xs" data-act="lit-reset">重置文献</button>' +
+      '<button type="button" class="btn btn-soft btn-xs" data-act="guide-reset">重置指南</button>') +
+      litProgress() + tabs + '<div class="card card-pad" style="margin-top:10px">' + body + '</div>' +
+      '<div class="callout" style="margin-top:9px">🔗 原文链接跳转 PubMed 检索结果，避免伪造 DOI/PMID；文献结论用于课题回顾，具体判断请回到原文与指南。</div>' +
+      quizHTML('literature');
+  }
+
+  /* ---------------- 4. 科研进展 ---------------- */
+  function stars(n) {
+    var s = '';
+    for (var i = 0; i < 5; i++) s += i < n ? '★' : '☆';
+    return '<span class="ifstar" title="影响因子星级">' + s + '</span>';
+  }
+  function paperLink(p) {
+    return '<a href="https://pubmed.ncbi.nlm.nih.gov/' + encodeURIComponent(p.pmid) + '/" target="_blank" rel="noopener">' + esc(p.title) + '</a>';
+  }
+  function researchTopHTML() {
+    var ps = pickN(DB.research.top, 20, Math.floor(DAY / 2) * 37 + 7);
+    return '<div class="rowline wrap" style="justify-content:space-between;margin-bottom:4px">' +
+      '<div class="tiny muted">每 2 天轮换展示 20 篇 · 本轮 ' + ps.length + '/' + DB.research.top.length + ' 篇 · 全部为 PubMed 真实记录</div>' +
+      '<span class="tag tag-blue">NEW</span></div>' +
+      '<div class="list">' + ps.map(function (p) {
+        return '<div class="journal-row"><div style="flex:1;min-width:0">' +
+          '<div class="row-title">' + paperLink(p) + '</div>' +
+          '<div class="row-meta"><span class="tag tag-gray">' + esc(p.journal) + '</span><span>' + esc(p.date) + '</span>' +
+          stars(p.ifStars) + '<span class="tiny">PMID ' + esc(p.pmid) + '</span> <span class="zh-toggle">' + esc(p.zh) + '</span></div>' +
+          '<div class="abs">' + esc(p.abs) + '</div>' +
+          '<div class="btn-row" style="margin-top:4px">' + speakBtn(p.zh + '。' + p.abs, 'zh-CN') +
+          '<a class="btn btn-xs btn-ghost" href="https://pubmed.ncbi.nlm.nih.gov/' + encodeURIComponent(p.pmid) + '/" target="_blank" rel="noopener">PubMed 原文 ↗</a></div>' +
+          '</div></div>';
+      }).join('') + '</div>';
+  }
+  function researchDirectionsHTML() {
+    var dirs = DB.research.directions;
+    return '<div class="dir-grid">' + dirs.map(function (d) {
+      var p = pickN(d.papers, 1, DAY * 31 + hashStr(d.key))[0];
+      return '<article class="dir-card"><h4>' + d.icon + ' ' + esc(d.name) + ' <span class="tiny muted">· 每日 1 篇 / 共 ' + d.papers.length + ' 篇</span></h4>' +
+        '<div class="row-title"><a href="https://pubmed.ncbi.nlm.nih.gov/?term=' + encodeURIComponent(p.q) + '" target="_blank" rel="noopener">' + esc(p.title) + '</a></div>' +
+        '<div class="row-meta"><span class="tag tag-gray">' + esc(p.journal) + '</span><span>' + p.year + '</span>' + stars(p.ifStars) + '</div>' +
+        '<div class="abs">' + esc(p.zh) + '</div>' +
+        '<div class="btn-row" style="margin-top:4px">' + speakBtn(p.zh, 'zh-CN') +
+        '<details class="clean" style="margin-top:1px"><summary class="btn btn-xs btn-ghost">全部 10 篇 <span class="chev">›</span></summary>' +
+        '<div class="list" style="margin-top:4px">' + d.papers.map(function (x) {
+          return '<div class="list-row"><div class="row-title"><a href="https://pubmed.ncbi.nlm.nih.gov/?term=' + encodeURIComponent(x.q) + '" target="_blank" rel="noopener">' + esc(x.title) + '</a></div>' +
+            '<div class="row-meta">' + esc(x.journal) + ' ' + x.year + ' ' + stars(x.ifStars) + ' <span class="zh-toggle">' + esc(x.zh) + '</span></div></div>';
+        }).join('') + '</div></details></div></article>';
+    }).join('') + '</div>';
+  }
+  function termEntries(dirKey) {
+    var d = DB.research.directions.filter(function (x) { return x.key === dirKey; })[0] || DB.research.directions[0];
+    var seen = get('termSeen', {});
+    var un = d.terms.filter(function (t) { return !recentSeen(seen, d.key + ':' + t.en, 30); });
+    if (un.length < 10) {
+      Object.keys(seen).forEach(function (k) { if (k.indexOf(d.key + ':') === 0) delete seen[k]; });
+      set('termSeen', seen);
+      un = d.terms.slice();
+    }
+    return { dir: d, list: pickN(un, 10, DAY * 41 + hashStr(d.key)) };
+  }
+  function researchTermsHTML() {
+    var tabs = tabsHTML(DB.research.directions.map(function (d) { return { key: d.key, label: d.icon + ' ' + d.name }; }), S.dir, 'research-dir');
+    var data = termEntries(S.dir);
+    return tabs + '<div class="rowline wrap" style="justify-content:space-between;margin:8px 0 6px">' +
+      '<div class="tiny muted">' + esc(data.dir.name) + ' · 每日 10 个 · 共 ' + data.dir.terms.length + ' 个 · 可标记已学换组</div>' +
+      '<button type="button" class="btn btn-xs btn-soft" data-act="term-group" data-key="' + esc(data.dir.key) + '">✓ 本组已学，换一组</button></div>' +
+      '<div class="vocab-cloud">' + data.list.map(function (t) {
+        return '<div class="word-card"><b>' + esc(t.en) + '</b><span class="ipa">' + esc(t.ipa) + '</span>' +
+          '<span class="zh-toggle">' + esc(t.zh) + '</span>' +
+          speakBtn(t.en, 'en-US') +
+          '<button type="button" class="btn btn-xs btn-ghost" data-act="term-learn" data-key="' + esc(data.dir.key) + '" data-en="' + attr(t.en) + '" title="标记已学">✓</button></div>';
+      }).join('') + '</div>';
+  }
+  function renderResearch() {
+    var tabs = tabsHTML([
+      { key: 'top', label: '顶刊速递' }, { key: 'directions', label: '六方向文献' }, { key: 'terms', label: '专业词汇' }
+    ], S.resTab, 'res-tab');
+    var body = S.resTab === 'top' ? researchTopHTML() : (S.resTab === 'directions' ? researchDirectionsHTML() : researchTermsHTML());
+    return pageHead('🔬', '科研进展', '顶刊速递每 2 天轮换 20 篇；六大方向每日各推 1 篇；96 个专业词汇每日 10 个。',
+      '<span class="tag tag-blue">PubMed 实时记录</span>') + tabs +
+      '<div class="card card-pad" style="margin-top:10px">' + body + '</div>' +
+      '<div class="callout" style="margin-top:9px">🔗 顶刊条目为真实 PMID，点击标题可打开 PubMed；中文摘要为标题与研究设计的中文导读，不替代原文结论。</div>' +
+      quizHTML('research');
+  }
+
+  /* ---------------- 5. 实验排期 ---------------- */
+  function shiftFor(d) {
+    var anchor = parseYmd(DB.schedule.anchor);
+    var idx = ((dayDiff(d, anchor) % 6) + 6) % 6;
+    return DB.schedule.cycle[idx];
+  }
+  function shiftClass(s) {
+    return s.key === 'duty24' ? 'shift-24' : (s.key === 'night' ? 'shift-night' : (s.key === 'off' ? 'shift-rest' : 'shift-day'));
+  }
+  function renderSchedule() {
+    var y = S.month.getFullYear(), m = S.month.getMonth();
+    var first = new Date(y, m, 1);
+    var offset = (first.getDay() + 6) % 7;
+    var days = new Date(y, m + 1, 0).getDate();
+    var cells = Math.ceil((offset + days) / 7) * 7;
+    var html = pageHead('📅', '实验排期', '六天一轮，以 ' + DB.schedule.anchor + ' 的实验日为锚点；实验、分析、写作、文献、组会与休息循环推进。',
+      '<button type="button" class="btn btn-soft" data-act="cal-today">回到今天</button>') +
+      '<div class="stat-strip">' + stat('🧪', '今日安排', shiftFor(NOW).label) +
+      stat('🔬', '本月实验日', monthCount(y, m, 'duty24') + ' <small>天</small>') +
+      stat('📖', '本月文献日', monthCount(y, m, 'night') + ' <small>天</small>') +
+      stat('☕', '下次休息', nextOff() + '</div>') +
+      '<section class="card"><div class="card-head"><h3>' + y + ' 年 ' + (m + 1) + ' 月</h3><div class="hint">' + DB.schedule.note + '</div></div>' +
+      '<div class="card-pad"><div class="cal-toolbar"><button type="button" class="btn btn-xs" data-act="cal-prev">‹ 上一月</button>' +
+      '<div class="cal-month">' + y + '.' + pad(m + 1) + '</div><button type="button" class="btn btn-xs" data-act="cal-next">下一月 ›</button></div>' +
+      '<div class="cal">' + ['一', '二', '三', '四', '五', '六', '日'].map(function (w) { return '<div class="cal-head">' + w + '</div>'; }).join('') +
+      (function () {
+        var out = '';
+        for (var i = 0; i < cells; i++) {
+          var d = new Date(y, m, 1 - offset + i);
+          var inMonth = d.getMonth() === m;
+          var s = shiftFor(d);
+          var wd = d.getDay();
+          out += '<div class="cal-day' + (inMonth ? '' : ' out') + (ymd(d) === TODAY ? ' today' : '') + ((wd === 0 || wd === 6) ? ' weekend' : '') + '" title="' + ymd(d) + ' · ' + s.label + '">' +
+            '<div class="cal-num"><span>' + d.getDate() + '</span>' + (ymd(d) === TODAY ? '<span class="tiny">今天</span>' : '') + '</div>' +
+            '<span class="cal-shift ' + shiftClass(s) + '">' + s.short + '</span></div>';
+        }
+        return out;
+      })() + '</div>' +
+      '<div class="legend"><span><i class="shift-24" style="background:#FDE7E7"></i>实验日</span><span><i class="shift-night" style="background:#E9E8FB"></i>文献日</span><span><i class="shift-day" style="background:#E6F6EE"></i>分析 / 写作 / 组会</span><span><i class="shift-rest" style="background:#F1F5FA"></i>休息</span></div>' +
+      '<div class="upcoming">' + upcomingHTML(6) + '</div></div></section>' + quizHTML('schedule');
+    return html;
+  }
+  function monthCount(y, m, type) {
+    var n = 0, days = new Date(y, m + 1, 0).getDate();
+    for (var i = 1; i <= days; i++) if (shiftFor(new Date(y, m, i)).key === type) n++;
+    return n;
+  }
+  function nextOff() {
+    var d = new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate());
+    for (var i = 1; i <= 20; i++) {
+      d.setDate(d.getDate() + 1);
+      if (shiftFor(d).key === 'off') return (i === 1 ? '明天' : '周' + '日一二三四五六'[d.getDay()]) + ' · ' + (d.getMonth() + 1) + '/' + d.getDate();
+    }
+    return '—';
+  }
+  function upcomingHTML(n) {
+    var out = '', d = new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate());
+    for (var i = 0; i < n; i++) {
+      if (i > 0) d.setDate(d.getDate() + 1);
+      var s = shiftFor(d);
+      out += '<div class="up-day"><span>' + WEEK[d.getDay()] + '</span><b>' + (d.getMonth() + 1) + '/' + d.getDate() + '</b>' +
+        '<span class="cal-shift ' + shiftClass(s) + '" style="margin-top:0">' + s.short + '</span></div>';
+    }
+    return out;
+  }
+
+  /* ---------------- 6. 科研体能 ---------------- */
+  function fitLinks(x) {
+    return '<a class="btn btn-xs btn-ghost" target="_blank" rel="noopener" href="https://search.bilibili.com/all?keyword=' + encodeURIComponent(x.bili) + '">B站跟练 ↗</a>' +
+      '<a class="btn btn-xs btn-ghost" target="_blank" rel="noopener" href="https://www.douyin.com/search/' + encodeURIComponent(x.douyin) + '">抖音跟练 ↗</a>';
+  }
+  function renderFitness() {
+    var tw = DB.fitness.week[(NOW.getDay() + 6) % 7];
+    var trainDays = DB.fitness.week.filter(function (w) { return w.focus !== '休息'; }).length;
+    return pageHead('💪', '科研体能', '9 个训练部位 + 本周计划。动作、组数、要领和跟练入口都在卡片里，按当天状态降阶。',
+      '<button type="button" class="btn btn-soft" data-speak="' + attr(DB.fitness.week.map(function (w) { return w.day + '，' + w.focus + '，' + w.detail; }).join('。')) + '" data-lang="zh-CN">🔊 朗读本周计划</button>') +
+      '<div class="stat-strip">' + stat('🧩', '训练部位', DB.fitness.parts.length + ' <small>个</small>') +
+      stat('📆', '本周训练', trainDays + ' <small>天</small>') +
+      stat('🎯', '今日重点', tw.focus) +
+      stat('⏱️', '建议时长', '30–45 <small>分钟</small>') + '</div>' +
+      '<div class="fit-grid">' + DB.fitness.parts.map(function (p) {
+        return '<article class="fit-card"><h4>' + p.icon + ' ' + esc(p.name) + '</h4>' +
+          '<div class="fit-intro">' + esc(p.focus) + '</div>' +
+          '<ul class="fit-moves">' + p.actions.map(function (a) {
+            return '<li><b>' + esc(a.name) + '</b><span>' + esc(a.sets) + '</span></li>';
+          }).join('') + '</ul>' +
+          '<div class="tiny muted" style="margin-top:4px">要领：' + esc(p.cues[0]) + '</div>' +
+          '<div class="fit-links">' + fitLinks(p) + '</div></article>';
+      }).join('') + '</div>' +
+      '<section class="card" style="margin-top:10px"><div class="card-head"><h3>本周训练计划</h3><span class="hint">高亮为今天</span></div>' +
+      '<div class="card-pad" style="padding-top:4px"><table class="week-table"><thead><tr><th>星期</th><th>重点</th><th>安排</th></tr></thead><tbody>' +
+      DB.fitness.week.map(function (w, i) {
+        return '<tr' + (i === (NOW.getDay() + 6) % 7 ? ' class="today"' : '') + '><td>' + esc(w.day) + '</td><td>' + esc(w.focus) + '</td><td>' + esc(w.detail) + '</td></tr>';
+      }).join('') + '</tbody></table></div></section>' +
+      '<div class="callout" style="margin-top:9px">⚠️ 久坐、移液与显微镜操作容易累积颈肩腰劳损；出现持续麻木、胸痛、晕厥或明显气促应停止并就医。重训日与实验日错开。</div>' +
+      quizHTML('fitness');
+  }
+
+  /* ---------------- 7. 账本 ---------------- */
+  function ledgerAll() { return get('ledger', []); }
+  function renderLedger() {
+    var all = ledgerAll().slice().sort(function (a, b) { return (b.date + b.ts).localeCompare(a.date + a.ts); });
+    var today = all.filter(function (x) { return x.date === TODAY; });
+    var sum = function (arr) { return arr.reduce(function (s, x) { return s + Number(x.amount || 0); }, 0); };
+    var ali = today.filter(function (x) { return x.platform === '支付宝'; });
+    var wec = today.filter(function (x) { return x.platform === '微信'; });
+    var month = TODAY.slice(0, 7);
+    var mAll = all.filter(function (x) { return String(x.date).slice(0, 7) === month; });
+    var byCat = CATS.map(function (c) { return { c: c, v: sum(mAll.filter(function (x) { return x.category === c; })) }; });
+    var max = Math.max.apply(null, byCat.map(function (x) { return x.v; }).concat([1]));
+    return pageHead('💰', '账本', '记录每日支出，区分支付宝 / 微信，6 个分类自动汇总，本机保存。',
+      '<span class="tag tag-blue">本月 ' + fmtMoney(sum(mAll)) + '</span>') +
+      '<div class="money-cards">' + '<div class="money"><div class="l">今日合计</div><div class="v">' + fmtMoney(sum(today)) + '</div></div>' +
+      '<div class="money"><div class="l">支付宝 · 今日</div><div class="v">' + fmtMoney(sum(ali)) + '</div></div>' +
+      '<div class="money"><div class="l">微信 · 今日</div><div class="v">' + fmtMoney(sum(wec)) + '</div></div></div>' +
+      '<section class="card" style="margin-top:10px"><div class="card-head"><h3>记一笔</h3><span class="hint">金额单位：元</span></div><div class="card-pad">' +
+      '<form id="ledgerForm" class="ledger-form">' +
+      '<div class="field"><label>日期</label><input class="input" type="date" id="ledgerDate" value="' + TODAY + '"></div>' +
+      '<div class="field"><label>平台</label><select class="input" id="ledgerPlatform"><option>支付宝</option><option>微信</option></select></div>' +
+      '<div class="field"><label>分类</label><select class="input" id="ledgerCategory">' + CATS.map(function (c) { return '<option>' + c + '</option>'; }).join('') + '</select></div>' +
+      '<div class="field"><label>金额</label><input class="input" type="number" id="ledgerAmount" min="0" step="0.01" placeholder="0.00" inputmode="decimal"></div>' +
+      '<div class="field"><label>备注</label><input class="input" id="ledgerNote" placeholder="可选" maxlength="40"></div>' +
+      '<div class="field field-submit"><button class="btn btn-primary" type="submit">＋ 记一笔</button></div></form></div></section>' +
+      '<div class="grid g2" style="margin-top:10px">' +
+      '<section class="card"><div class="card-head"><h3>本月分类</h3><span class="hint">' + month + ' · ' + fmtMoney(sum(mAll)) + '</span></div><div class="card-pad"><div class="bar-list">' +
+      byCat.map(function (x) {
+        return '<div class="bar-row"><span>' + x.c + '</span><div class="bar-track"><div class="bar-fill" style="width:' + (x.v / max * 100) + '%"></div></div><span>' + fmtMoney(x.v) + '</span></div>';
+      }).join('') + '</div></div></section>' +
+      '<section class="card"><div class="card-head"><h3>历史记录</h3><span class="hint">' + all.length + ' 笔</span></div><div class="card-pad"><div class="ledger-history">' +
+      (all.length ? all.map(function (x) {
+        return '<div class="ledger-item"><span class="tag ' + (x.platform === '支付宝' ? 'tag-blue' : 'tag-green') + '">' + esc(x.platform) + '</span>' +
+          '<span class="tag tag-gray">' + esc(x.category) + '</span><span class="small">' + esc(x.date) + '</span>' +
+          '<span class="tiny muted">' + esc(x.note || '') + '</span><span class="amt">' + fmtMoney(x.amount) + '</span>' +
+          '<button type="button" class="del" data-act="ledger-del" data-id="' + esc(x.id) + '" title="删除">×</button></div>';
+      }).join('') : '<div class="empty">还没有记录，先记下今天的第一笔。</div>') + '</div></div></section></div>' + quizHTML('ledger');
+  }
+  function addLedger() {
+    var amount = Number($('#ledgerAmount').value);
+    if (!amount || amount <= 0) { toast('请输入大于 0 的金额'); return; }
+    var arr = ledgerAll();
+    arr.push({
+      id: 'L' + Date.now(),
+      date: $('#ledgerDate').value || TODAY,
+      platform: $('#ledgerPlatform').value,
+      category: $('#ledgerCategory').value,
+      amount: Math.round(amount * 100) / 100,
+      note: $('#ledgerNote').value.trim(),
+      ts: Date.now()
+    });
+    set('ledger', arr);
+    toast('已记账：' + fmtMoney(amount));
+    render();
+  }
+
+  /* ---------------- 8. 科普热点 ---------------- */
+  function renderVideos() {
+    var list = S.videoAll ? DB.videos : pickN(DB.videos, 4, DAY * 43 + 17);
+    return pageHead('🎬', '科普热点', '10 种短视频类型，每日轮换 4 种。每种都给出示例标题、内容框架、技巧和搜索入口。',
+      '<button type="button" class="btn btn-soft" data-act="video-all">' + (S.videoAll ? '只看今日 4 种' : '展开全部 10 种') + '</button>') +
+      '<div class="video-grid">' + list.map(function (v) {
+        return '<article class="video-card"><h4>' + v.icon + ' ' + esc(v.name) + '</h4>' +
+          '<div class="example-title">示例：' + esc(v.example) + '</div>' +
+          '<div class="vmeta"><b>内容框架</b><ol class="mini-list">' + v.frame.map(function (f) { return '<li>' + esc(f) + '</li>'; }).join('') + '</ol></div>' +
+          '<div class="vmeta" style="margin-top:4px"><b>技巧</b> ' + esc(v.tip) + '</div>' +
+          '<div class="rowline wrap" style="margin-top:5px">' + v.topics.map(function (t) { return '<span class="tag tag-blue">' + esc(t) + '</span>'; }).join('') + '</div>' +
+          '<div class="btn-row" style="margin-top:6px"><a class="btn btn-xs btn-ghost" target="_blank" rel="noopener" href="https://search.bilibili.com/all?keyword=' + encodeURIComponent(v.bili) + '">B站搜索 ↗</a>' +
+          '<a class="btn btn-xs btn-ghost" target="_blank" rel="noopener" href="https://www.douyin.com/search/' + encodeURIComponent(v.douyin) + '">抖音搜索 ↗</a>' +
+          speakBtn(v.name + '。示例：' + v.example + '。技巧：' + v.tip, 'zh-CN') + '</div></article>';
+      }).join('') + '</div>' +
+      '<div class="callout" style="margin-top:9px">🎥 医疗科普内容需注意平台资质与表述边界：不承诺疗效、不替代面诊、不使用绝对化用语。</div>' + quizHTML('video');
+  }
+
+  /* ---------------- 9. 选题灵感 ---------------- */
+  function renderTopics() {
+    var favs = get('favTopics', []);
+    var all = DB.topics;
+    var list = S.topicFavOnly ? all.filter(function (t) { return favs.indexOf(t.id) >= 0; }) : (S.topicAll ? all : pickN(all, 4, DAY * 47 + 19));
+    return pageHead('💡', '选题灵感', '10 个科研 / 科普选题，每日轮换 4 个；收藏后进入「我的选题库」。',
+      '<button type="button" class="btn btn-soft" data-act="topic-fav-only">' + (S.topicFavOnly ? '返回每日选题' : '我的选题库 ' + favs.length) + '</button>' +
+      '<button type="button" class="btn btn-soft" data-act="topic-all">' + (S.topicAll ? '只看今日 4 个' : '全部 10 个') + '</button>') +
+      (list.length ? '<div class="topic-grid">' + list.map(function (t) {
+        var fav = favs.indexOf(t.id) >= 0;
+        return '<article class="topic-card"><h4>' + esc(t.title) + '</h4>' +
+          '<div class="topic-line"><b>切入角度</b> ' + esc(t.angle) + '</div>' +
+          '<div class="topic-line"><b>关键词</b> ' + t.keywords.map(function (k) { return '<span class="tag tag-gray">' + esc(k) + '</span>'; }).join(' ') + '</div>' +
+          '<div class="topic-line"><b>适合形式</b> ' + esc(t.format) + '</div>' +
+          '<div class="btn-row" style="margin-top:auto;padding-top:6px">' +
+          '<button type="button" class="btn btn-xs ' + (fav ? 'fav-active' : '') + '" data-act="topic-fav" data-id="' + esc(t.id) + '">' + (fav ? '★ 已收藏' : '☆ 收藏') + '</button>' +
+          '<button type="button" class="btn btn-xs btn-ghost" data-act="topic-copy" data-id="' + esc(t.id) + '">复制选题</button>' +
+          speakBtn(t.title + '。' + t.angle + '。适合形式：' + t.format, 'zh-CN') + '</div></article>';
+      }).join('') + '</div>' : '<div class="empty">还没有收藏选题。点卡片上的「☆ 收藏」即可加入我的选题库。</div>') +
+      quizHTML('topic');
+  }
+
+  /* ---------------- 10. 科研复盘 ---------------- */
+  function reviewList() { return get('reviews', []); }
+  function reviewField(label, id, val, ph) {
+    return '<div class="field"><label>' + label + '</label><textarea class="input" id="' + id + '" placeholder="' + attr(ph || '') + '">' + esc(val || '') + '</textarea></div>';
+  }
+  function renderReview() {
+    var all = reviewList().slice().sort(function (a, b) { return b.date.localeCompare(a.date); });
+    var cur = all.filter(function (x) { return x.date === TODAY; })[0] || {};
+    var hist = all.length ? all.map(function (x) {
+      return '<details class="review-item"><summary style="cursor:pointer"><span class="d">' + esc(x.date) + '</span>' +
+        '<div class="s">' + esc(x.caseSummary || '（未填研究摘要）') + '</div></summary>' +
+        '<div style="margin-top:5px">' + [['S 情境', x.s], ['T 任务', x.t], ['A 行动', x.a], ['R 结果', x.r], ['学习要点', x.learn], ['下一步', x.next]].map(function (kv) {
+          return kv[1] ? '<div class="topic-line"><b>' + kv[0] + '：</b>' + nl2br(kv[1]) + '</div>' : '';
+        }).join('') +
+        '<div class="btn-row" style="margin-top:4px">' + speakBtn((x.caseSummary || '') + '。' + (x.learn || ''), 'zh-CN') +
+        '<button type="button" class="btn btn-xs btn-ghost" data-act="review-del" data-date="' + esc(x.date) + '">删除</button></div></div></details>';
+    }).join('') : '<div class="empty">还没有科研复盘。今天离开实验室前，用 5 分钟写一条。</div>';
+    return pageHead('🧠', '科研复盘', '每日一条：研究摘要 + STAR 反思 + 学习要点 + 下一步。按日期保存在本机，可随时回看。',
+      '<span class="tag tag-blue">已记录 ' + all.length + ' 天</span>') +
+      '<div class="review-grid"><section class="card"><div class="card-head"><h3>今日复盘</h3><span class="hint">' + TODAY + '</span></div><div class="card-pad">' +
+      '<form id="reviewForm" class="review-form">' +
+      '<div class="field"><label>复盘日期</label><input class="input" type="date" id="reviewDate" value="' + TODAY + '"></div>' +
+      reviewField('研究摘要', 'rvCase', cur.caseSummary, '一句话说清：今天要回答的问题、关键操作与结果') +
+      '<div class="star-grid">' +
+      reviewField('S · 情境', 'rvS', cur.s, '今天的实验 / 分析场景与背景') +
+      reviewField('T · 任务', 'rvT', cur.t, '今天要解决的核心问题') +
+      reviewField('A · 行动', 'rvA', cur.a, '你做了什么、依据是什么') +
+      reviewField('R · 结果', 'rvR', cur.r, '结果如何、有没有偏差') +
+      '</div>' + reviewField('学习要点', 'rvLearn', cur.learn, '可迁移到下一个实验 / 下一轮分析的 1–3 点') +
+      reviewField('下一步', 'rvNext', cur.next, '具体到下一个实验日能执行的动作') +
+      '<div class="btn-row" style="margin-top:6px"><button class="btn btn-primary" type="submit">保存今日复盘</button>' +
+      '<span class="tiny muted">同一天再次保存会覆盖当天记录</span></div></form></div></section>' +
+      '<section class="card"><div class="card-head"><h3>复盘历史</h3><span class="hint">' + all.length + ' 天</span></div><div class="card-pad"><div class="review-history">' + hist + '</div></div></section></div>' +
+      quizHTML('review');
+  }
+  function saveReview() {
+    var date = $('#reviewDate').value || TODAY;
+    var obj = {
+      date: date,
+      caseSummary: $('#rvCase').value.trim(),
+      s: $('#rvS').value.trim(), t: $('#rvT').value.trim(),
+      a: $('#rvA').value.trim(), r: $('#rvR').value.trim(),
+      learn: $('#rvLearn').value.trim(), next: $('#rvNext').value.trim(),
+      ts: Date.now()
+    };
+    if (!obj.caseSummary && !obj.s && !obj.a && !obj.learn) { toast('至少填写研究摘要或一条反思'); return; }
+    var arr = reviewList();
+    var i = arr.findIndex(function (x) { return x.date === date; });
+    if (i >= 0) arr[i] = obj; else arr.push(obj);
+    set('reviews', arr);
+    toast(date + ' 的复盘已保存');
+    render();
+  }
+
+  /* ---------------- 渲染入口 ---------------- */
+  function render() {
+    markVisited(S.module);
+    var map = {
+      quotes: renderQuotes, english: renderEnglish, literature: renderLiterature,
+      research: renderResearch, schedule: renderSchedule, fitness: renderFitness,
+      ledger: renderLedger, videos: renderVideos, topics: renderTopics, review: renderReview
+    };
+    var fn = map[S.module] || renderQuotes;
+    $('#view').innerHTML = fn();
+    updateChrome();
+  }
+
+  function go(m) {
+    if (!TITLES[m]) return;
+    S.module = m;
+    closeNav();
+    try { history.replaceState(null, '', '#' + m); } catch (e) { location.hash = m; }
+    render();
+    window.scrollTo(0, 0);
+  }
+  function openNav() {
+    var sb = $('#sidebar'), sc = $('#scrim');
+    if (sb) sb.classList.add('open');
+    if (sc) sc.classList.add('show');
+  }
+  function closeNav() {
+    var sb = $('#sidebar'), sc = $('#scrim');
+    if (sb) sb.classList.remove('open');
+    if (sc) sc.classList.remove('show');
+  }
+
+  /* ---------------- 交互 ---------------- */
+  document.addEventListener('click', function (e) {
+    var sp = e.target.closest('[data-speak]');
+    if (sp) { speak(sp.getAttribute('data-speak'), sp.getAttribute('data-lang') || 'zh-CN'); return; }
+    var el = e.target.closest('[data-act]');
+    if (!el) return;
+    var act = el.getAttribute('data-act');
+    var key = el.getAttribute('data-key');
+    var id = el.getAttribute('data-id');
+    if (act === 'copy-quote') {
+      var q = DB.quotes.filter(function (x) { return x.id === id; })[0];
+      if (q) copyText('“' + q.text + '” — ' + q.author + '\n' + q.note);
+    } else if (act === 'en-tab') { S.enTab = key; render(); }
+    else if (act === 'en-mode') { S.enMode = key; render(); }
+    else if (act === 'en-daily') { S.enDaily = key === 'daily'; render(); }
+    else if (act === 'phrase-cat') { S.phraseCat = key; render(); }
+    else if (act === 'phrase-mark') { markPhrases([id]); }
+    else if (act === 'phrase-group') { markPhrases(currentPhrases().map(function (p) { return p.id; })); }
+    else if (act === 'phrase-reset') { set('phraseSeen', {}); toast('短语已学记录已重置'); render(); }
+    else if (act === 'lit-tab') { S.litTab = key; render(); }
+    else if (act === 'lit-learn') {
+      var ll = get('litLearned', []); if (ll.indexOf(id) < 0) ll.push(id); set('litLearned', ll);
+      toast('已标记，已自动补上下一篇'); render();
+    } else if (act === 'guide-learn') {
+      var gl = get('guideLearned', []); if (gl.indexOf(id) < 0) gl.push(id); set('guideLearned', gl);
+      toast('已标记，已自动补上下一部'); render();
+    } else if (act === 'lit-reset') { set('litLearned', []); toast('文献进度已重置'); render(); }
+    else if (act === 'guide-reset') { set('guideLearned', []); toast('指南进度已重置'); render(); }
+    else if (act === 'res-tab') { S.resTab = key; render(); }
+    else if (act === 'research-dir') { S.dir = key; render(); }
+    else if (act === 'term-learn') {
+      var seen = get('termSeen', {}); seen[key + ':' + el.getAttribute('data-en')] = TODAY; set('termSeen', seen); render();
+    } else if (act === 'term-group') {
+      var data = termEntries(key), ts = get('termSeen', {});
+      data.list.forEach(function (t) { ts[key + ':' + t.en] = TODAY; });
+      set('termSeen', ts); toast('本组 10 个词汇已标记，已换一组'); render();
+    } else if (act === 'cal-prev') { S.month = new Date(S.month.getFullYear(), S.month.getMonth() - 1, 1); render(); }
+    else if (act === 'cal-next') { S.month = new Date(S.month.getFullYear(), S.month.getMonth() + 1, 1); render(); }
+    else if (act === 'cal-today') { S.month = new Date(); render(); }
+    else if (act === 'ledger-del') {
+      set('ledger', ledgerAll().filter(function (x) { return x.id !== id; }));
+      toast('已删除'); render();
+    } else if (act === 'video-all') { S.videoAll = !S.videoAll; render(); }
+    else if (act === 'topic-fav') {
+      var favs = get('favTopics', []); var i = favs.indexOf(id);
+      if (i >= 0) { favs.splice(i, 1); toast('已取消收藏'); } else { favs.push(id); toast('已加入我的选题库'); }
+      set('favTopics', favs); render();
+    } else if (act === 'topic-all') { S.topicAll = !S.topicAll; S.topicFavOnly = false; render(); }
+    else if (act === 'topic-fav-only') {
+      S.topicFavOnly = !S.topicFavOnly;
+      if (S.topicFavOnly) S.topicAll = true;
+      render();
+    } else if (act === 'topic-copy') {
+      var t = DB.topics.filter(function (x) { return x.id === id; })[0];
+      if (t) copyText(t.title + '\n切入角度：' + t.angle + '\n关键词：' + t.keywords.join('、') + '\n形式：' + t.format);
+    } else if (act === 'review-del') {
+      var date = el.getAttribute('data-date');
+      set('reviews', reviewList().filter(function (x) { return x.date !== date; }));
+      toast('已删除 ' + date + ' 的复盘'); render();
+    } else if (act === 'quiz-submit') {
+      var root = el.closest('.quiz'); if (root) gradeQuiz(root);
+    } else if (act === 'quiz-reset') { render(); }
+  });
+
+  function markPhrases(ids) {
+    var seen = get('phraseSeen', {});
+    ids.forEach(function (id) { if (id) seen[id] = TODAY; });
+    set('phraseSeen', seen);
+    toast('已标记 ' + ids.length + ' 条，30 天内不再出现');
+    render();
+  }
+
+  document.addEventListener('submit', function (e) {
+    if (e.target.id === 'ledgerForm') { e.preventDefault(); addLedger(); }
+    else if (e.target.id === 'reviewForm') { e.preventDefault(); saveReview(); }
+  });
+
+  function init() {
+    loadVoices();
+    var h = String(location.hash || '').replace('#', '');
+    if (TITLES[h]) S.module = h;
+    $('#menuBtn').addEventListener('click', openNav);
+    $('#scrim').addEventListener('click', closeNav);
+    $('#stopSpeak').addEventListener('click', function () {
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      toast('已停止朗读');
+    });
+    $$('.nav-item').forEach(function (b) {
+      b.addEventListener('click', function () { go(b.getAttribute('data-module')); });
+    });
+    window.addEventListener('hashchange', function () {
+      var m = String(location.hash || '').replace('#', '');
+      if (TITLES[m] && m !== S.module) { S.module = m; render(); }
+    });
+    render();
+  }
+
+  var started = false;
+  function boot() {
+    if (started) return;
+    started = true;
+    init();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot, { once: true });
+  }
+  boot();
+})();
+
+</script>
+</body>
+</html>
