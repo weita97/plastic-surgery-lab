@@ -1812,8 +1812,11 @@ window.WB_DATA.quizExtra = {
   /* ---------------- 存储 ---------------- */
   var PREFIX = 'wb1_';
   function storeGet(k, dflt) {
-    try { var v = localStorage.getItem(PREFIX + k); return v == null ? dflt : JSON.parse(v); }
-    catch (e) { return dflt; }
+    try {
+      var v = localStorage.getItem(PREFIX + k);
+      if (v == null) return dflt;
+      try { return JSON.parse(v); } catch (e) { return v; }   /* 兼容非 JSON 裸字符串 */
+    } catch (e) { return dflt; }
   }
   function storeSet(k, v) {
     try { localStorage.setItem(PREFIX + k, JSON.stringify(v)); return true; }
@@ -3064,6 +3067,7 @@ window.WB_DATA.quizExtra = {
   var K_DEV = 'cloud_dev';         /* 本机设备 id */
 
   var FILE_NAME = 'wb-data.json';
+  var GIST_DESC = '每日学习工作台 · 云端同步数据（加密）';
   var API = 'https://api.github.com';
   var busy = false, lastErr = '', listeners = [];
 
@@ -3239,26 +3243,55 @@ window.WB_DATA.quizExtra = {
   function isLogged() { return !!U.storeGet(K_TOKEN, ''); }
   function lastSync() { return U.storeGet(K_LAST, ''); }
 
-  /* 找到（或创建）承载数据的私有 gist */
-  function ensureGist(token) {
+  /* 找到承载数据的私有 gist（返回数组：可能因历史原因存在多个）
+     ★ 关键：必须先在账号里按描述「查找」已有的 gist，找不到才新建。
+       否则每台新设备（手机）本机没有缓存 id，都会新建一个空 gist，
+       于是电脑和手机各写各的，永远同步不到一起。 */
+  function resolveGists() {
     var gid = U.storeGet(K_GIST, '');
-    if (gid) {
-      return api('/gists/' + gid).then(function (g) {
-        if (g && !g.notFound) return g;
-        U.storeDel(K_GIST);
-        return createGist();
-      });
-    }
-    return createGist();
+    var cached = gid ? api('/gists/' + gid).then(function (g) {
+      if (g && !g.notFound) return g;
+      U.storeDel(K_GIST); return null;
+    }, function () { return null; }) : Promise.resolve(null);
 
-    function createGist() {
-      var payload = { description: '每日学习工作台 · 云端同步数据（加密）', public: false, files: {} };
-      payload.files[FILE_NAME] = { content: JSON.stringify({ v: 1, empty: true, at: new Date().toISOString() }) };
-      return api('/gists', { method: 'POST', body: payload }).then(function (g) {
-        if (g && g.id) { U.storeSet(K_GIST, g.id); return g; }
-        throw new Error('创建云端存储失败');
-      });
+    return cached.then(function (g) {
+      if (g) return [g];
+      return findAll();
+    });
+  }
+
+  /* 在账号里按描述/文件名查找所有相关 gist */
+  function findAll() {
+    var found = [], page = 1;
+    function scan() {
+      return api('/gists?per_page=100&page=' + page).then(function (list) {
+        if (!Array.isArray(list)) return found;
+        list.forEach(function (g) {
+          if (!g || !g.id) return;
+          var sameDesc = String(g.description || '').trim() === GIST_DESC;
+          var hasFile = !!(g.files && g.files[FILE_NAME]);
+          if (sameDesc || hasFile) found.push(g);
+        });
+        if (list.length === 100 && page < 5) { page++; return scan(); }
+        return found;
+      }, function () { return found; });
     }
+    return scan().then(function (list) {
+      if (!list.length) return createGist().then(function (g) { return [g]; });
+      /* 按更新时间倒序，最新的放第一位作为写入目标 */
+      list.sort(function (a, b) { return String(b.updated_at || '').localeCompare(String(a.updated_at || '')); });
+      U.storeSet(K_GIST, list[0].id);
+      return list;
+    });
+  }
+
+  function createGist() {
+    var payload = { description: GIST_DESC, public: false, files: {} };
+    payload.files[FILE_NAME] = { content: JSON.stringify({ v: 1, empty: true, at: new Date().toISOString() }) };
+    return api('/gists', { method: 'POST', body: payload }).then(function (g) {
+      if (g && g.id) { U.storeSet(K_GIST, g.id); return g; }
+      throw new Error('创建云端存储失败');
+    });
   }
 
   function readGist(g) {
@@ -3282,25 +3315,33 @@ window.WB_DATA.quizExtra = {
 
     var local = snapshot();
     var key = null;
+    var target = null;
     return deriveKey(token).then(function (k) {
       key = k;
-      return ensureGist(token);
-    }).then(function (g) {
-      return readGist(g).then(function (pack) { return { gist: g, pack: pack }; });
-    }).then(function (r) {
-      var remote = null;
-      if (r.pack && r.pack.enc) {
-        return decryptJson(key, r.pack).then(function (d) { remote = d; }, function () {
-          throw new Error('云端数据解密失败：请确认使用的是同一个 GitHub 账号的令牌');
-        }).then(function () { return { gist: r.gist, remote: remote }; });
-      }
-      return { gist: r.gist, remote: null };
-    }).then(function (r) {
+      return resolveGists();
+    }).then(function (gists) {
+      target = gists[0];
+      /* 依次读取账号下所有相关 gist，逐个解密后合并 */
+      return gists.reduce(function (chain, g) {
+        return chain.then(function (acc) {
+          return readGist(g).then(function (pack) {
+            if (!pack || !pack.enc) return acc;
+            return decryptJson(key, pack).then(function (d) {
+              if (!d || !d.data) return acc;
+              return acc ? mergeSnapshots(acc, d.data) : d.data;
+            }, function () {
+              /* 单个 gist 解不开（比如换了令牌）就跳过，不阻断整体同步 */
+              return acc;
+            });
+          }, function () { return acc; });
+        });
+      }, Promise.resolve(null));
+    }).then(function (remote) {
       var merged;
-      if (!r.remote || !r.remote.data) {
+      if (!remote) {
         merged = local;                        /* 云端为空 → 直接上传本地 */
       } else {
-        merged = mergeSnapshots(local, r.remote.data);
+        merged = mergeSnapshots(local, remote);
       }
       applySnapshot(merged);
 
@@ -3314,12 +3355,12 @@ window.WB_DATA.quizExtra = {
       return encryptJson(key, pack).then(function (enc) {
         var body = { files: {} };
         body.files[FILE_NAME] = { content: JSON.stringify(enc) };
-        return api('/gists/' + r.gist.id, { method: 'PATCH', body: body }).then(function () {
+        return api('/gists/' + target.id, { method: 'PATCH', body: body }).then(function () {
           U.storeSet(K_LAST, new Date().toISOString());
           var stats = {
             keys: Object.keys(merged).length,
-            fromCloud: r.remote ? Object.keys(r.remote.data || {}).length : 0,
-            merged: r.remote ? 'merged' : 'uploaded'
+            fromCloud: remote ? Object.keys(remote).length : 0,
+            merged: remote ? 'merged' : 'uploaded'
           };
           notify({ state: 'ok', msg: '同步完成', stats: stats });
           return stats;
@@ -3334,6 +3375,55 @@ window.WB_DATA.quizExtra = {
     }, function (e) {
       busy = false; throw e;
     });
+  }
+
+  /* ---------- 只下载：把云端数据合并进本机，不回传 ---------- */
+  function pull() {
+    if (busy) return Promise.reject(new Error('正在同步中'));
+    var token = U.storeGet(K_TOKEN, '');
+    if (!token) return Promise.reject(new Error('尚未登录'));
+    busy = true; lastErr = '';
+    notify({ state: 'running', msg: '正在从云端下载…' });
+    var key = null;
+    return deriveKey(token).then(function (k) {
+      key = k; return resolveGists();
+    }).then(function (gists) {
+      return gists.reduce(function (chain, g) {
+        return chain.then(function (acc) {
+          return readGist(g).then(function (pack) {
+            if (!pack || !pack.enc) return acc;
+            return decryptJson(key, pack).then(function (d) {
+              if (!d || !d.data) return acc;
+              return acc ? mergeSnapshots(acc, d.data) : d.data;
+            }, function () { return acc; });
+          }, function () { return acc; });
+        });
+      }, Promise.resolve(null));
+    }).then(function (remote) {
+      if (!remote) throw new Error('云端还没有数据，请先在电脑端登录并同步一次');
+      var merged = mergeSnapshots(snapshot(), remote);
+      applySnapshot(merged);
+      U.storeSet(K_LAST, new Date().toISOString());
+      var stats = { keys: Object.keys(merged).length, fromCloud: Object.keys(remote).length, gists: 0 };
+      notify({ state: 'ok', msg: '已从云端下载', stats: stats });
+      return stats;
+    }).catch(function (e) {
+      lastErr = e.message || String(e);
+      notify({ state: 'err', msg: lastErr });
+      throw e;
+    }).then(function (v) { busy = false; return v; }, function (e) { busy = false; throw e; });
+  }
+
+  /* 云端概况：当前 gist 数量与最新更新时间（用于界面展示，便于排查） */
+  function cloudInfo() {
+    if (!isLogged()) return Promise.resolve(null);
+    return resolveGists().then(function (list) {
+      return {
+        count: list.length,
+        id: list[0] ? list[0].id : '',
+        updated: list[0] ? list[0].updated_at : ''
+      };
+    }, function () { return null; });
   }
 
   /* ---------- 监听 ---------- */
@@ -3377,6 +3467,7 @@ window.WB_DATA.quizExtra = {
 
   WB.cloud = {
     login: login, logout: logout, user: user, isLogged: isLogged, sync: sync,
+    pull: pull, cloudInfo: cloudInfo,
     lastSync: lastSync, onUpdate: onUpdate, snapshot: snapshot, applySnapshot: applySnapshot,
     mergeSnapshots: mergeSnapshots, autoSyncOnLogin: autoSyncOnLogin,
     installAutoHook: installAutoHook,
@@ -5183,11 +5274,12 @@ window.WB_DATA.quizExtra = {
           U.statCard('上次同步', fmtTime(WB.cloud.lastSync()).replace(' ', '<br>'), '') +
           U.statCard('同步方式', mode === 'auto' ? '自动' : '手动', mode === 'auto' ? '改动后 4 秒上传' : '点了才同步') +
           '</div>' +
+          '<div class="hint b mt8" data-cloudinfo>🔍 正在检查云端存储…</div>' +
           '<div class="row mt8">' +
           '<button type="button" class="btn pri" data-act="sync"' + (WB.cloud.isBusy() ? ' disabled' : '') + '>' +
           (WB.cloud.isBusy() ? '⏳ 同步中…' : '🔄 立即同步') + '</button>' +
+          '<button type="button" class="btn" data-act="pull">⬇ 只下载（从云端拉取）</button>' +
           '<button type="button" class="btn" data-act="mode">' + (mode === 'auto' ? '⚙ 切换为手动同步' : '⚙ 切换为自动同步') + '</button>' +
-          '<button type="button" class="btn" data-act="pull">⬇ 只下载（用云端覆盖本机）</button>' +
           '</div>' +
           (st.msg ? '<div class="hint g mt8">✅ ' + U.esc(st.msg) + '</div>' : '') +
           (st.err ? '<div class="hint mt8" style="border-color:#F3C1C1">⚠ ' + U.esc(st.err) + '</div>' : '') +
@@ -5263,13 +5355,16 @@ window.WB_DATA.quizExtra = {
         }
 
         if (act === 'pull') {
-          if (!window.confirm('将用云端数据覆盖本机同名数据（本机独有的记录会保留）。确定继续？')) return;
-          a.disabled = true;
-          WB.cloud.sync().then(function () {
-            setMsg('已从云端拉取并合并完成');
-            U.toast('已从云端拉取');
+          if (!window.confirm('从云端下载并合并到本机（本机独有的记录会保留）。确定继续？')) return;
+          a.disabled = true; a.textContent = '⏳ 下载中…';
+          WB.cloud.pull().then(function (r) {
+            setMsg('已从云端下载，本机现有 ' + r.keys + ' 项数据');
+            U.toast('☁️ 已从云端下载');
             setTimeout(function () { if (document.body.contains(host)) render(); }, 800);
-          }).catch(function (err) { setMsg('', err.message); });
+          }).catch(function (err) {
+            setMsg('', err.message || String(err));
+            a.disabled = false; a.textContent = '⬇ 只下载（用云端覆盖本机）';
+          });
           return;
         }
       });
@@ -5283,6 +5378,19 @@ window.WB_DATA.quizExtra = {
 
       render();
 
+      /* 展示云端存储实况 */
+      function refreshCloudInfo() {
+        var box = host.querySelector('[data-cloudinfo]');
+        if (!box) return;
+        WB.cloud.cloudInfo().then(function (info) {
+          if (!info) { box.textContent = '🔍 无法读取云端状态'; return; }
+          box.innerHTML = '🔍 云端存储：<b>' + info.count + '</b> 个同步 Gist' +
+            (info.updated ? ' · 最近更新 ' + fmtTime(info.updated) : '') +
+            (info.count > 1 ? ' <span class="muted">（历史遗留多个，已自动全部合并）</span>' : '');
+        }).catch(function () { box.textContent = '🔍 无法读取云端状态'; });
+      }
+      refreshCloudInfo();
+
       /* 同步状态变化时刷新界面 */
       WB.cloud.onUpdate(function (p) {
         if (!document.body.contains(host)) return;
@@ -5292,6 +5400,7 @@ window.WB_DATA.quizExtra = {
         } else if (p.state === 'ok') {
           st.msg = p.msg || '同步完成'; st.err = '';
           render();
+          refreshCloudInfo();
         } else if (p.state === 'err') {
           st.err = p.msg || ''; st.msg = '';
           render();
