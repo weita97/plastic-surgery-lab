@@ -2052,7 +2052,7 @@ window.WB_DATA.quizExtra = {
       '<div class="today">📅 <b id="brandDate"></b><span class="sp"></span><span id="brandWeek"></span></div></div>');
     sb.insertAdjacentHTML('beforeend', '<div class="nav" id="navBox"></div>');
     sb.insertAdjacentHTML('beforeend',
-      '<div class="nav-foot"><div class="row"><span>数据保存在本机浏览器</span></div>' +
+      '<div class="nav-foot"><div class="row"><span id="cloudTip">数据保存在本机浏览器</span></div>' +
       '<div class="row" style="margin-top:6px"><button class="btn sm" id="btnExport">⬇ 导出备份</button>' +
       '<button class="btn sm danger" id="btnClear">🗑 清空</button></div></div>');
     document.getElementById('navBox').innerHTML = navHTML();
@@ -2085,6 +2085,18 @@ window.WB_DATA.quizExtra = {
     /* 后台预热：开机即检查 PubMed 是否有当天新文献，不必等用户点进科研进展 */
     if (WB.live && WB.live.needsSync && WB.live.needsSync()) {
       setTimeout(function () { WB.live.sync(false); }, 1500);
+    }
+    /* 云端同步：已登录则自动合并一次，并挂上「改动后自动上传」的钩子 */
+    if (WB.cloud) {
+      WB.cloud.installAutoHook();
+      var tip = document.getElementById('cloudTip');
+      if (WB.cloud.isLogged()) {
+        var cu = WB.cloud.user();
+        if (tip) tip.textContent = '☁️ 已连接 ' + ((cu && cu.login) || '');
+        setTimeout(function () { WB.cloud.autoSyncOnLogin(); }, 2200);
+      } else if (tip) {
+        tip.textContent = '数据保存在本机浏览器';
+      }
     }
     window.addEventListener('beforeunload', stopSpeak);
   }
@@ -3035,6 +3047,347 @@ window.WB_DATA.quizExtra = {
 })();
 
 ;
+/* ---- cloud.js ---- */
+/* ===== 云端同步：GitHub Gist 后端 =====
+   登录方式：GitHub 个人访问令牌（仅需 gist 权限）
+   数据落地：用户自己账号下的私有 Gist（单文件 wb-data.json）
+   安全：令牌只存本机 localStorage；数据用 AES-GCM 加密后上传，密钥由令牌派生
+   合并策略：按记录维度做「并集 + 较新者优先」，避免多端互相覆盖 */
+(function () {
+  'use strict';
+  var U = WB.util;
+  var K_TOKEN = 'cloud_token';     /* GitHub token */
+  var K_USER = 'cloud_user';       /* {login, name, avatar} */
+  var K_GIST = 'cloud_gist';       /* gist id */
+  var K_LAST = 'cloud_last';       /* 上次同步时间 */
+  var K_MODE = 'cloud_mode';       /* 'auto' | 'manual' */
+  var K_DEV = 'cloud_dev';         /* 本机设备 id */
+
+  var FILE_NAME = 'wb-data.json';
+  var API = 'https://api.github.com';
+  var busy = false, lastErr = '', listeners = [];
+
+  /* ---------- 设备 id ---------- */
+  function devId() {
+    var d = U.storeGet(K_DEV, '');
+    if (!d) { d = 'dev-' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36); U.storeSet(K_DEV, d); }
+    return d;
+  }
+
+  /* ---------- 加密：令牌派生密钥（PBKDF2 → AES-GCM） ---------- */
+  function toBuf(str) { return new TextEncoder().encode(str); }
+  function b64(buf) {
+    var b = new Uint8Array(buf), s = '';
+    for (var i = 0; i < b.length; i++) s += String.fromCharCode(b[i]);
+    return btoa(s);
+  }
+  function unb64(str) {
+    var s = atob(str), b = new Uint8Array(s.length);
+    for (var i = 0; i < s.length; i++) b[i] = s.charCodeAt(i);
+    return b;
+  }
+  function deriveKey(token) {
+    if (!window.crypto || !window.crypto.subtle) return Promise.resolve(null);
+    return window.crypto.subtle.importKey('raw', toBuf('wb-salt::' + token), { name: 'PBKDF2' }, false, ['deriveKey'])
+      .then(function (base) {
+        return window.crypto.subtle.deriveKey(
+          { name: 'PBKDF2', salt: toBuf('wb1-cloud-sync'), iterations: 120000, hash: 'SHA-256' },
+          base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+      });
+  }
+  function encryptJson(key, obj) {
+    var iv = window.crypto.getRandomValues(new Uint8Array(12));
+    return window.crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, key, toBuf(JSON.stringify(obj)))
+      .then(function (ct) {
+        return { v: 1, enc: 'AES-GCM', iv: b64(iv), data: b64(ct), at: new Date().toISOString() };
+      });
+  }
+  function decryptJson(key, pack) {
+    if (!pack || !pack.iv || !pack.data) return Promise.reject(new Error('数据格式不对'));
+    return window.crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(pack.iv) }, key, unb64(pack.data))
+      .then(function (buf) { return JSON.parse(new TextDecoder().decode(buf)); });
+  }
+
+  /* ---------- 收集 / 应用本地数据 ---------- */
+  function snapshot() {
+    var out = {};
+    Object.keys(localStorage).forEach(function (k) {
+      if (k.indexOf('wb1_') !== 0) return;
+      var short = k.slice(4);
+      if (short.indexOf('cloud_') === 0) return;   /* 不同步同步配置本身 */
+      try { out[short] = JSON.parse(localStorage.getItem(k)); } catch (e) { }
+    });
+    return out;
+  }
+  function applySnapshot(obj) {
+    Object.keys(obj || {}).forEach(function (k) {
+      if (k.indexOf('cloud_') === 0) return;
+      try { localStorage.setItem('wb1_' + k, JSON.stringify(obj[k])); } catch (e) { }
+    });
+  }
+
+  /* ---------- 合并：数组型按 id/唯一键并集，对象型取较新 ---------- */
+  /* 唯一键：按业务含义取，避免用时间戳当键（多端会撞） */
+  function keyOf(item) {
+    if (item == null || typeof item !== 'object') return null;
+    if (item.id) return 'i:' + item.id;          /* 账本等自增 id */
+    if (item.pmid) return 'p:' + item.pmid;      /* 文献收藏 */
+    if (item.t) return 't:' + item.t;            /* 选题（标题唯一） */
+    if (item.title) return 'n:' + item.title;    /* 日程（标题） */
+    if (item.d) return 'd:' + item.d;            /* 按日记录：测验/词汇历史 */
+    if (item.date) return 'a:' + item.date;
+    if (item.ts) return 's:' + item.ts;
+    return null;
+  }
+  function stampOf(item) {
+    if (item == null || typeof item !== 'object') return 0;
+    return Number(item.ts) || Number(item.upd) || 0;
+  }
+  function mergeArray(a, b) {
+    a = Array.isArray(a) ? a : []; b = Array.isArray(b) ? b : [];
+    var map = {}, slots = [];   /* slots: {k:唯一键} 或 {raw:原对象} */
+    function put(item, preferNew) {
+      if (item == null) return;
+      /* 标量（字符串/数字）按值去重，如已学单词列表 */
+      if (typeof item !== 'object') {
+        var sk = '#' + String(item);
+        if (map[sk] === undefined) { map[sk] = item; slots.push({ k: sk }); }
+        return;
+      }
+      var k = keyOf(item);
+      if (k == null || k === '') { slots.push({ raw: item }); return; }
+      k = String(k);            /* 统一转字符串，避免数字键与哨兵混淆 */
+      if (map[k] === undefined) { map[k] = item; slots.push({ k: k }); return; }
+      if (preferNew && stampOf(item) >= stampOf(map[k])) map[k] = item;
+    }
+    a.forEach(function (x) { put(x, false); });
+    b.forEach(function (x) { put(x, true); });
+    return slots.map(function (s) { return s.raw !== undefined ? s.raw : map[s.k]; })
+      .filter(function (x) { return x !== undefined; });
+  }
+  function mergeValue(local, remote, key) {
+    if (local === undefined || local === null) return remote;
+    if (remote === undefined || remote === null) return local;
+    if (Array.isArray(local) || Array.isArray(remote)) return mergeArray(local, remote);
+    if (typeof local === 'object' && typeof remote === 'object') {
+      /* 日历这类 {date: [...]} 结构，逐日期合并 */
+      var out = {};
+      Object.keys(local).forEach(function (k) { out[k] = local[k]; });
+      Object.keys(remote).forEach(function (k) {
+        if (out[k] === undefined) out[k] = remote[k];
+        else if (Array.isArray(out[k]) || Array.isArray(remote[k])) out[k] = mergeArray(out[k], remote[k]);
+        else out[k] = remote[k];
+      });
+      return out;
+    }
+    return remote;   /* 标量以远端为准 */
+  }
+  function mergeSnapshots(local, remote) {
+    var out = {}, keys = {};
+    Object.keys(local || {}).forEach(function (k) { keys[k] = 1; });
+    Object.keys(remote || {}).forEach(function (k) { keys[k] = 1; });
+    Object.keys(keys).forEach(function (k) { out[k] = mergeValue(local[k], remote[k], k); });
+    return out;
+  }
+
+  /* ---------- GitHub API ---------- */
+  function api(path, opt) {
+    opt = opt || {};
+    var token = U.storeGet(K_TOKEN, '');
+    var headers = { 'Accept': 'application/vnd.github+json' };
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+    if (opt.body) headers['Content-Type'] = 'application/json';
+    return fetch(API + path, {
+      method: opt.method || 'GET',
+      headers: headers,
+      body: opt.body ? JSON.stringify(opt.body) : undefined
+    }).then(function (r) {
+      if (r.status === 401) throw new Error('令牌无效或已过期，请重新填写');
+      if (r.status === 403) throw new Error('GitHub 拒绝访问（可能是令牌权限不足，需勾选 gist）');
+      if (r.status === 404) return { notFound: true };
+      if (!r.ok) {
+        return r.text().then(function (t) {
+          throw new Error('GitHub 返回 ' + r.status + (t ? '：' + t.slice(0, 120) : ''));
+        });
+      }
+      return r.json();
+    });
+  }
+
+  /* 验证令牌 → 返回用户信息 */
+  function login(token) {
+    token = String(token || '').trim();
+    if (!token) return Promise.reject(new Error('请填写 GitHub 令牌'));
+    return fetch(API + '/user', {
+      headers: { 'Accept': 'application/vnd.github+json', 'Authorization': 'Bearer ' + token }
+    }).then(function (r) {
+      if (r.status === 401) throw new Error('令牌无效，请检查是否复制完整');
+      if (!r.ok) throw new Error('验证失败（HTTP ' + r.status + '）');
+      return r.json();
+    }).then(function (u) {
+      var info = { login: u.login, name: u.name || u.login, avatar: u.avatar_url || '' };
+      U.storeSet(K_TOKEN, token);
+      U.storeSet(K_USER, info);
+      return info;
+    });
+  }
+
+  function logout() {
+    U.storeDel(K_TOKEN); U.storeDel(K_USER); U.storeDel(K_GIST); U.storeDel(K_LAST);
+  }
+  function user() { return U.storeGet(K_USER, null); }
+  function isLogged() { return !!U.storeGet(K_TOKEN, ''); }
+  function lastSync() { return U.storeGet(K_LAST, ''); }
+
+  /* 找到（或创建）承载数据的私有 gist */
+  function ensureGist(token) {
+    var gid = U.storeGet(K_GIST, '');
+    if (gid) {
+      return api('/gists/' + gid).then(function (g) {
+        if (g && !g.notFound) return g;
+        U.storeDel(K_GIST);
+        return createGist();
+      });
+    }
+    return createGist();
+
+    function createGist() {
+      var payload = { description: '每日学习工作台 · 云端同步数据（加密）', public: false, files: {} };
+      payload.files[FILE_NAME] = { content: JSON.stringify({ v: 1, empty: true, at: new Date().toISOString() }) };
+      return api('/gists', { method: 'POST', body: payload }).then(function (g) {
+        if (g && g.id) { U.storeSet(K_GIST, g.id); return g; }
+        throw new Error('创建云端存储失败');
+      });
+    }
+  }
+
+  function readGist(g) {
+    var f = g && g.files && g.files[FILE_NAME];
+    if (!f) return Promise.resolve(null);
+    if (f.truncated && f.raw_url) {
+      return fetch(f.raw_url).then(function (r) { return r.text(); }).then(JSON.parse);
+    }
+    try { return Promise.resolve(JSON.parse(f.content)); } catch (e) { return Promise.resolve(null); }
+  }
+
+  /* ---------- 同步主流程 ---------- */
+  function sync(opts) {
+    opts = opts || {};
+    if (busy) return Promise.reject(new Error('正在同步中'));
+    var token = U.storeGet(K_TOKEN, '');
+    if (!token) return Promise.reject(new Error('尚未登录'));
+
+    busy = true; lastErr = '';
+    notify({ state: 'running', msg: '正在同步…' });
+
+    var local = snapshot();
+    var key = null;
+    return deriveKey(token).then(function (k) {
+      key = k;
+      return ensureGist(token);
+    }).then(function (g) {
+      return readGist(g).then(function (pack) { return { gist: g, pack: pack }; });
+    }).then(function (r) {
+      var remote = null;
+      if (r.pack && r.pack.enc) {
+        return decryptJson(key, r.pack).then(function (d) { remote = d; }, function () {
+          throw new Error('云端数据解密失败：请确认使用的是同一个 GitHub 账号的令牌');
+        }).then(function () { return { gist: r.gist, remote: remote }; });
+      }
+      return { gist: r.gist, remote: null };
+    }).then(function (r) {
+      var merged;
+      if (!r.remote || !r.remote.data) {
+        merged = local;                        /* 云端为空 → 直接上传本地 */
+      } else {
+        merged = mergeSnapshots(local, r.remote.data);
+      }
+      applySnapshot(merged);
+
+      var pack = {
+        v: 1,
+        dev: devId(),
+        at: new Date().toISOString(),
+        count: Object.keys(merged).length,
+        data: merged
+      };
+      return encryptJson(key, pack).then(function (enc) {
+        var body = { files: {} };
+        body.files[FILE_NAME] = { content: JSON.stringify(enc) };
+        return api('/gists/' + r.gist.id, { method: 'PATCH', body: body }).then(function () {
+          U.storeSet(K_LAST, new Date().toISOString());
+          var stats = {
+            keys: Object.keys(merged).length,
+            fromCloud: r.remote ? Object.keys(r.remote.data || {}).length : 0,
+            merged: r.remote ? 'merged' : 'uploaded'
+          };
+          notify({ state: 'ok', msg: '同步完成', stats: stats });
+          return stats;
+        });
+      });
+    }).catch(function (e) {
+      lastErr = e.message || String(e);
+      notify({ state: 'err', msg: lastErr });
+      throw e;
+    }).then(function (v) {
+      busy = false; return v;
+    }, function (e) {
+      busy = false; throw e;
+    });
+  }
+
+  /* ---------- 监听 ---------- */
+  function onUpdate(fn) { listeners.push(fn); }
+  function notify(p) { listeners.forEach(function (f) { try { f(p); } catch (e) { } }); }
+
+  /* ---------- 自动同步：改动后延迟上传 ---------- */
+  var autoTimer = null, hookInstalled = false;
+  function installAutoHook() {
+    if (hookInstalled) return;
+    hookInstalled = true;
+    var origSet = U.storeSet, origDel = U.storeDel;
+    U.storeSet = function (k, v) {
+      var r = origSet(k, v);
+      if (k.indexOf('cloud_') !== 0) scheduleAuto();
+      return r;
+    };
+    U.storeDel = function (k) {
+      var r = origDel(k);
+      if (k.indexOf('cloud_') !== 0) scheduleAuto();
+      return r;
+    };
+    WB.util.storeSet = U.storeSet;
+    WB.util.storeDel = U.storeDel;
+  }
+  function scheduleAuto() {
+    if (U.storeGet(K_MODE, 'auto') !== 'auto') return;
+    if (!isLogged()) return;
+    clearTimeout(autoTimer);
+    autoTimer = setTimeout(function () {
+      sync().catch(function () { });
+    }, 4000);
+  }
+
+  function autoSyncOnLogin() {
+    if (!isLogged()) return;
+    var mode = U.storeGet(K_MODE, 'auto');
+    if (mode !== 'auto') return;
+    sync().catch(function () { });
+  }
+
+  WB.cloud = {
+    login: login, logout: logout, user: user, isLogged: isLogged, sync: sync,
+    lastSync: lastSync, onUpdate: onUpdate, snapshot: snapshot, applySnapshot: applySnapshot,
+    mergeSnapshots: mergeSnapshots, autoSyncOnLogin: autoSyncOnLogin,
+    installAutoHook: installAutoHook,
+    getMode: function () { return U.storeGet(K_MODE, 'auto'); },
+    setMode: function (m) { U.storeSet(K_MODE, m); },
+    isBusy: function () { return busy; },
+    lastError: function () { return lastErr; }
+  };
+})();
+
+;
 /* ---- mod_quotes.js ---- */
 /* ===== 模块 1：每日成长语录 ===== */
 (function () {
@@ -3939,7 +4292,19 @@ window.WB_DATA.quizExtra = {
     remind: { n: '重要提醒', cls: 'ev-remind', ico: '⏰' }
   };
 
-  function allEv() { return U.storeGet(K_EV, {}); }
+  function allEv() {
+    var v = U.storeGet(K_EV, {});
+    if (!v || typeof v !== 'object' || Array.isArray(v)) return {};
+    var out = {};
+    Object.keys(v).forEach(function (d) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return;
+      var arr = v[d];
+      if (!Array.isArray(arr)) return;
+      var clean = arr.filter(function (e) { return e && typeof e === 'object' && e.title; });
+      if (clean.length) out[d] = clean;
+    });
+    return out;
+  }
   function evOf(dateStr) { var a = allEv(); return (a[dateStr] || []).slice(); }
   function saveEv(dateStr, arr) {
     var a = allEv();
@@ -4098,8 +4463,8 @@ window.WB_DATA.quizExtra = {
           if (!title) { U.toast('请填写标题'); return; }
           var list = evOf(st.sel);
           var idx = st.editing.idx;
-          var rec = { type: st.editing.type, title: title, time: time, text: text, ts: Date.now() };
-          if (idx == null) list.push(rec); else list[idx] = rec;
+          var rec = { id: 'e' + Date.now() + Math.floor(Math.random() * 1000), type: st.editing.type, title: title, time: time, text: text, ts: Date.now() };
+          if (idx == null) list.push(rec); else { rec.id = (list[idx] && list[idx].id) || rec.id; list[idx] = rec; }
           saveEv(st.sel, list); st.editing = null; renderCal(); renderDay(); U.toast('已保存'); return;
         }
         if (e.target.closest('[data-cancel]')) { st.editing = null; renderDay(); return; }
@@ -4127,7 +4492,16 @@ window.WB_DATA.quizExtra = {
   ];
   var PLATS = [{ k: 'alipay', n: '支付宝', ico: '🔵' }, { k: 'wechat', n: '微信', ico: '🟢' }];
 
-  function all() { return U.storeGet(K_LED, []); }
+  function all() {
+    var v = U.storeGet(K_LED, []);
+    if (!Array.isArray(v)) return [];
+    /* 容错：过滤掉云端同步可能带入的残缺记录，避免整页渲染崩掉 */
+    return v.filter(function (r) {
+      return r && typeof r === 'object' && typeof r.d === 'string' && r.d.length >= 7 && isFinite(Number(r.amt));
+    }).map(function (r) {
+      return { id: r.id || ('l' + Math.random().toString(36).slice(2, 8)), d: r.d, p: r.p || 'alipay', c: r.c || 'other', amt: Number(r.amt), note: r.note || '', ts: r.ts || 0 };
+    });
+  }
   function catOf(k) { for (var i = 0; i < CATS.length; i++) if (CATS[i].k === k) return CATS[i]; return CATS[5]; }
   function platOf(k) { for (var i = 0; i < PLATS.length; i++) if (PLATS[i].k === k) return PLATS[i]; return PLATS[0]; }
 
@@ -4554,7 +4928,17 @@ window.WB_DATA.quizExtra = {
     '如果只能保留今天做的一件事，你选哪件？'
   ];
 
-  function all() { return U.storeGet(K_REV, {}); }
+  function all() {
+    var v = U.storeGet(K_REV, {});
+    if (!v || typeof v !== 'object' || Array.isArray(v)) return {};
+    var out = {};
+    Object.keys(v).forEach(function (d) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return;
+      var r = v[d];
+      if (r && typeof r === 'object') out[d] = r;
+    });
+    return out;
+  }
 
   /* 自动统计今天的学习足迹 */
   function stats() {
@@ -4720,6 +5104,199 @@ window.WB_DATA.quizExtra = {
         else renderStat();
       }
       render();
+    }
+  });
+})();
+
+;
+/* ---- mod_cloud.js ---- */
+/* ===== 模块 11：云端同步（GitHub Gist 后端） ===== */
+(function () {
+  'use strict';
+  var U = WB.util;
+  var TOKEN_URL = 'https://github.com/settings/tokens/new?scopes=gist&description=%E6%AF%8F%E6%97%A5%E5%AD%A6%E4%B9%A0%E5%B7%A5%E4%BD%9C%E5%8F%B0';
+
+  function fmtTime(iso) {
+    if (!iso) return '从未同步';
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    var p = function (n) { return (n < 10 ? '0' : '') + n; };
+    return d.getFullYear() + '/' + p(d.getMonth() + 1) + '/' + p(d.getDate()) + ' ' +
+      p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+
+  function countLocal() {
+    var s = WB.cloud.snapshot();
+    var n = 0;
+    Object.keys(s).forEach(function (k) {
+      var v = s[k];
+      n += Array.isArray(v) ? v.length : (v && typeof v === 'object' ? Object.keys(v).length : 1);
+    });
+    return { keys: Object.keys(s).length, items: n };
+  }
+
+  WB.register({
+    id: 'cloud', icon: '☁️', title: '云端同步', group: '系统',
+    mount: function (host) {
+      var st = { tab: WB.cloud.isLogged() ? 'sync' : 'login', msg: '', err: '' };
+
+      function render() {
+        var u = WB.cloud.user();
+        var logged = WB.cloud.isLogged();
+        host.innerHTML =
+          '<div class="card">' +
+          '<div class="card-h"><h3>☁️ 云端同步</h3>' +
+          '<span class="muted small">' + (logged ? '已登录：' + U.esc(u ? u.login : '') : '未登录') + '</span></div>' +
+          (logged ? renderLogged() : renderLogin()) +
+          '</div>' +
+          renderHelp();
+      }
+
+      function renderLogin() {
+        return '' +
+          '<div class="hint b">用你自己的 GitHub 账号做云端存储：数据加密后存进你账号下的一个<b>私有 Gist</b>，' +
+          '手机、电脑登录同一账号即可自动同步。全程免费，数据只在你自己的账号里。</div>' +
+          '<div class="field" style="margin-top:12px"><label>GitHub 个人访问令牌（Personal Access Token）</label>' +
+          '<input type="password" data-token placeholder="ghp_xxxxxxxxxxxx 或 github_pat_xxx" autocomplete="off" spellcheck="false"></div>' +
+          '<div class="row mt8">' +
+          '<button type="button" class="btn pri" data-act="login">🔑 登录并同步</button>' +
+          '<a class="btn" href="' + TOKEN_URL + '" target="_blank" rel="noopener">🔗 去生成令牌</a>' +
+          '</div>' +
+          '<div class="hint g mt8">生成令牌时：<b>Note</b> 随便填（如 workbench），<b>Expiration</b> 可选 No expiration，' +
+          '<b>Scopes</b> 只需勾选 <b>gist</b> 这一项。生成后复制以 <code>ghp_</code> 开头的那串，粘贴到上面即可。</div>' +
+          (st.err ? '<div class="hint" style="border-color:#F3C1C1">⚠ ' + U.esc(st.err) + '</div>' : '');
+      }
+
+      function renderLogged() {
+        var u = WB.cloud.user() || {};
+        var c = countLocal();
+        var mode = WB.cloud.getMode();
+        return '' +
+          '<div class="row" style="gap:12px;align-items:center;margin-top:4px">' +
+          (u.avatar ? '<img src="' + U.esc(u.avatar) + '" alt="" style="width:38px;height:38px;border-radius:50%">' : '') +
+          '<div style="flex:1"><b>' + U.esc(u.name || u.login || '') + '</b>' +
+          '<div class="muted small">@' + U.esc(u.login || '') + ' · 数据存于私有 Gist</div></div>' +
+          '<button type="button" class="btn sm danger" data-act="logout">退出登录</button>' +
+          '</div>' +
+          '<div class="grid g3 mt8">' +
+          U.statCard('本机数据项', String(c.keys), '条记录') +
+          U.statCard('上次同步', fmtTime(WB.cloud.lastSync()).replace(' ', '<br>'), '') +
+          U.statCard('同步方式', mode === 'auto' ? '自动' : '手动', mode === 'auto' ? '改动后 4 秒上传' : '点了才同步') +
+          '</div>' +
+          '<div class="row mt8">' +
+          '<button type="button" class="btn pri" data-act="sync"' + (WB.cloud.isBusy() ? ' disabled' : '') + '>' +
+          (WB.cloud.isBusy() ? '⏳ 同步中…' : '🔄 立即同步') + '</button>' +
+          '<button type="button" class="btn" data-act="mode">' + (mode === 'auto' ? '⚙ 切换为手动同步' : '⚙ 切换为自动同步') + '</button>' +
+          '<button type="button" class="btn" data-act="pull">⬇ 只下载（用云端覆盖本机）</button>' +
+          '</div>' +
+          (st.msg ? '<div class="hint g mt8">✅ ' + U.esc(st.msg) + '</div>' : '') +
+          (st.err ? '<div class="hint mt8" style="border-color:#F3C1C1">⚠ ' + U.esc(st.err) + '</div>' : '') +
+          '<div class="hint b mt8">同步规则：多个设备的数据按<b>并集</b>合并（账本按笔、日程按条、收藏按篇），不会互相覆盖；' +
+          '同一项两边都改过时，保留较新的那次。合并完成后本机与云端一致。</div>';
+      }
+
+      function renderHelp() {
+        return '<div class="card" style="margin-top:12px">' +
+          '<div class="card-h"><h3>📖 使用说明</h3></div>' +
+          '<div class="hint b"><b>1. 电脑上先登录</b>：生成令牌 → 粘贴 → 点「登录并同步」，本机现有数据会上传到云端。</div>' +
+          '<div class="hint b" style="margin-top:8px"><b>2. 手机上打开同一个网址</b>：' +
+          '<code>https://weita97.github.io/plastic-surgery-lab/workbench/</code> → 进「云端同步」→ 粘贴<b>同一个令牌</b> → 点登录，数据会自动拉下来。</div>' +
+          '<div class="hint b" style="margin-top:8px"><b>3. 之后不用管</b>：自动模式下，任何改动（记账、写复盘、收藏文献、标记已学）4 秒后自动上传。</div>' +
+          '<div class="hint g" style="margin-top:8px">🔒 <b>安全</b>：令牌只存在你自己浏览器的 localStorage，不会发给任何第三方；' +
+          '上传的数据用令牌派生密钥做 AES-GCM 加密，即使 Gist 被看到也是密文。</div>' +
+          '<div class="hint g" style="margin-top:8px">⚠ <b>注意</b>：换设备或清浏览器数据后需要重新粘贴令牌；' +
+          '令牌等同于账号密码，不要发给别人。</div>' +
+          '</div>';
+      }
+
+      function setMsg(m, e) { st.msg = m || ''; st.err = e || ''; render(); }
+
+      function doSync(silent) {
+        if (!WB.cloud.isLogged()) return;
+        WB.cloud.sync().then(function (r) {
+          setMsg('同步完成：本机 ' + r.keys + ' 项数据已与云端合并');
+          if (!silent) U.toast('☁️ 同步完成');
+          setTimeout(function () { if (document.body.contains(host)) render(); }, 1200);
+        }).catch(function (err) {
+          setMsg('', err.message || String(err));
+          if (!silent) U.toast('同步失败：' + (err.message || '').slice(0, 40));
+        });
+      }
+
+      host.addEventListener('click', function (e) {
+        var a = e.target.closest('[data-act]');
+        if (!a) return;
+        var act = a.getAttribute('data-act');
+
+        if (act === 'login') {
+          var input = host.querySelector('[data-token]');
+          var tk = input ? input.value.trim() : '';
+          if (!tk) { setMsg('', '请先粘贴令牌'); return; }
+          a.disabled = true; a.textContent = '⏳ 验证中…';
+          WB.cloud.login(tk).then(function (u) {
+            st.tab = 'sync';
+            return WB.cloud.sync().then(function (r) {
+              setMsg('登录成功，欢迎 ' + u.login + '！已同步 ' + r.keys + ' 项数据');
+              U.toast('☁️ 登录成功，已同步');
+            });
+          }).catch(function (err) {
+            setMsg('', err.message || String(err));
+          });
+          return;
+        }
+
+        if (act === 'logout') {
+          if (!window.confirm('退出后本机数据保留，但不再自动同步。确定退出？')) return;
+          WB.cloud.logout();
+          setMsg('已退出登录');
+          U.toast('已退出云端同步');
+          return;
+        }
+
+        if (act === 'sync') { doSync(false); return; }
+
+        if (act === 'mode') {
+          var m = WB.cloud.getMode() === 'auto' ? 'manual' : 'auto';
+          WB.cloud.setMode(m);
+          setMsg(m === 'auto' ? '已切换为自动同步' : '已切换为手动同步');
+          return;
+        }
+
+        if (act === 'pull') {
+          if (!window.confirm('将用云端数据覆盖本机同名数据（本机独有的记录会保留）。确定继续？')) return;
+          a.disabled = true;
+          WB.cloud.sync().then(function () {
+            setMsg('已从云端拉取并合并完成');
+            U.toast('已从云端拉取');
+            setTimeout(function () { if (document.body.contains(host)) render(); }, 800);
+          }).catch(function (err) { setMsg('', err.message); });
+          return;
+        }
+      });
+
+      host.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && e.target.matches('[data-token]')) {
+          var b = host.querySelector('[data-act="login"]');
+          if (b) b.click();
+        }
+      });
+
+      render();
+
+      /* 同步状态变化时刷新界面 */
+      WB.cloud.onUpdate(function (p) {
+        if (!document.body.contains(host)) return;
+        if (p.state === 'running') {
+          var btn = host.querySelector('[data-act="sync"]');
+          if (btn) { btn.disabled = true; btn.textContent = '⏳ 同步中…'; }
+        } else if (p.state === 'ok') {
+          st.msg = p.msg || '同步完成'; st.err = '';
+          render();
+        } else if (p.state === 'err') {
+          st.err = p.msg || ''; st.msg = '';
+          render();
+        }
+      });
     }
   });
 })();
