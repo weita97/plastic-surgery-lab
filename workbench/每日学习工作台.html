@@ -304,6 +304,12 @@ table.tb td.num{text-align:right;font-variant-numeric:tabular-nums}
 .idea h4{margin:0 0 4px;font-size:13px;font-weight:600;line-height:1.5}
 .idea .kv{font-size:11.5px;color:var(--ink-2);margin-top:3px;line-height:1.6}
 .idea .kv b{color:var(--ink-3);font-weight:500}
+.idea .isrc{margin-top:4px;display:flex;flex-direction:column;gap:3px}
+.idea .ilink{display:block;font-size:11px;line-height:1.5;color:var(--brand-2);text-decoration:none;background:#F6FAFF;
+  border:1px solid #E3EEFA;border-radius:7px;padding:4px 7px;transition:.15s}
+.idea .ilink:hover{background:var(--brand-soft);border-color:#C7DCF5;color:var(--brand)}
+.idea .ilink b{color:var(--brand-3);font-weight:600}
+.idea .ij{display:block;font-size:10px;color:var(--ink-3);margin-top:1px}
 
 /* 提示条 */
 .hint{font-size:11.5px;color:var(--warn);background:var(--warn-soft);border:1px solid #F5DEB6;border-radius:9px;padding:6px 10px;line-height:1.6}
@@ -2686,6 +2692,349 @@ window.WB_DATA.quizExtra = {
 })();
 
 ;
+/* ---- topicgen.js ---- */
+/* ===== 选题生成引擎：从顶刊速递前 100 篇文献中挖掘科研选题 =====
+   纯前端确定性生成：同一批文献 → 同样的 20 个选题；
+   顶刊速递文献池刷新（PubMed 实时抓取）→ 选题自动重算。 */
+(function () {
+  'use strict';
+  var U = WB.util;
+
+  /* ---------- 词库 ----------
+     zh   中文名
+     re   在文献标题/摘要中的匹配正则
+     ang  专家判断（切入角度首句）
+     core 语义核：避免「衰老成纤维细胞中细胞衰老」这类同义反复
+     proc 下游过程（机制类用于拼 cell+proc）
+     cell 效应细胞（关键词标签用）
+     dys  该机制"坏掉"时的病理状态短语（过程类标题用）
+     tgt  被调控的效应过程短语（过程类标题用）
+     kind 'mech' 分子机制 | 'proc' 病理过程 | 'mat' 材料 | 'meth' 方法 */
+  var MECH = [
+    { zh: '细胞外囊泡', kind: 'mech', core: '囊泡', proc: '成管与迁移', cell: '内皮细胞',
+      re: /\b(exosom\w*|extracellular vesicle\w*|sEVs?|exosomal)\b/i,
+      ang: '细胞外囊泡携带 miRNA、蛋白与脂质重塑受体细胞表型，是无细胞治疗里最容易做出差异化的载体' },
+    { zh: '线粒体自噬', kind: 'mech', core: '线粒体', proc: '抗氧化与迁移', cell: '角质形成细胞',
+      re: /\b(mitophagy|PINK1|Parkin|BNIP3|Fundc1|mitochondrial autophagy)\b/i,
+      ang: '线粒体质量控制一旦失衡，ROS 蓄积会直接卡住角质形成细胞迁移与成纤维细胞收缩' },
+    { zh: '细胞衰老', kind: 'mech', core: '衰老', proc: '增殖与迁移', cell: '成纤维细胞',
+      re: /\b(senescen\w*|senolytic\w*|senomorphic\w*|SASP|p16INK4a)\b/i,
+      ang: '衰老细胞在创面床堆积并持续分泌 SASP，是"愈合慢 + 反复不愈"的常见上游原因' },
+    { zh: '代谢重编程', kind: 'mech', core: '代谢', proc: '糖代谢与存活', cell: '巨噬细胞',
+      re: /\b(glycolys\w*|lipid metabolism|metabolic reprogram\w*|ferroptosis)\b/i,
+      ang: '高糖环境下细胞代谢通路被迫改写，代谢节点往往比信号通路更接近临床' },
+    { zh: '表观遗传调控', kind: 'mech', core: '表观', proc: '分化与迁移', cell: '角质形成细胞',
+      re: /\b(epigenetic\w*|m6A|HDAC\w*|DNA methylation|chromatin remodel\w*)\b/i,
+      ang: '表观修饰把"一次损伤"固化成"长期难愈表型"，是解释复发的关键层' },
+    { zh: '内质网应激', kind: 'mech', core: '内质网', proc: '存活与分泌', cell: '成纤维细胞',
+      re: /\b(ER stress|unfolded protein response|proteostasis|GRP78|ATF\d)\b/i,
+      ang: '内质网应激决定细胞在缺氧高糖下的存活阈值，是耐受性改造的切入点' },
+
+    { zh: '血管新生', kind: 'proc', core: '血管', cell: '内皮细胞',
+      dys: '血管新生障碍', tgt: '内皮细胞成管与灌注恢复',
+      re: /\b(angiogen\w*|VEGF\w*|HIF-1\w*|neovascular\w*|endothelial)\b/i,
+      ang: '血供重建是创面从"不愈"走向"愈合"的限速步骤，灌注恢复程度是最硬的读数' },
+    { zh: '巨噬细胞极化', kind: 'proc', core: '巨噬', cell: '巨噬细胞',
+      dys: '巨噬细胞极化失衡', tgt: '胞葬功能与炎症消退',
+      re: /\b(macrophage\w*|polariz\w*|efferocytosis)\b/i,
+      ang: 'M1→M2 转换的时间窗决定炎症消退速度，是可干预性最强的免疫节点' },
+    { zh: '中性粒细胞胞外诱捕网', kind: 'proc', core: '中性粒', cell: '中性粒细胞',
+      dys: '中性粒细胞过度激活与 NETs 残留', tgt: '中性粒细胞浸润与炎症消退',
+      re: /\b(NETosis|neutrophil extracellular trap\w*|\bNETs?\b)\b/i,
+      ang: '中性粒细胞过度激活与 NETs 残留会把急性炎症拖成慢性炎症' },
+    { zh: '成纤维细胞异质性', kind: 'proc', core: '成纤维', cell: '成纤维细胞',
+      dys: '创面床成纤维细胞亚群失衡', tgt: '基质沉积与收缩表型',
+      re: /\b(fibroblast\w*|myofibroblast\w*|subpopulation\w*|heterogeneity)\b/i,
+      ang: '创面床成纤维细胞存在功能相反亚群，谁主导基质沉积直接决定愈合还是瘢痕' },
+    { zh: '再上皮化', kind: 'proc', core: '上皮', cell: '角质形成细胞',
+      dys: '再上皮化延迟', tgt: '角质形成细胞迁移与创面闭合',
+      re: /\b(keratinocyte\w*|re-epitheliali\w*|epidermal stem|epiderm\w*)\b/i,
+      ang: '再上皮化是创面闭合的最后一公里，迁移能力比增殖能力更常成为瓶颈' },
+    { zh: '神经-皮肤轴', kind: 'proc', core: '神经', cell: '施万细胞',
+      dys: '神经-皮肤轴功能受损', tgt: '神经肽释放与再上皮化',
+      re: /\b(Schwann|neuropath\w*|neuropeptide|CGRP|innervation)\b/i,
+      ang: '糖尿病创面存在小纤维神经病变，神经-皮肤轴是被低估的修复调控层' },
+    { zh: '生物膜耐药', kind: 'proc', core: '生物膜', cell: '巨噬细胞',
+      dys: '生物膜形成与耐药', tgt: '细菌清除与炎症消退',
+      re: /\b(biofilm\w*|S\. aureus|staphylococ\w*|antibiotic resistan\w*)\b/i,
+      ang: '生物膜把细菌包在自产基质里，是慢性创面"看着干净却总不愈"的隐形原因' },
+    { zh: '免疫微环境', kind: 'proc', core: '免疫', cell: '调节性 T 细胞',
+      dys: '免疫微环境失衡', tgt: 'T 细胞活化与局部免疫稳态',
+      re: /\b(immune microenvironment|regulatory T|Treg\b|dendritic cell\w*|adaptive immun\w*)\b/i,
+      ang: '适应性免疫在创面后期的作用长期被忽视，Treg 与组织驻留记忆细胞正成为新热点' },
+    { zh: '机械力信号', kind: 'proc', core: '机械', cell: '成纤维细胞',
+      dys: '力学信号失调', tgt: '成纤维细胞黏附与基质收缩',
+      re: /\b(mechanotransduction|matrix stiffness|Piezo\w*|tensile force)\b/i,
+      ang: '创面床刚度随愈合进程变化，力学信号通过 Piezo/YAP 直接改写细胞命运' },
+    { zh: '细胞外基质重塑', kind: 'proc', core: '基质', cell: '成纤维细胞',
+      dys: '基质重塑失衡', tgt: '胶原沉积与基质降解平衡',
+      re: /\b(extracellular matrix|\bECM\b|matrix metalloproteinase|MMPs?\b|collagen deposition)\b/i,
+      ang: 'ECM 不只是"填充物"，其降解片段本身即为信号分子，可反向调控修复' },
+    { zh: '皮肤菌群', kind: 'proc', core: '菌群', cell: '巨噬细胞',
+      dys: '菌群失调', tgt: '共生菌定植与局部免疫应答',
+      re: /\b(microbiome\w*|microbiota|commensal)\b/i,
+      ang: '共生菌通过短链脂肪酸与芳香烃受体影响局部免疫，是外用干预的新变量' },
+    { zh: '氧化应激', kind: 'proc', core: '氧化', cell: '角质形成细胞',
+      dys: '氧化应激过载', tgt: '细胞存活与迁移能力',
+      re: /\b(oxidative stress|\bROS\b|Nrf2|antioxidant)\b/i,
+      ang: '糖尿病创面处于"假性缺氧 + 氧化过载"双重状态，抗氧化递送仍有空间' },
+    { zh: '瘢痕挛缩', kind: 'proc', core: '瘢痕', cell: '肌成纤维细胞',
+      dys: '瘢痕挛缩过度', tgt: '肌成纤维细胞收缩与胶原过度沉积',
+      re: /\b(scar\w*|fibrosis|keloid|hypertrophic)\b/i,
+      ang: '瘢痕本质是修复"刹不住车"，找到终止信号比抑制某一因子更有价值' },
+    { zh: '瘙痒与疼痛', kind: 'proc', core: '瘙痒', cell: '感觉神经元',
+      dys: '瘙痒疼痛敏化', tgt: '感觉神经敏化与瘙痒行为',
+      re: /\b(pruritus|\bitch\b|nocicept\w*|hyperalgesia)\b/i,
+      ang: '瘢痕瘙痒疼痛是患者最在意的结局指标，却极少被做成机制研究' },
+
+    { zh: '水凝胶敷料', kind: 'mat', core: '水凝胶', cell: '成纤维细胞',
+      re: /\b(hydrogel\w*|wound dressing|sponge|microneedle\w*|adhesive patch)\b/i,
+      ang: '敷料已从"覆盖"进化到"按需响应释放"，材料结构本身就是治疗参数' },
+    { zh: '纳米酶', kind: 'mat', core: '纳米', cell: '巨噬细胞',
+      re: /\b(nanozyme\w*|nanoparticle\w*|metal-organic|\bMOF\b|nanomedicine)\b/i,
+      ang: '纳米体系能把抗氧化、抗菌、促愈三种功能压进一个载体，适合做"一材多效"' },
+    { zh: '生物打印皮肤', kind: 'mat', core: '打印', cell: '角质形成细胞',
+      re: /\b(bioprint\w*|3D[- ]print\w*|skin substitute|dermal substitute|electrospun\w*)\b/i,
+      ang: '打印/静电纺构建的仿生支架可同时提供力学支撑与细胞黏附位点' },
+    { zh: '脂肪来源基质细胞', kind: 'mat', core: '脂肪', cell: '内皮细胞',
+      re: /\b(adipose[- ]derived|ADSCs?|fat graft\w*|stromal vascular fraction)\b/i,
+      ang: '脂肪来源基质细胞取材方便、免疫原性低，是整形与创面交叉的天然抓手' },
+
+    { zh: '单细胞与空间组学', kind: 'meth', core: '单细胞', cell: '成纤维细胞',
+      re: /\b(single[- ]cell|scRNA\w*|spatial transcriptom\w*)\b/i,
+      ang: '单细胞 + 空间转录组能把"哪群细胞在哪个位置做了什么"讲清楚，是机制文章的硬通货' },
+    { zh: '皮肤类器官', kind: 'meth', core: '类器官', cell: '角质形成细胞',
+      re: /\b(organoid\w*|skin equivalent|ex vivo model)\b/i,
+      ang: '皮肤类器官可在人源背景下验证机制，弥补小鼠与人的物种差异' }
+  ];
+
+  /* ---------- 疾病模型语境 ---------- */
+  var MODEL = {
+    '糖尿病难愈创面': { model: '糖尿病难愈创面', env: '慢性炎症与血管新生障碍', bad: '迁延不愈', cell: '巨噬细胞',
+      form: '体外高糖细胞模型 + 糖尿病小鼠全层创面 + 单细胞测序' },
+    '创面修复': { model: '皮肤全层创面', env: '炎症-增殖转换失衡', bad: '愈合不良', cell: '成纤维细胞',
+      form: '体外细胞模型 + 小鼠全层创面 + 组织学与免疫组化' },
+    '整形医学': { model: '缺血皮瓣', env: '缺血再灌注损伤', bad: '缺血坏死', cell: '脂肪间充质干细胞',
+      form: '动物皮瓣模型 + 影像学评估 + 临床样本验证' },
+    '细胞衰老': { model: '衰老皮肤创面', env: '衰老相关分泌表型', bad: '延迟愈合', cell: '成纤维细胞',
+      form: '衰老细胞共培养 + 老年小鼠创面 + 衰老标志物检测' },
+    '线粒体自噬': { model: '高糖环境创面', env: '线粒体质量控制失衡', bad: '愈合延迟', cell: '角质形成细胞',
+      form: '高糖培养 + 线粒体功能检测 + 糖尿病创面模型' },
+    '外泌体': { model: '难愈性创面', env: '细胞间通讯失衡', bad: '愈合障碍', cell: '内皮细胞',
+      form: '囊泡分离鉴定 + 体内示踪 + 动物创面模型' }
+  };
+  var FALLBACK_MODEL = MODEL['创面修复'];
+  var CELLS = ['成纤维细胞', '内皮细胞', '角质形成细胞', '巨噬细胞', '脂肪间充质干细胞'];
+  var CARRIER = ['温敏水凝胶', '可溶性微针贴片', '可注射微球', 'ROS 响应纳米颗粒', '外泌体-水凝胶复合体系', '静电纺纤维膜'];
+
+  /* 机制类标题里避免「衰老成纤维细胞中细胞衰老」这类同义反复 */
+  function pickCell(m, cfg) {
+    var bad = function (c) {
+      return !c || c === m.zh || c.indexOf(m.core) >= 0 || (m.core.length > 1 && m.core.indexOf(c) >= 0);
+    };
+    if (!bad(m.cell)) return m.cell;
+    if (!bad(cfg.cell)) return cfg.cell;
+    for (var i = 0; i < CELLS.length; i++) if (!bad(CELLS[i])) return CELLS[i];
+    return '修复细胞';
+  }
+
+  function titleFor(m, o, rnd) {
+    var pick = function (arr) { return arr[Math.floor(rnd() * arr.length) % arr.length]; };
+
+    if (m.kind === 'meth') {
+      return pick([
+        m.zh + '解析' + o.model + '中' + o.mech2 + '相关' + o.cell + '亚群及其空间互作',
+        '基于' + m.zh + '的' + o.model + '修复过程' + o.cell + '图谱构建与关键节点筛选',
+        m.zh + '联合' + o.carrier + '揭示' + o.model + '中' + o.mech2 + '的时空演变规律'
+      ]);
+    }
+    if (m.kind === 'mat') {
+      return pick([
+        m.zh + '负载' + o.mech2 + '调控分子的构建及其促进' + o.model + '愈合的机制研究',
+        '靶向' + o.mech2 + '的' + m.zh + '设计及其在' + o.model + '中的应用',
+        '多功能' + m.zh + '通过' + o.mech2 + '通路重塑' + o.model + '愈合微环境'
+      ]);
+    }
+    if (m.kind === 'proc') {
+      return pick([
+        '靶向' + o.mech + '改善' + o.model + '中' + o.tgt + '的机制研究',
+        o.mech + '调控' + o.tgt + '：' + o.model + '愈合的新靶点',
+        o.model + '中' + o.dys + '对' + o.tgt + '的影响及靶向干预研究',
+        o.dys + '驱动' + o.model + o.bad + '的机制及' + o.carrier + '干预策略'
+      ]);
+    }
+    return pick([
+      o.mech + '介导' + o.cell + o.proc + '在' + o.model + '中的作用及干预策略',
+      o.cell + '中' + o.mech + '通路对' + o.model + '愈合质量的调控机制',
+      '靶向' + o.mech + '逆转' + o.env + '：' + o.model + '愈合的新思路',
+      o.mech + '调控' + o.cell + o.proc + '：从' + o.model + '机制到' + o.carrier + '递送',
+      o.mech + '作为' + o.model + '分层干预靶点的机制与转化研究'
+    ]);
+  }
+
+  /* 合并静态库 + 实时抓取库（与「科研进展 → 顶刊速递」同源） */
+  function collect() {
+    var D = window.WB_DATA || {};
+    var map = {}, arr = [];
+    (D.papers || []).forEach(function (p) {
+      var k = String(p.pmid || '');
+      if (!k || map[k]) return;
+      map[k] = p; arr.push(p);
+    });
+    var live = (WB.live && WB.live.list) ? WB.live.list() : [];
+    live.forEach(function (p) {
+      var k = String(p.pmid || '');
+      if (!k) return;
+      if (map[k]) {
+        var o = map[k];
+        if (!o.abstractZh && p.abstractZh) o.abstractZh = p.abstractZh;
+        if (!o.titleZh && p.titleZh) o.titleZh = p.titleZh;
+        if (!o.abstract && p.abstract) o.abstract = p.abstract;
+      } else { map[k] = p; arr.push(p); }
+    });
+    arr.forEach(function (p) { p._d = p.edat || p.date || p.year || ''; });
+    return arr;
+  }
+
+  function topPapers(papers, n) {
+    var arr = (papers || []).slice();
+    arr.sort(function (a, b) {
+      var da = a._d || a.edat || a.date || a.year || '';
+      var db = b._d || b.edat || b.date || b.year || '';
+      if (da !== db) return String(db).localeCompare(String(da));
+      return (b.ts || 0) - (a.ts || 0);
+    });
+    return arr.slice(0, n);
+  }
+
+  function dominantTopic(hits) {
+    var m = {};
+    hits.forEach(function (p) { if (p.topic) m[p.topic] = (m[p.topic] || 0) + 1; });
+    var best = '', n = -1;
+    Object.keys(m).forEach(function (k) { if (m[k] > n) { n = m[k]; best = k; } });
+    return MODEL[best] ? best : '创面修复';
+  }
+
+  function shortPaper(p) {
+    return {
+      pmid: String(p.pmid || ''), title: p.title || '', titleZh: p.titleZh || '',
+      journal: p.journal || '', if: p.if || '', date: p.edat || p.date || p.year || ''
+    };
+  }
+
+  /* 切入角度第二句：多句式轮换，避免 20 条同一模板 */
+  function angle2(m, cfg, o, src) {
+    var j = (src && src[0] && src[0].journal) ? String(src[0].journal).replace(/\.\s*$/, '').replace(/\.\s+/g, ' ') : '';
+    var tpl;
+
+    if (m.kind === 'mat') {
+      tpl = [
+        '材料侧的关键不是"做得更复杂"，而是让' + o.carrier + '在创面床按' + o.env + '的节奏释放' + o.mech2 + '调控分子，把"打哪个靶点"与"怎么送进去"一次解决。',
+        j ? '近三年 ' + j + ' 等刊已把' + m.zh + '推进到"功能化"阶段，但' + o.mech2 + '的剂量-时序关系仍缺系统研究，这正是可切入的空白。' : '',
+        '可先在' + o.model + '模型上比较' + m.zh + '与' + o.carrier + '两种递送形式的修复差异，再用单细胞测序定位' + o.mech2 + '受益细胞群。'
+      ];
+    } else if (m.kind === 'meth') {
+      tpl = [
+        '先用它把' + o.model + '中' + o.mech2 + '的空间分布画出来，拿到"谁在哪儿"的直接证据，再据此收窄干预靶点，比先猜通路更省时间。',
+        j ? '目前 ' + j + ' 等刊的' + m.zh + '研究多停在描述性图谱，缺少与功能实验的闭环，把"图谱 + 敲减验证"做完整即可形成差异化。' : '',
+        '落地时建议把' + m.zh + '与' + o.carrier + '递送实验串起来：先找亚群，再做靶向递送验证，形成"发现—干预—验证"的完整链条。'
+      ];
+    } else if (m.kind === 'proc') {
+      tpl = [
+        '在' + o.model + '中，' + o.dys + '是导致' + o.bad + '的可干预环节；把' + o.mech + '的定量指标与「' + o.tgt + '」这一结局挂钩，可做出可重复的疗效评价体系。',
+        j ? '近三年 ' + j + ' 等刊反复报道' + o.mech + '与愈合结局相关，但"干预到什么程度最合适"仍无共识，剂量-效应关系是现成的切入点。' : '',
+        '建议先在临床样本中确认' + o.mech + '与愈合时间的相关性，再在动物模型中做' + o.carrier + '局部干预，形成"临床观察—机制—干预"的完整证据链。',
+        '相较泛泛的"抗炎促愈"，把' + o.mech + '作为分层标志物，可先筛出最可能获益的患者亚群，提高临床试验的成功率。'
+      ];
+    } else {
+      tpl = [
+        '在' + o.model + '中，' + o.env + '是核心瓶颈；把' + o.mech + '与' + o.carrier + '局部递送结合，可同时解决"打哪个靶点"与"怎么送进去"。',
+        j ? '近三年 ' + j + ' 等刊已报道' + o.mech + '参与修复调控，但多数停在相关性层面，缺少因果验证与递送方案，这正是可补的缺口。' : '',
+        '技术上可用条件性敲除/过表达确认' + o.mech + '对' + o.cell + o.proc + '的因果作用，再用' + o.carrier + '做局部干预验证转化潜力。',
+        '若把' + o.mech + '与' + o.carrier + '结合，还能顺带解决小分子半衰期短、局部浓度不足的老问题，属于"机制 + 递送"双卖点。'
+      ];
+    }
+    var ok = tpl.filter(function (x) { return x; });
+    return ok[Math.floor(o.rnd() * ok.length) % ok.length];
+  }
+
+  function generate(papers, n) {
+    n = n || 20;
+    var top = topPapers(papers, 100);
+    if (!top.length) return { list: [], total: 0, sig: '' };
+
+    var sig = top.map(function (p) { return p.pmid; }).join(',');
+    var seed = (U.daySeed(sig) ^ 0x9e3779b9) >>> 0;
+    var rnd = U.rndFor(seed);
+
+    var scored = [];
+    MECH.forEach(function (m) {
+      var hits = top.filter(function (p) {
+        return m.re.test((p.title || '') + ' ' + (p.titleZh || '') + ' ' + (p.abstract || ''));
+      });
+      if (hits.length) {
+        scored.push({ m: m, hits: hits, r: rnd(), w: hits.length + (m.kind === 'mech' ? 2 : m.kind === 'proc' ? 1 : 0) });
+      }
+    });
+    scored.sort(function (a, b) { return b.w - a.w || a.r - b.r; });
+    if (!scored.length) return { list: [], total: top.length, sig: sig };
+
+    var list = [], used = {}, round = 0;
+    while (list.length < n && round < 8) {
+      for (var k = 0; k < scored.length && list.length < n; k++) {
+        var s = scored[k];
+        var key = s.m.zh + '#' + round;
+        if (used[key]) continue;
+        used[key] = 1;
+
+        var tp = dominantTopic(s.hits);
+        var cfg = MODEL[tp] || FALLBACK_MODEL;
+        var partner = null;
+        if (s.m.kind === 'mat' || s.m.kind === 'meth') {
+          for (var q = 0; q < scored.length; q++) {
+            if (scored[q].m.kind === 'mech' || scored[q].m.kind === 'proc') { partner = scored[q].m; break; }
+          }
+        }
+        var mech2 = (s.m.kind === 'mat' || s.m.kind === 'meth')
+          ? (partner ? partner.zh : '创面修复信号') : s.m.zh;
+        var cell = pickCell(s.m, cfg);
+        var carrier = CARRIER[(k + round + Math.floor(rnd() * CARRIER.length)) % CARRIER.length];
+        var o = {
+          mech: s.m.zh, mech2: mech2, env: cfg.env, model: cfg.model, bad: cfg.bad,
+          cell: cell, proc: s.m.proc || '增殖与迁移', carrier: carrier,
+          dys: s.m.dys || (s.m.zh + '失衡'), tgt: s.m.tgt || (cell + (s.m.proc || '增殖与迁移')),
+          rnd: rnd
+        };
+        var title = titleFor(s.m, o, rnd);
+
+        var src = s.hits.slice().sort(function (a, b) {
+          return String(b.edat || b.date || '').localeCompare(String(a.edat || a.date || ''));
+        }).slice(0, 3).map(shortPaper);
+
+        var formTag = s.m.kind === 'meth' ? '多组学/模型构建'
+          : (s.m.kind === 'mat' ? '材料 + 机制交叉' : '基础机制');
+        var ang = s.m.ang + '。' + angle2(s.m, cfg, o, src);
+
+        list.push({
+          t: title,
+          a: ang,
+          k: [s.m.zh, cfg.model, s.m.cell, formTag].filter(function (v, ix, ar) { return v && ar.indexOf(v) === ix; }),
+          f: formTag + '：' + cfg.form,
+          src: src,
+          tp: tp,
+          kind: s.m.kind,
+          ts: Date.now()
+        });
+      }
+      round++;
+    }
+    return { list: list, total: top.length, sig: sig };
+  }
+
+  WB.topicGen = { generate: generate, collect: collect, topPapers: topPapers, MECH: MECH };
+})();
+
+;
 /* ---- mod_quotes.js ---- */
 /* ===== 模块 1：每日成长语录 ===== */
 (function () {
@@ -4018,33 +4367,73 @@ window.WB_DATA.quizExtra = {
 
 ;
 /* ---- mod_ideas.js ---- */
-/* ===== 模块 9：选题灵感 ===== */
+/* ===== 模块 9：选题灵感（基于顶刊速递前 100 篇文献自动挖掘） ===== */
 (function () {
   'use strict';
-  var U = WB.util, D = window.WB_DATA || {};
-  var IDEAS = D.ideas || [];
-  var K_MINE = 'my_ideas';
+  var U = WB.util;
+  var K_MINE = 'my_ideas';        /* 我的选题库 */
+  var K_CACHE = 'idea_cache';     /* {sig, day, list} 缓存当天生成结果 */
 
   function mine() { return U.storeGet(K_MINE, []); }
-  function isMine(t) {
-    return mine().some(function (x) { return x.t === t; });
+  function setMine(m) { U.storeSet(K_MINE, m); }
+  function mineIdx(t) {
+    var m = mine(), idx = -1;
+    m.forEach(function (x, i) { if (x.t === t) idx = i; });
+    return idx;
+  }
+  function isMine(t) { return mineIdx(t) >= 0; }
+
+  /* 取选题：优先用缓存（文献池签名 + 当天未变），否则重新生成 */
+  function getIdeas() {
+    var papers = WB.topicGen.collect();
+    var res = WB.topicGen.generate(papers, 20);
+    var cache = U.storeGet(K_CACHE, null);
+    if (cache && cache.sig === res.sig && cache.day === U.todayStr() && cache.list && cache.list.length) {
+      res.list = cache.list;
+      res.cached = true;
+    } else if (res.list.length) {
+      U.storeSet(K_CACHE, { sig: res.sig, day: U.todayStr(), list: res.list, total: res.total });
+    }
+    return res;
+  }
+
+  function pmUrl(pmid) { return 'https://pubmed.ncbi.nlm.nih.gov/' + pmid + '/'; }
+
+  function srcHtml(it) {
+    var src = it.src || [];
+    if (!src.length) return '<div class="kv"><b>来源文献：</b><span class="muted">暂无关联文献</span></div>';
+    return '<div class="kv"><b>来源文献（点击查看原文）：</b></div><div class="isrc">' +
+      src.map(function (p, i) {
+        var label = p.titleZh || p.title || ('PMID ' + p.pmid);
+        return '<a class="ilink" href="' + pmUrl(p.pmid) + '" target="_blank" rel="noopener" title="' + U.esc(p.title || '') + '">' +
+          '<b>' + (i + 1) + '.</b> ' + U.esc(label) +
+          '<span class="ij">' + U.esc(p.journal || '') + (p.if ? ' · IF ' + p.if : '') + (p.date ? ' · ' + U.esc(p.date) : '') + '</span>' +
+          '</a>';
+      }).join('') + '</div>';
   }
 
   WB.register({
     id: 'ideas', icon: '💡', title: '选题灵感', group: '科研',
     mount: function (host) {
-      var st = { tab: 'today' };
+      var st = { tab: 'today', data: null };
 
       host.innerHTML =
         '<div class="card"><div class="tabs">' +
-        '<button type="button" class="tab on" data-tab="today">✨ 今日灵感</button>' +
-        '<button type="button" class="tab" data-tab="all">📚 全部选题</button>' +
-        '<button type="button" class="tab" data-tab="mine">⭐ 我的选题库 <span class="tiny" data-mn></span></button>' +
+        '<button type="button" class="tab on" data-tab="today">✨ 今日灵感 <span class="tiny" data-n1></span></button>' +
+        '<button type="button" class="tab" data-tab="mine">⭐ 我的选题库 <span class="tiny" data-n2></span></button>' +
         '</div><div data-body></div></div>';
 
       var body = host.querySelector('[data-body]');
-      var mn = host.querySelector('[data-mn]');
-      function refreshN() { var n = mine().length; mn.textContent = n ? '(' + n + ')' : ''; }
+      var n1 = host.querySelector('[data-n1]');
+      var n2 = host.querySelector('[data-n2]');
+
+      function refreshN() {
+        var d = st.data || getIdeas();
+        st.data = d;
+        n1.textContent = d.list.length ? '(' + d.list.length + ')' : '';
+        var m = mine().length;
+        n2.textContent = m ? '(' + m + ')' : '';
+      }
 
       function ideaCard(it, showFav) {
         var got = isMine(it.t);
@@ -4055,26 +4444,26 @@ window.WB_DATA.quizExtra = {
           '<div class="kv"><b>切入角度：</b>' + U.esc(it.a) + '</div>' +
           '<div class="kv"><b>关键词：</b>' + (it.k || []).map(function (k) { return '<span class="tag n tiny">' + U.esc(k) + '</span>'; }).join(' ') + '</div>' +
           '<div class="kv"><b>适合形式：</b>' + U.esc(it.f) + '</div>' +
+          srcHtml(it) +
           '<div class="row mt8"><button type="button" class="btn xs"' + U.spkAttr(it.t + '。' + it.a, 'zh-CN') + '>🔊 朗读</button>' +
           '<button type="button" class="btn xs" data-copy="' + U.esc(it.t + '\n切入点：' + it.a + '\n关键词：' + (it.k || []).join('、') + '\n适合形式：' + it.f) + '">📋 复制</button></div>' +
           '</div>';
       }
 
       function renderToday() {
-        var rnd = U.rndFor(WB.seedOf(17));
-        var list = U.pickN(IDEAS, Math.min(4, IDEAS.length), rnd);
+        var d = st.data || getIdeas();
+        st.data = d;
+        if (!d.list.length) {
+          body.innerHTML = U.emptyBox('💡', '文献池为空，请先到「科研进展 → 预刊速递」同步一次文献');
+          return;
+        }
         body.innerHTML =
-          '<div class="row mb8"><span class="tag dark">今日 ' + list.length + ' 个</span>' +
-          '<span class="muted small">从 ' + IDEAS.length + ' 个选题中每日轮换 · 两天一换请隔日再来</span>' +
-          '<span class="sp"></span><button type="button" class="btn sm" data-act="shuffle">🔄 换一批</button></div>' +
-          '<div class="grid g2 half">' + list.map(function (i) { return ideaCard(i); }).join('') + '</div>' +
-          '<div class="hint b mt8">💡 收藏后进入「我的选题库」，方便下次和导师讨论时直接翻出来。</div>';
-      }
-
-      function renderAll() {
-        body.innerHTML = '<div class="row mb8"><span class="tag dark">共 ' + IDEAS.length + ' 个</span>' +
-          '<span class="muted small">围绕干细胞与创面修复再生 · 糖尿病创面模型</span></div>' +
-          '<div class="list">' + IDEAS.map(function (i) { return ideaCard(i); }).join('') + '</div>';
+          '<div class="row mb8"><span class="tag dark">' + d.list.length + ' 个选题</span>' +
+          '<span class="muted small">从顶刊速递前 ' + d.total + ' 篇文献中挖掘 · 文献更新即自动重算</span>' +
+          '<span class="sp"></span>' +
+          '<button type="button" class="btn sm" data-act="regen">🔄 重新挖掘</button></div>' +
+          '<div class="grid g2 half">' + d.list.map(function (i) { return ideaCard(i); }).join('') + '</div>' +
+          '<div class="hint b mt8">💡 选题由「科研进展 → 顶刊速递」前 100 篇文献自动挖掘：文献池每天刷新，选题随之更新。收藏后进入「我的选题库」。</div>';
       }
 
       function renderMine() {
@@ -4088,6 +4477,11 @@ window.WB_DATA.quizExtra = {
             : U.emptyBox('⭐', '还没有收藏选题，去「今日灵感」点 ☆ 收藏'));
       }
 
+      function render() {
+        refreshN();
+        if (st.tab === 'today') renderToday(); else renderMine();
+      }
+
       host.addEventListener('click', function (e) {
         var t = e.target.closest('[data-tab]');
         if (t) {
@@ -4098,28 +4492,47 @@ window.WB_DATA.quizExtra = {
         var f = e.target.closest('[data-fav]');
         if (f) {
           var title = f.getAttribute('data-fav');
-          var m = mine(), idx = -1;
-          m.forEach(function (x, i) { if (x.t === title) idx = i; });
-          if (idx >= 0) { m.splice(idx, 1); f.textContent = '☆ 收藏'; f.classList.remove('on'); U.toast('已取消收藏'); }
-          else {
-            var src = IDEAS.filter(function (x) { return x.t === title; })[0] || { t: title };
-            m.push({ t: src.t, a: src.a, k: src.k, f: src.f, ts: Date.now() });
+          var m = mine(), idx = mineIdx(title);
+          if (idx >= 0) {
+            m.splice(idx, 1); setMine(m);
+            f.textContent = '☆ 收藏'; f.classList.remove('on'); U.toast('已取消收藏');
+          } else {
+            var pool = (st.data ? st.data.list : []).concat((U.storeGet(K_CACHE, {}) || {}).list || []);
+            var src = pool.filter(function (x) { return x.t === title; })[0] || { t: title };
+            m.push({ t: src.t, a: src.a || '', k: src.k || [], f: src.f || '', src: src.src || [], ts: Date.now() });
+            setMine(m);
             f.textContent = '★ 已收藏'; f.classList.add('on'); U.toast('已加入我的选题库');
           }
-          U.storeSet(K_MINE, m); refreshN();
+          refreshN();
           if (st.tab === 'mine') renderMine();
           return;
         }
-        if (e.target.closest('[data-act="shuffle"]')) { renderToday(); U.toast('已换一批灵感'); return; }
+        if (e.target.closest('[data-act="regen"]')) {
+          U.storeDel(K_CACHE);
+          st.data = getIdeas();
+          renderToday(); refreshN();
+          U.toast('已重新挖掘选题');
+          return;
+        }
       });
 
-      function render() {
-        refreshN();
-        if (st.tab === 'today') renderToday();
-        else if (st.tab === 'all') renderAll();
-        else renderMine();
-      }
       render();
+
+      /* 顶刊速递文献池更新（实时抓取/翻译完成）后自动重算选题 */
+      if (WB.live && WB.live.onUpdate) {
+        var _t = null;
+        WB.live.onUpdate(function () {
+          if (!document.body.contains(host)) return;
+          clearTimeout(_t);
+          _t = setTimeout(function () {
+            if (!document.body.contains(host)) return;
+            var d = getIdeas();
+            if (st.data && d.sig === st.data.sig) return;
+            st.data = d;
+            if (st.tab === 'today') { renderToday(); refreshN(); }
+          }, 1200);
+        });
+      }
     }
   });
 })();
