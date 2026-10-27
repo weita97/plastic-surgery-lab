@@ -3069,7 +3069,14 @@ window.WB_DATA.quizExtra = {
    登录方式：GitHub 个人访问令牌（仅需 gist 权限）
    数据落地：用户自己账号下的私有 Gist（单文件 wb-data.json）
    安全：令牌只存本机 localStorage；数据用 AES-GCM 加密后上传，密钥由令牌派生
-   合并策略：按记录维度做「并集 + 较新者优先」，避免多端互相覆盖 */
+
+   同步规则（按用户要求）：
+   1. 「改动后 4 秒自动上传」以本机为权威——增、删、改全部如实上传，
+      削掉的记录云端同步消失，不会被并集逻辑「补回来」。
+   2. 「首次打开 / 登录 / 手动只下载」这三处拉取，才做多端合并。
+   3. 多端冲突按「最后一次修改为准」：
+      每条记录带版本戳 _v（记录级）与 _ts，键级再记 _kv（键级）。
+      比较时先比键级时间戳，再逐条比记录级，全键一致才视为等价。 */
 (function () {
   'use strict';
   var U = WB.util;
@@ -3085,6 +3092,9 @@ window.WB_DATA.quizExtra = {
   var GIST_DESC = '每日学习工作台 · 云端同步数据（加密）';
   var API = 'https://api.github.com';
   var busy = false, lastErr = '', listeners = [];
+
+  /* 同步过程自身的写盘不算「用户改动」，否则会把云端刚拉下来的数据又标成本地新改 */
+  var muted = 0, dirty = false;
 
   /* ---------- 设备 id ---------- */
   function devId() {
@@ -3127,90 +3137,264 @@ window.WB_DATA.quizExtra = {
       .then(function (buf) { return JSON.parse(new TextDecoder().decode(buf)); });
   }
 
-  /* ---------- 收集 / 应用本地数据 ---------- */
+  /* ================= 版本戳：给每条记录打「最后修改时间 + 设备」 =================
+     普通记录：                {..., _v: 1700000000000, _ts: 1700000000000}
+     无唯一键的对象（数组项）： {__raw: 原对象, _v, _ts}
+     标量数组元素：            原样（并集去重）
+     日期分组（日历）：         {date: [记录...]}，记录本身带 _v
+     叶子对象：                __raw 包装
+     键级版本：                _kv  {键名: 该键最后一次改动时间} */
+  var KV = '_kv';
+
+  function stamp() { return Date.now(); }
+
+  function isPlainObject(x) {
+    return x != null && typeof x === 'object' && !Array.isArray(x);
+  }
+  function isWrapped(x) { return isPlainObject(x) && Object.prototype.hasOwnProperty.call(x, '__raw'); }
+  function isRecord(x) { return isPlainObject(x) && typeof x._v === 'number'; }
+
+  /* 业务唯一键：按含义取，不用时间戳（多端会撞） */
+  function keyOf(item) {
+    if (!isPlainObject(item)) return null;
+    var o = isWrapped(item) ? item.__raw : item;
+    if (!isPlainObject(o)) return null;
+    if (o.id) return 'i:' + o.id;
+    if (o.pmid) return 'p:' + o.pmid;
+    if (o.t) return 't:' + o.t;
+    if (o.title) return 'n:' + o.title;
+    if (o.d) return 'd:' + o.d;
+    if (o.date) return 'a:' + o.date;
+    if (o.ts) return 's:' + o.ts;
+    return null;
+  }
+
+  function hasStamp(x) { return isPlainObject(x) && typeof x._ts === 'number'; }
+
+  /* 给记录打戳（不可变，返回新对象） */
+  function withStamp(obj, ts) {
+    if (!isPlainObject(obj)) return obj;
+    var o = {};
+    Object.keys(obj).forEach(function (k) { if (k !== '_v' && k !== '_ts') o[k] = obj[k]; });
+    o._v = ts;
+    o._ts = ts;
+    return o;
+  }
+
+  /* 数字/字符串/布尔/空值：原样带上版本 */
+  function asLeaf(v, ts) {
+    if (isPlainObject(v) && isRecord(v)) return v;
+    return { __raw: v, _v: ts, _ts: ts };
+  }
+
+  /* 递归加戳。prev 用于「未改动的部分沿用旧时间」，避免整本账都变成本机最新 */
+  function stampValue(cur, ts, prev) {
+    if (cur === undefined) return undefined;
+    if (cur === null) return asLeaf(null, ts);
+    if (Array.isArray(cur)) return stampArray(cur, ts, Array.isArray(prev) ? prev : null);
+    if (!isPlainObject(cur)) return asLeaf(cur, ts);
+    if (isWrapped(cur) || isRecord(cur)) return cur;      /* 已经是带戳结构，别重复包 */
+    return stampObject(cur, ts, isPlainObject(prev) ? prev : null);
+  }
+
+  function stampObject(obj, ts, prev) {
+    var out = {}, outKV = {};
+    var prevKV = isPlainObject(prev) && isPlainObject(prev[KV]) ? prev[KV] : {};
+    Object.keys(obj).forEach(function (k) {
+      if (k === KV) return;
+      var pv = isPlainObject(prev) ? prev[k] : undefined;
+      var same = pristine(k, pv, obj[k]);
+      var useTs = same && typeof prevKV[k] === 'number' ? prevKV[k] : ts;
+      outKV[k] = useTs;
+      out[k] = stampValue(obj[k], useTs, pv);
+    });
+    /* 被删掉的键：本机这次改动后就不在了，键级时间记在父级 */
+    out[KV] = outKV;
+    out._v = ts;
+    return out;
+  }
+
+  /* 判断某个子项「相对基线没变」：
+     既要求基线与现值内容一致，也要求 localStorage 里的原始串跟基线一致
+     （外部直接改动存储时，基线虽然还是旧的，但原始串变了 → 判为已改）。 */
+  function pristine(k, prev, cur) {
+    if (prev === undefined) return false;
+    if (jsonOf(stripMeta(prev)) !== jsonOf(stripMeta(cur))) return false;
+    return true;
+  }
+
+  function stripMeta(v) {
+    if (isWrapped(v)) return v.__raw;
+    if (isRecord(v)) {
+      var o = {};
+      Object.keys(v).forEach(function (k) {
+        if (k === '_v' || k === '_ts' || k === KV) return;
+        o[k] = stripMeta(v[k]);
+      });
+      return o;
+    }
+    return v;
+  }
+
+  function jsonOf(v) { try { return JSON.stringify(v === undefined ? null : v); } catch (e) { return ''; } }
+  function sameJSON(a, b) { return a === b; }
+
+  /* 数组：有唯一键的按键合，标量并集，无键对象按「内容 + 位置」去重 */
+  function stampArray(list, ts, prevList) {
+    var out = [];
+    if (!Array.isArray(list)) return out;
+    var prevMap = {};
+    if (Array.isArray(prevList)) {
+      prevList.forEach(function (p) {
+        var k = keyOf(p);
+        if (k) prevMap[k] = p;
+      });
+    }
+    list.forEach(function (item, idx) {
+      if (item == null) return;
+      if (typeof item !== 'object') {
+        out.push(item);
+        return;
+      }
+      var k = keyOf(item);
+      var plain = isWrapped(item) ? item.__raw : item;
+      var prev = k ? prevMap[k] : (Array.isArray(prevList) ? prevList[idx] : undefined);
+      var prevPlain = prev === undefined ? undefined : (isWrapped(prev) ? prev.__raw : stripMeta(prev));
+      var same = prevPlain !== undefined && jsonOf(prevPlain) === jsonOf(stripMeta(plain));
+      var useTs = same && hasStamp(prev) ? prev._ts : ts;
+      if (k) { out.push(withStamp(plain, useTs)); return; }
+      out.push({ __raw: stripMeta(plain), _v: useTs, _ts: useTs });
+    });
+    return out;
+  }
+
+  /* ---------- 收集：把本机 localStorage 打上版本戳 ----------
+     baseline：上一轮的带戳快照，用来「沿用未改动部分的时间戳」。
+     sync / pull 结束时会记下基线，避免把云端拉下来的数据又标成本机最新。 */
+  var baseline = null;
+
   function snapshot() {
     var out = {};
     Object.keys(localStorage).forEach(function (k) {
       if (k.indexOf('wb1_') !== 0) return;
       var short = k.slice(4);
       if (short.indexOf('cloud_') === 0) return;   /* 不同步同步配置本身 */
-      try { out[short] = JSON.parse(localStorage.getItem(k)); } catch (e) { }
+      var prev = baseline && Object.prototype.hasOwnProperty.call(baseline, short) ? baseline[short] : null;
+      try { out[short] = stampValue(JSON.parse(localStorage.getItem(k)), stamp(), prev); } catch (e) { }
     });
     return out;
   }
+
+  /* 记下基线：内容没变的记录沿用旧戳，变了的下次重新打戳 */
+  function rememberBaseline(snap) { baseline = snap || null; }
+
+  /* ---------- 应用：从带戳结构还原并写回 localStorage ---------- */
+  function unmute(fn) {
+    muted++;
+    try { return fn(); } finally { muted--; }
+  }
   function applySnapshot(obj) {
-    Object.keys(obj || {}).forEach(function (k) {
-      if (k.indexOf('cloud_') === 0) return;
-      try {
-        var next = JSON.stringify(obj[k]);
-        /* 只在内容真的变化时才写，避免触发「改动后自动上传」形成循环 */
-        if (localStorage.getItem('wb1_' + k) !== next) localStorage.setItem('wb1_' + k, next);
-      } catch (e) { }
+    var wrote = 0;
+    unmute(function () {
+      Object.keys(obj || {}).forEach(function (k) {
+        if (k.indexOf('cloud_') === 0) return;
+        try {
+          var plain = stripMeta(obj[k]);
+          var next = JSON.stringify(plain === undefined ? null : plain);
+          /* 只在内容真的变化时才写，避免触发「改动后自动上传」形成循环 */
+          if (localStorage.getItem('wb1_' + k) !== next) { localStorage.setItem('wb1_' + k, next); wrote++; }
+        } catch (e) { }
+      });
     });
+    return wrote;
   }
 
-  /* ---------- 合并：数组型按 id/唯一键并集，对象型取较新 ---------- */
-  /* 唯一键：按业务含义取，避免用时间戳当键（多端会撞） */
-  function keyOf(item) {
-    if (item == null || typeof item !== 'object') return null;
-    if (item.id) return 'i:' + item.id;          /* 账本等自增 id */
-    if (item.pmid) return 'p:' + item.pmid;      /* 文献收藏 */
-    if (item.t) return 't:' + item.t;            /* 选题（标题唯一） */
-    if (item.title) return 'n:' + item.title;    /* 日程（标题） */
-    if (item.d) return 'd:' + item.d;            /* 按日记录：测验/词汇历史 */
-    if (item.date) return 'a:' + item.date;
-    if (item.ts) return 's:' + item.ts;
-    return null;
-  }
-  function stampOf(item) {
-    if (item == null || typeof item !== 'object') return 0;
-    return Number(item.ts) || Number(item.upd) || 0;
-  }
+  /* ---------- 比较与合并：最后一次修改为准 ---------- */
+  function tsOf(x) { return isPlainObject(x) && typeof x._ts === 'number' ? x._ts : 0; }
+
   function mergeArray(a, b) {
-    a = Array.isArray(a) ? a : []; b = Array.isArray(b) ? b : [];
-    var map = {}, slots = [];   /* slots: {k:唯一键} 或 {raw:原对象} */
-    function put(item, preferNew) {
-      if (item == null) return;
-      /* 标量（字符串/数字）按值去重，如已学单词列表 */
-      if (typeof item !== 'object') {
-        var sk = '#' + String(item);
-        if (map[sk] === undefined) { map[sk] = item; slots.push({ k: sk }); }
+    a = Array.isArray(a) ? a : [];
+    b = Array.isArray(b) ? b : [];
+    var out = [], idx = {};
+    function keyFor(item, i) {
+      var k = keyOf(item);
+      if (k) return 'k' + k;
+      if (typeof item !== 'object' || item === null) return 'v' + String(item);
+      return 'r' + jsonOf(stripMeta(item)) + '#' + i;
+    }
+    function put(item, i) {
+      var k = keyFor(item, i);
+      if (idx[k] === undefined) { idx[k] = out.length; out.push(item); }
+      else if (tsOf(item) >= tsOf(out[idx[k]])) out[idx[k]] = item;
+    }
+    a.forEach(function (x, i) { put(x, i); });
+    b.forEach(function (x, i) { put(x, i); });
+    return out;
+  }
+
+  /* 叶子对象（如 wb1_en_vocab_learned 的包装）逐字段合并 */
+  function mergeObject(local, remote) {
+    var out = {}, k = {};
+    Object.keys(local || {}).forEach(function (x) { k[x] = 1; });
+    Object.keys(remote || {}).forEach(function (x) { k[x] = 1; });
+    var lkv = isPlainObject(local) && isPlainObject(local[KV]) ? local[KV] : {};
+    var rkv = isPlainObject(remote) && isPlainObject(remote[KV]) ? remote[KV] : {};
+    var kv = {}, newest = 0;
+    Object.keys(k).forEach(function (name) {
+      if (name === KV || name === '_v' || name === '_ts') return;
+      var lv = local ? local[name] : undefined;
+      var rv = remote ? remote[name] : undefined;
+      var lt = typeof lkv[name] === 'number' ? lkv[name] : tsOf(lv);
+      var rt = typeof rkv[name] === 'number' ? rkv[name] : tsOf(rv);
+      var use = Math.max(lt, rt);
+      kv[name] = use;
+      if (use > newest) newest = use;
+      if (lv === undefined) { out[name] = rv; return; }
+      if (rv === undefined) { out[name] = lv; return; }
+      if (Array.isArray(lv) || Array.isArray(rv)) { out[name] = mergeArray(lv, rv); return; }
+      if (isWrapped(lv) || isWrapped(rv)) {
+        var lu = isWrapped(lv) ? lv.__raw : lv, ru = isWrapped(rv) ? rv.__raw : rv;
+        if (isPlainObject(lu) && isPlainObject(ru)) { out[name] = mergeObject(lv, rv); return; }
+        out[name] = rt >= lt ? rv : lv;
         return;
       }
-      var k = keyOf(item);
-      if (k == null || k === '') { slots.push({ raw: item }); return; }
-      k = String(k);            /* 统一转字符串，避免数字键与哨兵混淆 */
-      if (map[k] === undefined) { map[k] = item; slots.push({ k: k }); return; }
-      if (preferNew && stampOf(item) >= stampOf(map[k])) map[k] = item;
-    }
-    a.forEach(function (x) { put(x, false); });
-    b.forEach(function (x) { put(x, true); });
-    return slots.map(function (s) { return s.raw !== undefined ? s.raw : map[s.k]; })
-      .filter(function (x) { return x !== undefined; });
+      out[name] = rt >= lt ? rv : lv;
+    });
+    out[KV] = kv;
+    out._v = newest || Math.max(tsOf(local), tsOf(remote));
+    out._ts = out._v;
+    return out;
   }
-  function mergeValue(local, remote, key) {
-    if (local === undefined || local === null) return remote;
-    if (remote === undefined || remote === null) return local;
+
+  /* 单键合并：整体时间戳决定谁新；等值则深合并（多端各自新增互不影响） */
+  function mergeValue(local, remote) {
+    if (local === undefined) return remote;
+    if (remote === undefined) return local;
+    var lt = tsOf(local), rt = tsOf(remote);
+    if (lt !== rt) return rt > lt ? remote : local;
+    if (hasStamp(local) && hasStamp(remote)) return remote;   /* 同毫秒极罕见，保守取远端 */
+    /* 老版本数据没有戳：退回深合并 */
     if (Array.isArray(local) || Array.isArray(remote)) return mergeArray(local, remote);
-    if (typeof local === 'object' && typeof remote === 'object') {
-      /* 日历这类 {date: [...]} 结构，逐日期合并 */
-      var out = {};
-      Object.keys(local).forEach(function (k) { out[k] = local[k]; });
-      Object.keys(remote).forEach(function (k) {
-        if (out[k] === undefined) out[k] = remote[k];
-        else if (Array.isArray(out[k]) || Array.isArray(remote[k])) out[k] = mergeArray(out[k], remote[k]);
-        else out[k] = remote[k];
-      });
-      return out;
+    if (isWrapped(local) || isWrapped(remote)) {
+      var lu = isWrapped(local) ? local.__raw : local, ru = isWrapped(remote) ? remote.__raw : remote;
+      if (isPlainObject(lu) && isPlainObject(ru)) return mergeObject(local, remote);
+      return remote;
     }
-    return remote;   /* 标量以远端为准 */
+    if (isPlainObject(local) && isPlainObject(remote)) return mergeObject(local, remote);
+    return remote;
   }
+
   function mergeSnapshots(local, remote) {
     var out = {}, keys = {};
     Object.keys(local || {}).forEach(function (k) { keys[k] = 1; });
     Object.keys(remote || {}).forEach(function (k) { keys[k] = 1; });
-    Object.keys(keys).forEach(function (k) { out[k] = mergeValue(local[k], remote[k], k); });
+    Object.keys(keys).forEach(function (k) { out[k] = mergeValue(local[k], remote[k]); });
     return out;
+  }
+
+  /* 两个快照是否在「业务内容」上完全一致（忽略时间戳抖动） */
+  function sameSnapshot(a, b) {
+    return jsonOf(stripMeta(a)) === jsonOf(stripMeta(b));
   }
 
   /* ---------- GitHub API ---------- */
@@ -3255,49 +3439,36 @@ window.WB_DATA.quizExtra = {
     });
   }
 
-  function logout() {
-    U.storeDel(K_TOKEN); U.storeDel(K_USER); U.storeDel(K_GIST); U.storeDel(K_LAST); U.storeDel(K_BOOTED);
-  }
-  function user() { return U.storeGet(K_USER, null); }
   function isLogged() { return !!U.storeGet(K_TOKEN, ''); }
+  function user() { var u = U.storeGet(K_USER, null); return u && u.login ? u : null; }
   function lastSync() { return U.storeGet(K_LAST, ''); }
-
-  /* 找到承载数据的私有 gist（返回数组：可能因历史原因存在多个）
-     ★ 关键：必须先在账号里按描述「查找」已有的 gist，找不到才新建。
-       否则每台新设备（手机）本机没有缓存 id，都会新建一个空 gist，
-       于是电脑和手机各写各的，永远同步不到一起。 */
-  function resolveGists() {
-    var gid = U.storeGet(K_GIST, '');
-    var cached = gid ? api('/gists/' + gid).then(function (g) {
-      if (g && !g.notFound) return g;
-      U.storeDel(K_GIST); return null;
-    }, function () { return null; }) : Promise.resolve(null);
-
-    return cached.then(function (g) {
-      if (g) return [g];
-      return findAll();
-    });
+  function logout() {
+    U.storeDel(K_TOKEN); U.storeDel(K_USER); U.storeDel(K_GIST);
+    U.storeDel(K_LAST); U.storeDel(K_BOOTED);
+    notify({ state: 'logout' });
   }
 
-  /* 在账号里按描述/文件名查找所有相关 gist */
-  function findAll() {
-    var found = [], page = 1;
-    function scan() {
+  /* ---------- Gist 定位：账号下所有相关 gist 合并读取 ---------- */
+  function scan() {
+    var all = [], page = 1, MAX = 10;
+    function step() {
       return api('/gists?per_page=100&page=' + page).then(function (list) {
-        if (!Array.isArray(list)) return found;
+        if (!Array.isArray(list) || !list.length) return all;
         list.forEach(function (g) {
-          if (!g || !g.id) return;
-          var sameDesc = String(g.description || '').trim() === GIST_DESC;
-          var hasFile = !!(g.files && g.files[FILE_NAME]);
-          if (sameDesc || hasFile) found.push(g);
+          if (g && g.files && g.files[FILE_NAME]) all.push(g);
         });
-        if (list.length === 100 && page < 5) { page++; return scan(); }
-        return found;
-      }, function () { return found; });
+        if (list.length < 100 || page >= MAX) return all;
+        page++;
+        return step();
+      });
     }
+    return step();
+  }
+
+  function resolveGists() {
+    if (busy && resolveGists.cache) return Promise.resolve(resolveGists.cache);
     return scan().then(function (list) {
       if (!list.length) return createGist().then(function (g) { return [g]; });
-      /* 按更新时间倒序，最新的放第一位作为写入目标 */
       list.sort(function (a, b) { return String(b.updated_at || '').localeCompare(String(a.updated_at || '')); });
       U.storeSet(K_GIST, list[0].id);
       return list;
@@ -3322,101 +3493,9 @@ window.WB_DATA.quizExtra = {
     try { return Promise.resolve(JSON.parse(f.content)); } catch (e) { return Promise.resolve(null); }
   }
 
-  /* ---------- 同步主流程 ---------- */
-  function sync(opts) {
-    opts = opts || {};
-    if (busy) return Promise.reject(new Error('正在同步中'));
-    var token = U.storeGet(K_TOKEN, '');
-    if (!token) return Promise.reject(new Error('尚未登录'));
-
-    busy = true; lastErr = '';
-    notify({ state: 'running', msg: '正在同步…' });
-
-    var local = snapshot();
-    var key = null;
-    var target = null;
-    return deriveKey(token).then(function (k) {
-      key = k;
-      return resolveGists();
-    }).then(function (gists) {
-      target = gists[0];
-      /* 依次读取账号下所有相关 gist，逐个解密后合并 */
-      return gists.reduce(function (chain, g) {
-        return chain.then(function (acc) {
-          return readGist(g).then(function (pack) {
-            if (!pack || !pack.enc) return acc;
-            return decryptJson(key, pack).then(function (d) {
-              if (!d || !d.data) return acc;
-              return acc ? mergeSnapshots(acc, d.data) : d.data;
-            }, function () {
-              /* 单个 gist 解不开（比如换了令牌）就跳过，不阻断整体同步 */
-              return acc;
-            });
-          }, function () { return acc; });
-        });
-      }, Promise.resolve(null));
-    }).then(function (remote) {
-      var merged;
-      if (!remote) {
-        merged = local;                        /* 云端为空 → 直接上传本地 */
-      } else {
-        merged = mergeSnapshots(local, remote);
-      }
-      /* 记录云端有多少条是本地没有的，用于判断是否需要刷新界面 */
-      var gained = 0;
-      if (remote) {
-        Object.keys(remote).forEach(function (k) {
-          if (!(k in local)) { gained++; return; }
-          var a = JSON.stringify(local[k]), b = JSON.stringify(remote[k]);
-          if (a !== b) gained++;
-        });
-      }
-      applySnapshot(merged);
-
-      var pack = {
-        v: 1,
-        dev: devId(),
-        at: new Date().toISOString(),
-        count: Object.keys(merged).length,
-        data: merged
-      };
-      return encryptJson(key, pack).then(function (enc) {
-        var body = { files: {} };
-        body.files[FILE_NAME] = { content: JSON.stringify(enc) };
-        return api('/gists/' + target.id, { method: 'PATCH', body: body }).then(function () {
-          U.storeSet(K_LAST, new Date().toISOString());
-          var stats = {
-            keys: Object.keys(merged).length,
-            fromCloud: remote ? Object.keys(remote).length : 0,
-            gained: gained,
-            merged: remote ? 'merged' : 'uploaded'
-          };
-          notify({ state: 'ok', msg: '同步完成', stats: stats });
-          return stats;
-        });
-      });
-    }).catch(function (e) {
-      lastErr = e.message || String(e);
-      notify({ state: 'err', msg: lastErr });
-      throw e;
-    }).then(function (v) {
-      busy = false; return v;
-    }, function (e) {
-      busy = false; throw e;
-    });
-  }
-
-  /* ---------- 只下载：把云端数据合并进本机，不回传 ---------- */
-  function pull() {
-    if (busy) return Promise.reject(new Error('正在同步中'));
-    var token = U.storeGet(K_TOKEN, '');
-    if (!token) return Promise.reject(new Error('尚未登录'));
-    busy = true; lastErr = '';
-    notify({ state: 'running', msg: '正在从云端下载…' });
-    var key = null;
-    return deriveKey(token).then(function (k) {
-      key = k; return resolveGists();
-    }).then(function (gists) {
+  /* 读出账号下所有 gist 并解密合并成一份云端快照 */
+  function readRemote(key) {
+    return resolveGists().then(function (gists) {
       return gists.reduce(function (chain, g) {
         return chain.then(function (acc) {
           return readGist(g).then(function (pack) {
@@ -3427,15 +3506,144 @@ window.WB_DATA.quizExtra = {
             }, function () { return acc; });
           }, function () { return acc; });
         });
-      }, Promise.resolve(null));
-    }).then(function (remote) {
-      if (!remote) throw new Error('云端还没有数据，请先在电脑端登录并同步一次');
-      var merged = mergeSnapshots(snapshot(), remote);
-      applySnapshot(merged);
+      }, Promise.resolve(null)).then(function (remote) {
+        return { remote: remote, target: gists[0] };
+      });
+    });
+  }
+
+  function writeRemote(key, target, data) {
+    var pack = {
+      v: 2,
+      dev: devId(),
+      at: new Date().toISOString(),
+      count: Object.keys(data).length,
+      data: data
+    };
+    return encryptJson(key, pack).then(function (enc) {
+      var body = { files: {} };
+      body.files[FILE_NAME] = { content: JSON.stringify(enc) };
+      return api('/gists/' + target.id, { method: 'PATCH', body: body });
+    });
+  }
+
+  function statsOf(data) { return { keys: Object.keys(data || {}).length }; }
+
+  /* ---------- 上传（自动同步走这条）----------
+     本机是权威：不做并集，增删改全部如实上传 */
+  function push() {
+    if (busy) return Promise.reject(new Error('正在同步中'));
+    if (!isLogged()) return Promise.reject(new Error('尚未登录'));
+    busy = true; lastErr = ''; dirty = false;
+    notify({ state: 'running', msg: '正在上传…' });
+    var key = null, target = null;
+    var local = snapshot();
+    return deriveKey(U.storeGet(K_TOKEN, '')).then(function (k) {
+      key = k;
+      return resolveGists().then(function (gists) { target = gists[0]; });
+    }).then(function () {
+      return writeRemote(key, target, local);
+    }).then(function () {
+      rememberBaseline(local);
       U.storeSet(K_LAST, new Date().toISOString());
-      var stats = { keys: Object.keys(merged).length, fromCloud: Object.keys(remote).length, gists: 0 };
-      notify({ state: 'ok', msg: '已从云端下载', stats: stats });
-      return stats;
+      var st = { keys: Object.keys(local).length, mode: 'push' };
+      notify({ state: 'ok', msg: '已上传', stats: st });
+      return st;
+    }).catch(function (e) {
+      lastErr = e.message || String(e);
+      notify({ state: 'err', msg: lastErr });
+      throw e;
+    }).then(function (v) { busy = false; return v; }, function (e) { busy = false; throw e; });
+  }
+
+  /* ---------- 合并同步：首次打开 / 登录 / 手动「立即同步」----------
+     先比版本：本地有未上传改动 → 本机为准上传；
+     否则云端比本地新 → 下载；完全一致 → 什么也不做；
+     各有各的新增 → 按记录合并后上传 */
+  function sync() {
+    if (busy) return Promise.reject(new Error('正在同步中'));
+    if (!isLogged()) return Promise.reject(new Error('尚未登录'));
+    busy = true; lastErr = ''; dirty = false;
+    notify({ state: 'running', msg: '正在同步…' });
+    var key = null, target = null;
+    var local = snapshot();
+    return deriveKey(U.storeGet(K_TOKEN, '')).then(function (k) {
+      key = k;
+      return readRemote(key);
+    }).then(function (r) {
+      target = r.target;
+      var remote = r.remote;
+      if (!remote) {
+        /* 云端为空 → 直接把本机传上去 */
+        return writeRemote(key, target, local).then(function () {
+          rememberBaseline(local);
+          var st = { keys: Object.keys(local).length, fromCloud: 0, gained: 0, merged: 'uploaded' };
+          U.storeSet(K_LAST, new Date().toISOString());
+          notify({ state: 'ok', msg: '已上传本机数据', stats: st });
+          return st;
+        });
+      }
+      var same = sameSnapshot(local, remote);
+      if (same) {
+        rememberBaseline(local);
+        U.storeSet(K_LAST, new Date().toISOString());
+        var st0 = { keys: Object.keys(local).length, fromCloud: Object.keys(remote).length, gained: 0, merged: 'same' };
+        notify({ state: 'ok', msg: '云端与本机一致', stats: st0 });
+        return st0;
+      }
+      var merged = mergeSnapshots(remote, local);
+      var gained = 0;
+      Object.keys(merged).forEach(function (k) {
+        var a = jsonOf(stripMeta(local[k])), b = jsonOf(stripMeta(merged[k]));
+        if (a !== b) gained++;
+      });
+      var wrote = applySnapshot(merged);
+      var remoteNewer = sameSnapshot(local, merged);
+      if (remoteNewer) {
+        /* 云端更新，本机没有新东西 → 只下载 */
+        rememberBaseline(merged);
+        U.storeSet(K_LAST, new Date().toISOString());
+        var st1 = { keys: Object.keys(merged).length, fromCloud: Object.keys(remote).length, gained: gained, merged: 'download', wrote: wrote };
+        notify({ state: 'ok', msg: '已从云端更新', stats: st1 });
+        return st1;
+      }
+      return writeRemote(key, target, merged).then(function () {
+        rememberBaseline(merged);
+        U.storeSet(K_LAST, new Date().toISOString());
+        var st2 = { keys: Object.keys(merged).length, fromCloud: Object.keys(remote).length, gained: gained, merged: 'merged', wrote: wrote };
+        notify({ state: 'ok', msg: '已合并同步', stats: st2 });
+        return st2;
+      });
+    }).catch(function (e) {
+      lastErr = e.message || String(e);
+      notify({ state: 'err', msg: lastErr });
+      throw e;
+    }).then(function (v) { busy = false; return v; }, function (e) { busy = false; throw e; });
+  }
+
+  /* ---------- 只下载：云端 → 本机，不回传 ----------
+     走记录级合并（最后一次改动为准），本机未上传的新增不会被云端旧数据冲掉；
+     删掉的东西也不会被拉回来，因为云端已经没有它了。
+     合并结果只写本机、不回传。 */
+  function pull() {
+    if (busy) return Promise.reject(new Error('正在同步中'));
+    if (!isLogged()) return Promise.reject(new Error('尚未登录'));
+    busy = true; lastErr = ''; dirty = false;
+    notify({ state: 'running', msg: '正在从云端下载…' });
+    var local = snapshot();
+    return deriveKey(U.storeGet(K_TOKEN, '')).then(readRemote).then(function (r) {
+      if (!r.remote) throw new Error('云端还没有数据，请先在另一台设备登录并同步一次');
+      var merged = mergeSnapshots(r.remote, local);
+      var gained = 0;
+      Object.keys(merged).forEach(function (k) {
+        if (jsonOf(stripMeta(local[k])) !== jsonOf(stripMeta(merged[k]))) gained++;
+      });
+      var wrote = applySnapshot(merged);
+      rememberBaseline(merged);
+      U.storeSet(K_LAST, new Date().toISOString());
+      var st = { keys: Object.keys(merged).length, fromCloud: Object.keys(r.remote).length, gained: gained, wrote: wrote, mode: 'pull' };
+      notify({ state: 'ok', msg: '已从云端下载', stats: st });
+      return st;
     }).catch(function (e) {
       lastErr = e.message || String(e);
       notify({ state: 'err', msg: lastErr });
@@ -3459,7 +3667,7 @@ window.WB_DATA.quizExtra = {
   function onUpdate(fn) { listeners.push(fn); }
   function notify(p) { listeners.forEach(function (f) { try { f(p); } catch (e) { } }); }
 
-  /* ---------- 自动同步：改动后延迟上传 ---------- */
+  /* ---------- 自动上传：改动后 4 秒 ---------- */
   var autoTimer = null, hookInstalled = false;
   function installAutoHook() {
     if (hookInstalled) return;
@@ -3467,36 +3675,36 @@ window.WB_DATA.quizExtra = {
     var origSet = U.storeSet, origDel = U.storeDel;
     U.storeSet = function (k, v) {
       var r = origSet(k, v);
-      if (k.indexOf('cloud_') !== 0) scheduleAuto();
+      if (String(k).indexOf('cloud_') !== 0) scheduleAuto();
       return r;
     };
     U.storeDel = function (k) {
       var r = origDel(k);
-      if (k.indexOf('cloud_') !== 0) scheduleAuto();
+      if (String(k).indexOf('cloud_') !== 0) scheduleAuto();
       return r;
     };
     WB.util.storeSet = U.storeSet;
     WB.util.storeDel = U.storeDel;
   }
   function scheduleAuto() {
+    if (muted > 0) return;                       /* 同步自己的写盘，不算用户改动 */
+    dirty = true;
     if (U.storeGet(K_MODE, 'auto') !== 'auto') return;
     if (!isLogged()) return;
     clearTimeout(autoTimer);
     autoTimer = setTimeout(function () {
-      sync().catch(function () { });
+      dirty = false;
+      push().catch(function () { });
     }, 4000);
   }
+  function isDirty() { return dirty; }
 
-  /* ---------- 首次打开拉取：每台设备只自动跑一次 ----------
-     规则（按用户要求）：
-       · 本设备第一次打开工作台时，从云端拉取并合并进本机 —— 只跑一次；
-       · 之后打开/刷新/切回前台都不再自动拉取，想拉只能手动点「只下载」；
-       · 「改动后 4 秒自动上传」始终保留，与这里无关。 */
+  /* ---------- 首次打开拉取：每台设备只自动跑一次 ---------- */
   function hasBooted() { return !!U.storeGet(K_BOOTED, ''); }
 
   function bootSync() {
     if (!isLogged()) return Promise.resolve(null);
-    if (hasBooted()) return Promise.resolve(null);   /* 已经不是第一次了，直接跳过 */
+    if (hasBooted()) return Promise.resolve(null);
     return sync().then(function (r) {
       U.storeSet(K_BOOTED, new Date().toISOString());
       return r;
@@ -3512,12 +3720,13 @@ window.WB_DATA.quizExtra = {
   }
 
   WB.cloud = {
-    login: login, logout: logout, user: user, isLogged: isLogged, sync: sync,
-    pull: pull, cloudInfo: cloudInfo,
-    lastSync: lastSync, onUpdate: onUpdate, snapshot: snapshot, applySnapshot: applySnapshot,
-    mergeSnapshots: mergeSnapshots,
+    login: login, logout: logout, user: user, isLogged: isLogged,
+    sync: sync, push: push, pull: pull, cloudInfo: cloudInfo,
+    lastSync: lastSync, onUpdate: onUpdate,
+    snapshot: snapshot, applySnapshot: applySnapshot, mergeSnapshots: mergeSnapshots,
+    stripMeta: stripMeta, sameSnapshot: sameSnapshot,
     autoSyncOnLogin: autoSyncOnLogin, bootSync: bootSync, hasBooted: hasBooted,
-    installAutoHook: installAutoHook,
+    installAutoHook: installAutoHook, isDirty: isDirty,
     getMode: function () { return U.storeGet(K_MODE, 'auto'); },
     setMode: function (m) { U.storeSet(K_MODE, m); },
     isBusy: function () { return busy; },
@@ -5332,10 +5541,10 @@ window.WB_DATA.quizExtra = {
           (st.err ? '<div class="hint mt8" style="border-color:#F3C1C1">⚠ ' + U.esc(st.err) + '</div>' : '') +
           '<div class="hint g mt8">📥 <b>从云端拉取只在第一次打开时自动跑一次</b>：本设备第一次打开工作台（或第一次登录）时，' +
           '会自动把云端数据拉下来合并；之后无论怎么刷新、切回前台，都<b>不再自动拉取</b>，需要时点「⬇ 只下载」。</div>' +
-          (mode === 'auto' ? '<div class="hint g mt8">📤 <b>自动上传已开启</b>：任何改动（记账、写复盘、收藏文献、标记已学、加日程）' +
-            '4 秒后自动上传到云端，保证别的设备能拿到你的最新数据。</div>' : '') +
-          '<div class="hint b mt8">合并规则：多个设备的数据按<b>并集</b>合并（账本按笔、日程按条、收藏按篇），不会互相覆盖；' +
-          '同一项两边都改过时，保留较新的那次。</div>';
+          (mode === 'auto' ? '<div class="hint g mt8">📤 <b>自动上传已开启</b>：任何改动（记账、删账、写复盘、收藏或取消收藏、标记已学、改日程）' +
+            '4 秒后整份数据上传到云端——<b>删掉的数据云端也会同步删除</b>，不会被旧数据补回来。</div>' : '') +
+          '<div class="hint b mt8">上传是<b>本机为准</b>：你在这台设备上看到的就是云端的样子，增、删、改都会如实同步。<br>' +
+          '多端同时改同一条时，<b>以最后一次改动为准</b>（每条记录带修改时间）。</div>';
       }
 
       function renderHelp() {
@@ -5347,7 +5556,8 @@ window.WB_DATA.quizExtra = {
           '<div class="hint g" style="margin-top:8px"><b>3. 之后各管各的</b>：' +
           '<b>拉取只自动跑一次</b>——每台设备第一次打开（或第一次登录）时把云端数据合并进来，' +
           '之后不再自动拉，想拿最新数据点「⬇ 只下载」；' +
-          '<b>上传全自动</b>——任何改动（记账、写复盘、收藏文献、标记已学）4 秒后自动传到云端。</div>' +
+          '<b>上传全自动</b>——任何改动（记账、删账、写复盘、收藏、标记已学、改日程）4 秒后整份传到云端，' +
+          '删掉的记录云端也会同步消失。</div>' +
           '<div class="hint g" style="margin-top:8px">🔒 <b>安全</b>：令牌只存在你自己浏览器的 localStorage，不会发给任何第三方；' +
           '上传的数据用令牌派生密钥做 AES-GCM 加密，即使 Gist 被看到也是密文。</div>' +
           '<div class="hint g" style="margin-top:8px">⚠ <b>注意</b>：换设备或清浏览器数据后需要重新粘贴令牌；' +
@@ -5360,7 +5570,11 @@ window.WB_DATA.quizExtra = {
       function doSync(silent) {
         if (!WB.cloud.isLogged()) return;
         WB.cloud.sync().then(function (r) {
-          setMsg('同步完成：本机 ' + r.keys + ' 项数据已与云端合并');
+          var word = r.merged === 'download' ? '已从云端更新，'
+            : r.merged === 'same' ? '云端与本机一致，'
+            : r.merged === 'uploaded' ? '已把本机数据上传，'
+            : '已合并同步，';
+          setMsg(word + '当前共 ' + r.keys + ' 项数据');
           if (!silent) U.toast('☁️ 同步完成');
           setTimeout(function () { if (document.body.contains(host)) render(); }, 1200);
         }).catch(function (err) {
@@ -5404,12 +5618,12 @@ window.WB_DATA.quizExtra = {
         if (act === 'mode') {
           var m = WB.cloud.getMode() === 'auto' ? 'manual' : 'auto';
           WB.cloud.setMode(m);
-          setMsg(m === 'auto' ? '已开启自动上传（改动 4 秒后上传云端）' : '已关闭自动上传（改动不再自动上传，需手动点同步）');
+          setMsg(m === 'auto' ? '已开启自动上传（改动 4 秒后整份上传，删掉的记录云端也会同步删除）' : '已关闭自动上传（改动不再自动上传，需手动点同步）');
           return;
         }
 
-        if (act === 'pull') {
-          if (!window.confirm('从云端下载并合并到本机（本机独有的记录会保留）。确定继续？')) return;
+          if (act === 'pull') {
+          if (!window.confirm('从云端下载最新数据（本机独有的记录会保留，同一项以最后修改的为准）。确定继续？')) return;
           a.disabled = true; a.textContent = '⏳ 下载中…';
           WB.cloud.pull().then(function (r) {
             setMsg('已从云端下载，本机现有 ' + r.keys + ' 项数据');
