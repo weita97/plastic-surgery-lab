@@ -3185,6 +3185,14 @@ window.WB_DATA.quizExtra = {
           if (localStorage.getItem('wb1_' + k) !== next) { localStorage.setItem('wb1_' + k, next); wrote++; }
         } catch (e) { }
       });
+      /* 合并结果里已经没有的键 → 本机也要删掉，否则删除永远同步不过来 */
+      Object.keys(localStorage).forEach(function (full) {
+        if (full.indexOf('wb1_') !== 0) return;
+        var short = full.slice(4);
+        if (short.indexOf('cloud_') === 0) return;
+        if (obj && Object.prototype.hasOwnProperty.call(obj, short)) return;
+        try { localStorage.removeItem(full); wrote++; } catch (e) { }
+      });
     });
     return wrote;
   }
@@ -3271,16 +3279,53 @@ window.WB_DATA.quizExtra = {
     Object.keys(local || {}).forEach(function (k) { keys[k] = 1; });
     Object.keys(remote || {}).forEach(function (k) { keys[k] = 1; });
     Object.keys(keys).forEach(function (k) {
-      out[k] = merge3Value(
+      var v = merge3Value(
         local ? local[k] : undefined,
         remote ? remote[k] : undefined,
         base ? base[k] : undefined,
         lts ? lts[k] : 0,
         rts ? rts[k] : 0
       );
+      /* 结果为 undefined 表示这一项被删掉了，不能写进结果里
+         （否则会变成 localStorage 里的 null，删除同步不过来） */
+      if (v !== undefined) out[k] = v;
     });
     return out;
   }
+
+  /* 元素级唯一键：同一条记录在两端要能对上 */
+  function elemKey(item, i) {
+    var k = keyOf(item);
+    if (k) return k;
+    if (typeof item !== 'object' || item === null) return 'v:' + String(item);
+    return 'r:' + jsonOf(item) + '#' + i;
+  }
+  function indexArr(arr) {
+    var m = {};
+    (Array.isArray(arr) ? arr : []).forEach(function (it, i) { m[elemKey(it, i)] = it; });
+    return m;
+  }
+
+  /* 数组级三方比对：逐条判断，两端的「各自新增」都能保住，删除也能如实生效。
+     这是修「电脑删了账手机看不到 / 两端各改各的会互相覆盖」的关键。 */
+  function merge3Array(l, r, b) {
+    var out = [], ml = indexArr(l), mr = indexArr(r), mb = indexArr(b);
+    var order = [];
+    (Array.isArray(l) ? l : []).forEach(function (it, i) { var k = elemKey(it, i); if (order.indexOf(k) < 0) order.push(k); });
+    (Array.isArray(r) ? r : []).forEach(function (it, i) { var k = elemKey(it, i); if (order.indexOf(k) < 0) order.push(k); });
+    Object.keys(mb).forEach(function (k) { if (order.indexOf(k) < 0) order.push(k); });
+    order.forEach(function (k) {
+      var lv = ml[k], rv = mr[k], bv = mb[k];
+      /* 逐条记录也带自己的 ts，冲突时用来判断谁更新 */
+      var lt = lv && typeof lv.ts === 'number' ? lv.ts : 0;
+      var rt = rv && typeof rv.ts === 'number' ? rv.ts : 0;
+      var v = merge3Value(lv, rv, bv, lt, rt);
+      if (v !== undefined) out.push(v);
+    });
+    return out;
+  }
+
+  function isPlainObj(x) { return x != null && typeof x === 'object' && !Array.isArray(x); }
 
   function merge3Value(l, r, b, lt, rt) {
     var hasL = l !== undefined, hasR = r !== undefined, hasB = b !== undefined;
@@ -3301,7 +3346,11 @@ window.WB_DATA.quizExtra = {
       if (rt && !lt) return r;
       return hasL ? l : r;
     }
-    /* 两边都改过：最后改动的那一端为准，整键覆盖 */
+    /* 两边都改过：数组走逐条合并（各自的新增/删除都能保住），其它整键取较新的一端 */
+    if (hasL && hasR && Array.isArray(l) && Array.isArray(r)) {
+      return merge3Array(l, r, Array.isArray(b) ? b : []);
+    }
+    /* 一边删了整个键、另一边是数组：仍按「最后改动为准」 */
     lt = lt || 0; rt = rt || 0;
     if (lt && rt) return rt > lt ? r : l;
     if (lt) return l;
@@ -3631,7 +3680,9 @@ window.WB_DATA.quizExtra = {
     clearTimeout(autoTimer);
     autoTimer = setTimeout(function () {
       dirty = false;
-      push().catch(function () { });
+      /* 用 sync() 而不是 push()：sync 走三方比对，
+         既能如实上传本机的删除，又不会把另一台设备刚上传的改动抹掉。 */
+      sync().catch(function () { });
     }, 4000);
   }
   function isDirty() { return dirty; }
@@ -3639,10 +3690,10 @@ window.WB_DATA.quizExtra = {
   /* ---------- 打开工作台：每次都自动拉一次最新 ---------- */
   function bootSync() {
     if (!isLogged()) return Promise.resolve(null);
-    /* 本机有未上传改动 → 先上传，避免被云端覆盖；上传后再拉一次取回别的设备的新数据 */
-    if (dirty) {
-      return push().then(function () { return sync(); }).catch(function () { return null; });
-    }
+    /* 注意：这里绝不能先 push()。
+       本机的 dirty 只代表「打开前有过改动」，那批改动在改动发生时就已经自动上传过；
+       如果开机先整份覆盖，会把另一台设备刚上传的数据抹掉。
+       开机一律先 sync()（三方比对），本机独有的改动会被保留并合并上去。 */
     return sync().catch(function () { return null; });
   }
 
