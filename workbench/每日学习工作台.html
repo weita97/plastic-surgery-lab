@@ -3276,7 +3276,7 @@ window.WB_DATA.quizExtra = {
     var isNew = !!(p._live && (p._d || '') >= cut);
     return '<div class="paper' + (isNew ? ' fresh' : '') + '" data-pmid="' + pmid + '">' +
       '<p class="pt"><a href="' + url + '" target="_blank" rel="noopener">' + U.esc(p.title) + '</a></p>' +
-      '<div class="zh">🇨🇳 ' + U.esc(p.titleZh || p.title) + '</div>' +
+      (p.titleZh ? '<div class="zh">🇨🇳 ' + U.esc(p.titleZh) + '</div>' : '<div class="zh muted">🇨🇳 中文标题生成中…</div>') +
       '<div class="pm">' +
       (isNew ? '<span class="tag g">NEW</span>' : '') +
       '<span class="tag dark">' + U.esc(p.topic) + '</span>' +
@@ -3293,7 +3293,7 @@ window.WB_DATA.quizExtra = {
       '</div>' +
       '<div class="ab' + (openMap && openMap[pmid] ? ' show' : '') + '" data-ab>' +
       '<div class="ab-en">' + U.esc(p.abstract || '（暂无摘要）') + '</div>' +
-      (zhAbs ? '<div class="zh-ab">🇨🇳 ' + U.esc(zhAbs) + '</div>' : '<div class="zh-ab muted">（中文翻译生成中，稍后自动补上）</div>') +
+      (zhAbs ? '<div class="zh-ab">🇨🇳 ' + U.esc(zhAbs) + '</div>' : '<div class="zh-ab muted">🇨🇳 中文摘要生成中，完成后自动显示…</div>') +
       '<div class="row mt8"><a class="btn xs" href="' + url + '" target="_blank" rel="noopener">PubMed ↗</a>' +
       (p.doi ? '<a class="btn xs" href="https://doi.org/' + U.esc(p.doi) + '" target="_blank" rel="noopener">DOI ↗</a>' : '') +
       '</div></div>' +
