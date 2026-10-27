@@ -2089,14 +2089,29 @@ window.WB_DATA.quizExtra = {
     if (WB.live && WB.live.needsSync && WB.live.needsSync()) {
       setTimeout(function () { WB.live.sync(false); }, 1500);
     }
-    /* 云端同步：已登录则自动合并一次，并挂上「改动后自动上传」的钩子 */
+    /* 云端同步：已登录则【打开即拉取合并】，并挂上「改动后 4 秒自动上传」的钩子 */
     if (WB.cloud) {
       WB.cloud.installAutoHook();
+      WB.cloud.installOpenSync();
       var tip = document.getElementById('cloudTip');
       if (WB.cloud.isLogged()) {
         var cu = WB.cloud.user();
         if (tip) tip.textContent = '☁️ 已连接 ' + ((cu && cu.login) || '');
-        setTimeout(function () { WB.cloud.autoSyncOnLogin(); }, 2200);
+        /* 云端带来新数据 → 自动重挂当前模块，让界面立刻显示出来 */
+        WB.cloud.onUpdate(function (p) {
+          if (p.state !== 'ok') return;
+          var g = p.stats && p.stats.gained;
+          if (!g) return;
+          var cur = currentId();
+          if (cur === 'cloud') return;              /* 云端同步页自己会刷新 */
+          setTimeout(function () {
+            if (currentId() !== cur) return;        /* 期间用户已切走 */
+            mount(cur);
+            toast('☁️ 已同步云端 ' + g + ' 项更新');
+          }, 120);
+        });
+        /* 立即执行一次双向同步：先把云端的新数据合并进来，再回传本机新增 */
+        WB.cloud.bootSync();
       } else if (tip) {
         tip.textContent = '数据保存在本机浏览器';
       }
@@ -3126,7 +3141,11 @@ window.WB_DATA.quizExtra = {
   function applySnapshot(obj) {
     Object.keys(obj || {}).forEach(function (k) {
       if (k.indexOf('cloud_') === 0) return;
-      try { localStorage.setItem('wb1_' + k, JSON.stringify(obj[k])); } catch (e) { }
+      try {
+        var next = JSON.stringify(obj[k]);
+        /* 只在内容真的变化时才写，避免触发「改动后自动上传」形成循环 */
+        if (localStorage.getItem('wb1_' + k) !== next) localStorage.setItem('wb1_' + k, next);
+      } catch (e) { }
     });
   }
 
@@ -3343,6 +3362,15 @@ window.WB_DATA.quizExtra = {
       } else {
         merged = mergeSnapshots(local, remote);
       }
+      /* 记录云端有多少条是本地没有的，用于判断是否需要刷新界面 */
+      var gained = 0;
+      if (remote) {
+        Object.keys(remote).forEach(function (k) {
+          if (!(k in local)) { gained++; return; }
+          var a = JSON.stringify(local[k]), b = JSON.stringify(remote[k]);
+          if (a !== b) gained++;
+        });
+      }
       applySnapshot(merged);
 
       var pack = {
@@ -3360,6 +3388,7 @@ window.WB_DATA.quizExtra = {
           var stats = {
             keys: Object.keys(merged).length,
             fromCloud: remote ? Object.keys(remote).length : 0,
+            gained: gained,
             merged: remote ? 'merged' : 'uploaded'
           };
           notify({ state: 'ok', msg: '同步完成', stats: stats });
@@ -3458,18 +3487,60 @@ window.WB_DATA.quizExtra = {
     }, 4000);
   }
 
+  /* ---------- 打开即同步：每次打开/切回工作台都先拉取合并 ---------- */
+  var visInstalled = false, lastVisSync = 0, VIS_GAP = 60000;
+
+  function bootSync() {
+    if (!isLogged()) return Promise.resolve(null);
+    lastVisSync = Date.now();
+    return sync().catch(function () { return null; });
+  }
+
+  function installOpenSync() {
+    if (visInstalled) return;
+    visInstalled = true;
+
+    /* 切回标签页 / 手机从后台唤醒 → 立刻拉一次（60 秒内不重复） */
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState !== 'visible') return;
+      if (!isLogged()) return;
+      var now = Date.now();
+      if (now - lastVisSync < VIS_GAP) return;
+      lastVisSync = now;
+      sync().catch(function () { });
+    });
+
+    /* 网络恢复时补一次 */
+    window.addEventListener('online', function () {
+      if (isLogged()) sync().catch(function () { });
+    });
+
+    /* 页面从往返缓存恢复（手机 Safari/微信常见） */
+    window.addEventListener('pageshow', function (e) {
+      if (!e.persisted) return;
+      if (isLogged()) sync().catch(function () { });
+    });
+
+    /* 停留在页面上超过 5 分钟，也自动拉一次，避免长时间不刷新看不到别的设备的改动 */
+    setInterval(function () {
+      if (document.visibilityState !== 'visible') return;
+      if (!isLogged()) return;
+      if (Date.now() - lastVisSync < VIS_GAP) return;
+      lastVisSync = Date.now();
+      sync().catch(function () { });
+    }, 60000);
+  }
+
   function autoSyncOnLogin() {
-    if (!isLogged()) return;
-    var mode = U.storeGet(K_MODE, 'auto');
-    if (mode !== 'auto') return;
-    sync().catch(function () { });
+    return bootSync();
   }
 
   WB.cloud = {
     login: login, logout: logout, user: user, isLogged: isLogged, sync: sync,
     pull: pull, cloudInfo: cloudInfo,
     lastSync: lastSync, onUpdate: onUpdate, snapshot: snapshot, applySnapshot: applySnapshot,
-    mergeSnapshots: mergeSnapshots, autoSyncOnLogin: autoSyncOnLogin,
+    mergeSnapshots: mergeSnapshots,
+    autoSyncOnLogin: autoSyncOnLogin, bootSync: bootSync, installOpenSync: installOpenSync,
     installAutoHook: installAutoHook,
     getMode: function () { return U.storeGet(K_MODE, 'auto'); },
     setMode: function (m) { U.storeSet(K_MODE, m); },
@@ -5272,17 +5343,19 @@ window.WB_DATA.quizExtra = {
           '<div class="grid g3 mt8">' +
           U.statCard('本机数据项', String(c.keys), '条记录') +
           U.statCard('上次同步', fmtTime(WB.cloud.lastSync()).replace(' ', '<br>'), '') +
-          U.statCard('同步方式', mode === 'auto' ? '自动' : '手动', mode === 'auto' ? '改动后 4 秒上传' : '点了才同步') +
+          U.statCard('同步方式', mode === 'auto' ? '全自动' : '手动', mode === 'auto' ? '打开即拉取 · 改动 4 秒上传' : '点了才同步') +
           '</div>' +
           '<div class="hint b mt8" data-cloudinfo>🔍 正在检查云端存储…</div>' +
           '<div class="row mt8">' +
           '<button type="button" class="btn pri" data-act="sync"' + (WB.cloud.isBusy() ? ' disabled' : '') + '>' +
           (WB.cloud.isBusy() ? '⏳ 同步中…' : '🔄 立即同步') + '</button>' +
           '<button type="button" class="btn" data-act="pull">⬇ 只下载（从云端拉取）</button>' +
-          '<button type="button" class="btn" data-act="mode">' + (mode === 'auto' ? '⚙ 切换为手动同步' : '⚙ 切换为自动同步') + '</button>' +
+          '<button type="button" class="btn" data-act="mode">' + (mode === 'auto' ? '⚙ 切换为手动同步' : '⚙ 切换为全自动同步') + '</button>' +
           '</div>' +
           (st.msg ? '<div class="hint g mt8">✅ ' + U.esc(st.msg) + '</div>' : '') +
           (st.err ? '<div class="hint mt8" style="border-color:#F3C1C1">⚠ ' + U.esc(st.err) + '</div>' : '') +
+          (mode === 'auto' ? '<div class="hint g mt8">🔄 <b>全自动已开启</b>：每次打开工作台、手机从后台切回、网络恢复、' +
+            '或停留超过 1 分钟，都会自动从云端拉取并合并；任何改动 4 秒后自动上传。</div>' : '') +
           '<div class="hint b mt8">同步规则：多个设备的数据按<b>并集</b>合并（账本按笔、日程按条、收藏按篇），不会互相覆盖；' +
           '同一项两边都改过时，保留较新的那次。合并完成后本机与云端一致。</div>';
       }
@@ -5293,7 +5366,9 @@ window.WB_DATA.quizExtra = {
           '<div class="hint b"><b>1. 电脑上先登录</b>：生成令牌 → 粘贴 → 点「登录并同步」，本机现有数据会上传到云端。</div>' +
           '<div class="hint b" style="margin-top:8px"><b>2. 手机上打开同一个网址</b>：' +
           '<code>https://weita97.github.io/plastic-surgery-lab/workbench/</code> → 进「云端同步」→ 粘贴<b>同一个令牌</b> → 点登录，数据会自动拉下来。</div>' +
-          '<div class="hint b" style="margin-top:8px"><b>3. 之后不用管</b>：自动模式下，任何改动（记账、写复盘、收藏文献、标记已学）4 秒后自动上传。</div>' +
+          '<div class="hint g" style="margin-top:8px"><b>3. 之后完全不用管</b>：' +
+          '<b>打开即同步</b>——每次打开工作台、手机从后台切回、网络恢复、停留超 1 分钟，都会自动从云端拉取并合并；' +
+          '任何改动（记账、写复盘、收藏文献、标记已学）4 秒后自动上传。两端数据始终保持一致。</div>' +
           '<div class="hint g" style="margin-top:8px">🔒 <b>安全</b>：令牌只存在你自己浏览器的 localStorage，不会发给任何第三方；' +
           '上传的数据用令牌派生密钥做 AES-GCM 加密，即使 Gist 被看到也是密文。</div>' +
           '<div class="hint g" style="margin-top:8px">⚠ <b>注意</b>：换设备或清浏览器数据后需要重新粘贴令牌；' +
@@ -5350,7 +5425,7 @@ window.WB_DATA.quizExtra = {
         if (act === 'mode') {
           var m = WB.cloud.getMode() === 'auto' ? 'manual' : 'auto';
           WB.cloud.setMode(m);
-          setMsg(m === 'auto' ? '已切换为自动同步' : '已切换为手动同步');
+          setMsg(m === 'auto' ? '已切换为全自动同步（打开即拉取）' : '已切换为手动同步（需自己点同步）');
           return;
         }
 
