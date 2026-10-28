@@ -1027,152 +1027,2145 @@ window.WB_DATA.listenings = [
   }
 ];
 
-/* ---------- 雅思（5 板块 × 10 卡片） ---------- */
-/* 格式：标题|讲解|题干|选项A;;B;;C;;D|答案索引|解析 */
-window.WB_DATA.ieltsRaw = {
-  '听力策略': `
-抓信号词定位|听力填空最常见的失分不是听不懂，而是跟丢位置。题干里圈出空前后的名词与数字，录音中出现同义替换即为定位点。|填空题定位时，最可靠的"锚"是什么？|空前的专有名词、数字、大写词;;录音中的背景音乐;;说话人的口音;;题号顺序|0|专有名词与数字几乎不会被替换，是最稳的定位锚点。
-数字与拼写陷阱|电话号码、金额、日期常设三重陷阱：先说一个数再改口（"actually, make it..."）、单位切换（pounds/dollars）、字母拼读（double L）。|录音中听到"double L"应写成？|D L;;LL;;L2;;Double|1|double L 表示连续两个 L，即 LL。
-地图题方位词|地图题考的是空间介词：opposite / adjacent to / at the end of / just past / on your left after the fountain。先标出入口与已知地标。|"just past the fountain" 表示目标在？|喷泉前方更远处;;喷泉旁边;;喷泉对面;;喷泉之前|0|just past = 经过之后，即更远处。
-选择题同义替换|雅思听力正确选项几乎不会照抄原文，而是同义改写。听到原词照搬的选项，往往是干扰项。|正确选项通常与录音的关系是？|原词照抄;;同义改写;;完全无关;;顺序相反|1|正确项多为同义改写，原词照抄常为陷阱。
-多选题分组听|多选题常按"先说 A、B，再否定，最后确认 C"的结构展开。要听转折词 but / however / actually 后的信息。|多选题最关键的信号词是？|and;;but / however;;so;;then|1|转折词后往往是最终确定的信息。
-Section 1 场景预测|S1 多为租房、注册、预订类对话，提前预测可能出现的字段：姓名、地址、日期、价格、联系方式。|Section 1 最常出现的场景是？|学术讲座;;生活服务类对话;;新闻播报;;多人讨论|1|S1 为生存英语场景，如租房、注册、预订。
-拼写与大小写|填空题的专有名词必须大写首字母；英式拼写（centre, colour, programme）在雅思中更稳妥。|以下哪个是英式拼写？|center;;centre;;centr;;centar|1|雅思以英式拼写为准：centre。
-干扰信息排除法|录音里会先给一个"看似答案"的信息，再用 oh, sorry, I mean... 更正。遇到更正要立刻改写答案。|听到"I mean"后应？|忽略;;更新答案为更正后的信息;;重听;;选前一个|1|I mean 是自我更正信号，答案应更新。
-预读题干划关键词|每部分开始前有 30 秒预读，划出题干中的名词、动词、限制词（only, not, maximum）。|预读时应重点划出？|所有词;;名词与限制词;;形容词;;标点|1|名词定位、限制词决定答案边界（如 maximum, only）。
-笔记速记符号|用缩写与符号速记：↑增加 ↓减少 →导致 ∵因为 ∴所以 w/ 表示 with。|"→" 在速记中通常表示？|增加;;减少;;导致;;等于|2|箭头 → 常表示"导致/指向"。
-`,
-  '阅读策略': `
-先看题后读文|雅思阅读时间极紧（60 分钟 3 篇 40 题）。先扫题干关键词，再回原文定位，比通读全文高效得多。|阅读最高效的做题顺序是？|通读全文再做题;;先看题干再定位原文;;先读首段;;随机作答|1|题干先行、原文定位，可节省大量时间。
-True/False/Not Given 区分|False 是原文明确矛盾；Not Given 是原文未提及或无法判断。判断标准是"原文能否证明"，而不是"是否合理"。|原文未提及相关信息时应选？|False;;True;;Not Given;;以上均可|2|未提及、无法证明即为 Not Given。
-Matching Headings 策略|先做细节题再做 heading 题，因为做完细节题后对段落内容已有印象；heading 题读段落首末句 + 转折句。|Matching Headings 建议何时做？|最先做;;最后做;;跳过;;与细节题交替|1|先做细节题积累印象，最后做 heading 更省时。
-平行阅读法|同一篇文章的多组题（如 Q1-7 判断 + Q8-13 填空）按原文顺序同步推进，一次定位解决两组题。|平行阅读法的核心是？|逐题回读全文;;多组题同步按顺序推进;;先做填空题;;只看首段|1|多组题共享同一段落，一次定位可解多题。
-同义替换识别|题干与原文的对应几乎全靠同义替换：rise/increase/climb，difficult/challenging/demanding。|"decline" 在原文中可能对应？|increase;;drop;;stable;;peak|1|decline ≈ drop / fall / decrease。
-长难句拆解|遇到长句先找主谓宾，把 that/which/who 引导的从句先括起来，主干往往就是答案所在。|拆解长难句的第一步是？|查生词;;找主谓宾;;看标点;;读从句|1|先抓主干（主谓宾），从句是修饰。
-段落主旨判断|段落主旨常出现在首句、末句或转折词（but, however, yet）之后。举例、数据、人名属于支撑细节。|段落主旨最可能出现在？|举例句中;;数据句中;;首末句或转折后;;括号内|2|首末句与转折句是主旨高发区。
-时间分配策略|建议 Passage 1 用 15 分钟、Passage 2 用 20 分钟、Passage 3 用 25 分钟，留 2-3 分钟检查拼写。|三篇文章建议的时间分配是？|各 20 分钟;;15/20/25;;10/20/30;;25/20/15|1|难度递增，时间也应递增。
-填空题字数限制|题干会写 NO MORE THAN TWO WORDS，超出即判错；连字符词（well-known）算一个词。|"NO MORE THAN TWO WORDS" 下写三个词会？|得分;;不得分;;部分得分;;警告|1|超字数直接判错，务必核对词数。
-定位词不可替换|专有名词、数字、年份、大写术语不会同义替换，是最可靠的定位词。|最可靠的定位词是？|动词;;形容词;;专有名词与数字;;副词|2|专有名词与数字几乎原样出现。
-`,
-  '写作 Task1': `
-图表概述段 Overview|Task1 必须有 overview（不写具体数字，只写总体趋势与最显著特征），没有 overview 通常卡在 6 分以下。|Overview 段应该包含？|具体数字;;总体趋势与最显著特征;;原因分析;;个人观点|1|Overview 只写总体趋势与最显著特征，不含具体数据。
-数据描述分组|把相似趋势的数据分组描述（上升组/下降组/稳定组），比按时间顺序流水账得分更高。|描述数据时更好的做法是？|逐个数字罗列;;按趋势分组描述;;只写最大值;;只写首末年份|1|分组对比体现"比较与总结"能力。
-上升下降表达|上升：rise, increase, climb, surge, soar；下降：fall, decline, drop, plunge。注意搭配幅度副词（sharply, slightly, steadily）。|"plunge" 表示？|缓慢上升;;急剧下降;;保持不变;;波动|1|plunge = 急剧下降，常与 sharply 连用。
-静态图比较|饼图、表格等静态图不用时间趋势词，而用比较结构：twice as many as, the largest proportion, compared with。|静态图应避免使用？|proportion;;compared with;;increased steadily;;the majority of|2|静态图没有时间轴，不能用趋势动词。
-流程图被动语态|流程图与地图题多用被动语态与顺序连接词：First, Subsequently, Once ..., Finally。|流程图最常用的语态是？|主动语态;;被动语态;;虚拟语气;;祈使句|1|流程图强调过程而非施动者，多用被动语态。
-地图题方位变化|地图题描述变化：was replaced by, was extended, a new ... was built to the north of。|地图题描述变化的常用结构是？|there is;;was replaced by;;I think;;because of|1|was replaced by / was extended 是地图题核心句式。
-时态选择|过去年份用一般过去时；预测未来用 is expected to / is projected to；无时间信息用一般现在时。|描述 2040 年预测数据应用？|一般过去时;;is expected to;;现在完成时;;过去完成时|1|未来预测用 is expected/projected to + 动词原形。
-字数与结构|Task1 要求至少 150 词，建议 170-190 词，四段式：改写题目 → overview → 细节段 1 → 细节段 2。|Task1 建议的段落结构是？|两段;;三段;;四段式;;五段式|2|四段式最稳：改写 + overview + 两组细节。
-避免主观原因|Task1 只描述数据，不解释原因、不发表观点。原因分析属于 Task2。|Task1 中可以写的是？|数据变化趋势;;变化原因;;个人建议;;社会影响|0|Task1 只描述，不解释原因、不做评价。
-比较级与最高级|使用 the highest, the lowest, twice as high as, the second largest 等结构体现比较能力。|体现"比较"能力最好的方式是？|列举数字;;使用比较级与最高级;;使用被动语态;;使用长句|1|比较级、最高级与倍数结构是 Task1 得分点。
-`,
-  '写作 Task2': `
-四段式结构|Task2 推荐四段：引言（改写题目 + 明确立场）→ 主体段 1（论点 + 解释 + 例证）→ 主体段 2 → 结论（重申立场）。|Task2 最稳妥的结构是？|一段到底;;两段;;四段式;;五段以上|2|四段式清晰且易控字数。
-论点—解释—例证|每个主体段遵循 PEEL：Point（论点）→ Explain（解释）→ Example（例证）→ Link（回扣题目）。|PEEL 中的 E 指的是？|Example 和 Explain;;Evidence 和 Effect;;End 和 Essay;;Emphasis 和 Emotion|0|PEEL = Point, Explain, Example, Link。
-立场一致|引言给出的立场必须在结论中重申，中间不能摇摆。模棱两可通常限制在 6 分。|立场应当？|随段落变化;;首尾一致;;留给读者判断;;只写在结论|1|立场首尾一致是 Task2 的基本要求。
-连接词多样|使用 However, Nevertheless, Consequently, In contrast, Admittedly 等，但避免每段都用 Firstly/Secondly/Finally。|连接词使用应？|只用 Firstly;;多样且自然;;越多越好;;完全不用|1|多样且自然，机械堆砌反而扣分。
-让步段技巧|用 Admittedly ... However ... 结构展示批判性思维，是 7 分以上的加分点。|Admittedly ... However ... 的作用是？|凑字数;;展示批判性思维;;表达反对;;引入例证|1|让步再反驳体现论证深度。
-避免口语化|书面语中避免 a lot of, kids, stuff, get。改用 a great deal of, children, material, obtain。|以下哪个不适合学术写作？|obtain;;a lot of;;consequently;;nevertheless|1|a lot of 过于口语，应替换为 a great deal of / numerous。
-字数与时间|Task2 至少 250 词，建议 260-290 词，用时 40 分钟（Task1 20 分钟）。|Task2 建议用时？|20 分钟;;30 分钟;;40 分钟;;60 分钟|2|Task2 占分权重高，建议 40 分钟。
-审题三要素|审题时确认：话题（topic）、任务（question type）、限定（limitation）。漏掉限定词是最常见的跑题原因。|审题最容易被忽略的是？|话题;;题型;;限定词;;字数|2|限定词（如 only, some people, in developing countries）最易被忽略。
-观点类题型|To what extent do you agree or disagree：可以完全同意、完全不同意或部分同意，但必须明确。|"To what extent" 题型要求？|必须完全同意;;必须中立;;明确立场并论证;;只描述现象|2|关键是"明确立场 + 论证"，程度可自选。
-报告类题型|Causes and solutions 类题目必须同时写原因与解决方案，且方案要与原因对应。|Causes and solutions 题必须写？|只写原因;;只写方案;;原因与对应方案;;个人经历|2|原因与方案需一一对应，否则任务完成度不足。
-`,
-  '口语策略': `
-Part1 三段式回答|Part1 每题答 2-3 句：直接回答 + 一句扩展（原因/例子）+ 一句收尾。避免一个字回答。|Part1 回答建议长度是？|一个词;;2-3 句;;一整段;;两分钟|1|2-3 句，既充分又不过长。
-Part2 一分钟准备|Part2 有 1 分钟准备，用关键词写 4-5 个点（who/what/when/why/feeling），按提示卡顺序讲满 2 分钟。|Part2 准备时间用于？|写完整稿;;写关键词提纲;;背模板;;休息|1|写关键词提纲，切勿写完整稿。
-Part3 抽象讨论|Part3 要求讨论社会层面问题，用 In my view, It depends on, On the one hand ... on the other hand 展开。|Part3 更侧重？|个人经历;;社会与抽象讨论;;背诵答案;;语法展示|1|Part3 考抽象、社会性讨论能力。
-流利度优先|口语评分中流利度与连贯性权重最高。宁可换一个简单词，也不要长时间停顿。|口语评分权重最高的维度之一是？|词汇量;;流利度与连贯性;;口音纯正;;语法复杂度|1|流利与连贯是第一印象，卡顿代价最大。
-填充语自然使用|用 Well, I suppose, To be honest, Let me think 争取思考时间，但不要每句都用。|填充语的正确用法是？|每句都用;;偶尔用于争取时间;;完全不用;;只用于结尾|1|适度使用，过多显得空洞。
-发音连读|注意辅音+元音的连读（turn it on → tur-ni-ton）与失去爆破，比刻意模仿口音更重要。|连读最常发生在？|两个辅音之间;;辅音结尾 + 元音开头;;两个元音之间;;句末|1|辅音结尾接元音开头最易连读。
-避免背诵痕迹|考官能识别背诵。用自然的停顿、自我更正（I mean, rather）反而更像真实交流。|背诵答案的风险是？|得分更高;;被判为模板化而扣分;;不影响;;只影响发音|1|模板化答案在 Part3 追问时容易暴露。
-话题词汇准备|按高频话题准备词汇：environment, education, technology, health, work。每类准备 8-10 个搭配。|口语词汇准备应按什么组织？|字母顺序;;高频话题;;词性;;长度|1|按话题组织，便于考场调用。
-纠错式自我修正|说错时用 I mean / sorry, what I meant was 自然更正，比停顿沉默得分更高。|说错后最好的处理是？|沉默;;重新开始整段;;用 I mean 自然更正;;忽略继续|2|自然自我更正体现语言控制力。
-Part2 结尾感受|Part2 结尾用一句感受或评价收束：Overall, it was ... / I really enjoyed it because ...|Part2 结尾建议？|直接停止;;加一句感受或评价;;重复开头;;询问考官|1|结尾感受能自然收束并展示语言。
-`
-};
 
-/* ---------- 托福（5 板块 × 10 卡片） ---------- */
-window.WB_DATA.toeflRaw = {
-  '听力笔记法': `
-符号速记系统|托福听力长达 5-6 分钟，必须用符号：↑↓→∵∴ = ≠ + w/ 表因果、对比、并列。|"∴" 在笔记中表示？|因为;;所以;;等于;;增加|1|∴ 表示"所以/因此"，∵ 表示"因为"。
-分层笔记结构|讲座有明显结构（定义 → 举例 → 对比 → 结论），笔记用缩进分层，便于对应题目。|讲座笔记最好的组织方式是？|线性流水记录;;缩进分层;;只记数字;;只记结论|1|分层结构与出题顺序高度对应。
-转折后是考点|but, however, in fact 之后常出重听题与推断题，必须完整记录转折后的内容。|托福听力最常出题的位置是？|开头第一句;;转折词之后;;结束语;;人名|1|转折与强调之后是高频考点。
-例子功能题|"Why does the professor mention X?" 考例子功能，笔记应在例子旁标注"→说明…"。|例子类题目考的是？|例子细节;;例子的作用;;例子的年份;;例子的作者|1|考功能而非细节，笔记要记"举例说明什么"。
-重听题策略|重听题考语气与言外之意，注意语调变化、反问、迟疑（well, actually）。|重听题主要考查？|单词拼写;;语气与言外之意;;语速;;口音|1|关注语调与话语功能。
-态度题标记|教授的态度常用形容词与语气词表达（interesting, unfortunately, surprisingly），笔记用 +/- 标记。|记录教授态度最简捷的方式是？|抄原句;;用 +/- 标记;;画表情;;忽略|1|正负号标记便于快速对应态度题。
-数字只记关键|数字只需记与结论相关的（年代、比例），不要试图记全部数据。|笔记中数字应？|全部记录;;只记与结论相关的;;完全不记;;记在最后|1|选择性记录，避免丢失主线。
-信号词预测结构|听到 Today we'll discuss / There are three reasons / In contrast 即可预判下文结构。|"There are three reasons" 提示？|结论;;并列结构;;转折;;举例|1|预示并列三点，笔记应留三行。
-对话问题-解决|Conversation 结构为：问题 → 尝试 → 解决/未解决，笔记按此三段记。|Conversation 常见结构是？|问题—解决;;纯叙述;;辩论;;诗歌|0|问题-解决结构最典型。
-笔记不求完整|笔记是提示不是听写。漏记时优先保证理解，凭记忆作答往往更准。|笔记的正确定位是？|逐字听写;;理解优先的提示;;唯一依据;;不需要|1|理解优先，笔记只作提示。
-`,
-  '阅读题型': `
-事实信息题|事实信息题按题干关键词回原文定位，答案多为同义改写，不要凭常识作答。|事实信息题的正确做法是？|凭常识;;按关键词定位并找同义改写;;读全文;;选最长选项|1|定位 + 同义改写是核心。
-否定事实题|否定事实题（EXCEPT / NOT）用排除法：三个选项能在原文找到，剩下的即为答案。|EXCEPT 题最有效的方法是？|正向定位;;排除法;;猜测;;选最短|1|排除法：找原文能证实的三个。
-推断题|推断题答案必须"可推出但未明说"，过度推断是主要失分原因。|推断题最常见的错误是？|定位错误;;过度推断;;拼写错误;;时间不足|1|答案必须由原文直接支撑。
-修辞目的题|"Why does the author mention X?" 看例子前后的观点句，例子服务于观点。|修辞目的题应关注？|例子本身细节;;例子前后的观点句;;段落长度;;作者生平|1|例子服务于观点，答案在观点句。
-词汇题|词汇题考上下文义，用代入法：把选项代入原句，看语义与逻辑是否通顺。|词汇题最实用的方法是？|背词典义;;代入原句检验;;看词根;;猜|1|托福词汇题考语境义，代入法最稳。
-句子简化题|句子简化题保留原句主干逻辑（因果、转折、条件），删去修饰成分。|句子简化题必须保留？|所有修饰语;;主干逻辑关系;;原句长度;;标点|1|主干逻辑（因果/转折/条件）不可丢。
-插入文本题|插入题看四个空位前后的指代与逻辑连接（this, however, for example），找语义最连贯处。|插入题主要依据？|段落长度;;指代与逻辑连接;;单词难度;;标点|1|指代与逻辑衔接决定插入位置。
-文章小结题|小结题（6 选 3）选的是段落主旨，细节与错误信息不选；先排除与原文矛盾的选项。|小结题应优先排除？|主旨句;;与原文矛盾的选项;;长选项;;首段内容|1|矛盾项与细节项都要排除。
-指代题|指代题向上文找最近的、性数一致的先行词，注意单复数。|指代题应向上文找？|最近的同性数名词;;任意名词;;段落首句;;标题|0|就近 + 性数一致原则。
-时间分配|托福阅读每篇 18 分钟（含 2 分钟检查），最后一题分值高，务必留足时间。|托福阅读每篇建议用时？|10 分钟;;18 分钟;;25 分钟;;30 分钟|1|每篇约 18 分钟，最后一题留足时间。
-`,
-  '独立写作': `
-五段式结构|独立写作推荐五段：引言（明确立场）→ 主体段 1 → 主体段 2 → 让步段 → 结论。|独立写作推荐结构是？|三段;;四段;;五段式;;一段|2|五段式（含让步段）在 30 分钟内最稳。
-具体例证|例证要具体：人名、时间、数字、结果。泛泛而谈（for example, many people）会限制在 fair 档。|独立写作例证最重要的特征是？|长度;;具体性;;词汇难度;;修辞|1|具体例证是高分关键。
-明确立场|题目问 Do you agree or disagree，必须在引言明确表态，不能"两边都对"。|独立写作引言必须包含？|背景;;明确立场;;例证;;结论|1|立场必须明确，且全文一致。
-让步段价值|承认对立观点再反驳，展示思维的全面性，是 4 分以上（满分 5）的常见特征。|让步段的作用是？|凑字数;;展示思维全面性;;表达反对;;重复论点|1|让步再反驳体现论证深度。
-时间分配|30 分钟建议：2 分钟审题列提纲、22 分钟写作、5 分钟检查。|独立写作建议的时间分配是？|10/15/5;;2/22/5;;25/5/0;;15/15/0|1|列提纲 2 分钟、写作 22 分钟、检查 5 分钟。
-字数目标|独立写作建议 300-380 词，低于 250 词会明显影响评分。|独立写作建议词数？|150-200;;200-250;;300-380;;500 以上|2|300-380 词最稳妥。
-避免模板化|模板句式（Every coin has two sides）会被识别为背诵，降低语言分。|以下哪种表达风险最高？|From my perspective;;Every coin has two sides;;Admittedly;;Consequently|1|过度使用的模板句会被判为套路。
-连接词层级|使用 First and foremost, Furthermore, More importantly, Ultimately 形成层级，而非堆砌 firstly/secondly。|连接词应体现？|数量;;层级与逻辑;;长度;;难度|1|层级化连接词体现逻辑推进。
-观点具体化|论点要可争论（arguable），不能是人人同意的事实陈述。|好的论点应当？|人尽皆知;;可争论且有支撑;;越长越好;;使用生僻词|1|可争论性是好论点的前提。
-检查清单|最后 5 分钟检查：主谓一致、时态、冠词、拼写、是否回应题目全部要求。|最后检查最应关注？|换词;;语法与任务回应;;加长;;删减|1|语法准确与任务回应是评分核心。
-`,
-  '综合写作': `
-阅读-听力-写作三段|综合写作结构固定：阅读观点 → 听力反驳 → 写作中逐点对比（听力如何反驳阅读）。|综合写作的核心任务是？|表达个人观点;;对比听力与阅读;;描述现象;;讲故事|1|不写个人观点，只做听力与阅读的对比。
-20 分钟流程|3 分钟读文章、2 分钟听讲座、15 分钟写作，共 20 分钟。|综合写作总时长是？|15 分钟;;20 分钟;;30 分钟;;50 分钟|1|阅读 3 + 听力 2 + 写作 15 = 20 分钟。
-不表达个人立场|综合写作严禁写自己的观点，只客观转述听力如何反驳阅读。|综合写作可以写个人观点吗？|可以;;不可以;;部分可以;;视题目而定|1|写个人观点会直接扣分。
-点对点对应|通常阅读给 3 个理由，听力逐一反驳，写作按 3 点各写一段。|综合写作的段落组织通常是？|一段到底;;按 3 个理由逐段对应;;两段;;按时间顺序|1|逐点对应最清晰。
-转述动词|使用 The lecturer argues that, contradicts, refutes, points out that 等转述动词。|综合写作常用的转述动词是？|I think;;The lecturer argues that;;In my opinion;;Let me tell you|1|转述动词体现客观复述。
-听力细节优先|综合写作得分主要看听力信息还原度，听力细节越全分越高。|综合写作得分主要取决于？|词汇华丽;;听力信息还原度;;字数;;语法复杂度|1|听力要点还原是评分核心。
-字数要求|综合写作建议 150-225 词，通常写 3 段主体即可满足。|综合写作建议词数？|100-150;;150-225;;250-300;;350 以上|1|150-225 词最稳妥。
-不抄原文|阅读内容要改写，不能整句照抄，否则不算有效转述。|引用阅读内容时应当？|整句照抄;;同义改写;;完全不提;;只写标题|1|必须同义改写，避免抄袭。
-逻辑连接|使用 While the reading claims..., the lecturer argues instead that... 形成对比。|综合写作常用的对比句式是？|Because...;;While the reading claims..., the lecturer argues...;;If...;;Although...|1|对比句式直接体现"反驳"关系。
-模板化开头|开头段固定模板：The reading and the lecture discuss..., the lecturer challenges the reading's claim. 简洁即可。|综合写作开头应？|长篇背景;;简洁点明对立关系;;直接举例;;写个人经历|1|简洁点明阅读与听力的对立关系。
-`,
-  '口语 Task': `
-Task1 独立口语|15 秒准备、45 秒作答。结构：明确选择 → 理由 1 + 例证 → 理由 2（或总结）。|独立口语 Task1 的作答时长是？|30 秒;;45 秒;;60 秒;;90 秒|1|准备 15 秒、作答 45 秒。
-Task2 校园场景|阅读（通知）+ 听力（学生观点）+ 口述：先概括阅读，再转述听力理由。|Task2 需要转述的是？|个人观点;;听力中学生的理由;;阅读作者生平;;统计数据|1|转述听力中学生的支持或反对理由。
-Task3 学术概念|阅读给概念定义，听力给例子，口述用听力例子解释阅读概念。|Task3 的核心是？|背定义;;用听力例子解释阅读概念;;表达观点;;总结全文|1|"概念 + 例子"的对应关系。
-Task4 讲座总结|只放听力（无阅读），要求概括讲座的两个要点及例子。|Task4 的信息来源是？|只有阅读;;只有听力;;阅读+听力;;个人经历|1|Task4 无阅读材料，纯听力总结。
-模板句式|开头用 The reading states that..., The professor explains this by...，避免逐字背诵长模板。|口语模板应？|越长越好;;简洁自然;;完全不用;;逐字背诵|1|简洁自然的框架句更安全。
-时间控制|45 秒内必须说完，宁可少说一个细节，也不要超时被打断。|口语作答最重要的时间原则是？|尽量多说;;按时结束;;超时补充;;中途停顿|1|超时被打断会明显影响流利度分。
-发音清晰|评分看重清晰度而非口音纯正；语速适中、重音正确即可。|口语评分对发音的要求是？|纯正美音;;清晰可懂;;语速快;;音量高|1|清晰可懂即可，不要求纯正口音。
-笔记提示|准备时间写 3-4 个关键词，作答时看关键词展开，不要写完整句子。|准备时间应写？|完整句子;;3-4 个关键词;;整段模板;;什么都不写|1|关键词提纲便于展开。
-避免停顿|用 Well, I'd say, To put it simply 填充，保持语流连续。|出现卡顿时最好的处理是？|沉默;;用短填充语过渡;;重头再说;;放弃|1|短填充语保持语流连续。
-流利度优先|评分四项：delivery, language use, topic development。delivery（流畅清晰）权重最高。|口语评分权重最高的是？|词汇量;;delivery 流畅清晰;;语法复杂;;内容长度|1|delivery 是第一印象，权重最高。
-`
-};
+;
+/* ---- en_exam_vocab.js ---- */
+/* ===== 雅思 / 托福 核心词汇 ===== */
+window.WB_DATA = window.WB_DATA || {};
 
-function parseCards(raw) {
-  var out = {};
-  Object.keys(raw).forEach(function (band) {
-    out[band] = raw[band].trim().split('\n').map(function (line, i) {
-      var p = line.split('|');
-      return {
-        id: band + '_' + i,
-        band: band,
-        t: p[0], d: p[1],
-        q: { q: p[2], o: p[3].split(';;'), a: parseInt(p[4], 10), e: p[5] }
-      };
-    });
-  });
-  return out;
-}
-window.WB_DATA.ielts = parseCards(window.WB_DATA.ieltsRaw);
-window.WB_DATA.toefl = parseCards(window.WB_DATA.toeflRaw);
+/* 格式：单词|音标|词性与释义 */
+window.WB_DATA.ieltsWordsRaw = `
+abundant|əˈbʌndənt|adj. 丰富的，充裕的
+academic|ˌækəˈdemɪk|adj. 学术的；学业的
+accessible|əkˈsesəbl|adj. 可获得的；易理解的
+accommodate|əˈkɒmədeɪt|v. 容纳；适应；提供住宿
+accumulate|əˈkjuːmjəleɪt|v. 积累，积聚
+accurate|ˈækjərət|adj. 准确的，精确的
+acknowledge|əkˈnɒlɪdʒ|v. 承认；致谢
+adequate|ˈædɪkwət|adj. 足够的；适当的
+adjust|əˈdʒʌst|v. 调整，调节；适应
+administration|ədˌmɪnɪˈstreɪʃn|n. 管理；行政部门
+adolescent|ˌædəˈlesnt|n. 青少年 adj. 青春期的
+advocate|ˈædvəkeɪt|v. 提倡，主张 n. 拥护者
+aesthetic|iːsˈθetɪk|adj. 美学的，审美的
+affordable|əˈfɔːdəbl|adj. 负担得起的
+agriculture|ˈæɡrɪkʌltʃə|n. 农业，农学
+allocate|ˈæləkeɪt|v. 分配，拨给
+alter|ˈɔːltə|v. 改变，更改
+alternative|ɔːlˈtɜːnətɪv|n. 替代方案 adj. 可替代的
+ambiguous|æmˈbɪɡjuəs|adj. 模棱两可的，含糊的
+ample|ˈæmpl|adj. 充足的；宽敞的
+analyse|ˈænəlaɪz|v. 分析，分解
+annual|ˈænjuəl|adj. 每年的 n. 年刊
+anticipate|ænˈtɪsɪpeɪt|v. 预料，预期
+apparent|əˈpærənt|adj. 明显的；表面上的
+appeal|əˈpiːl|v./n. 呼吁；吸引力；上诉
+appliance|əˈplaɪəns|n. 家用电器，器具
+applicant|ˈæplɪkənt|n. 申请人
+appreciate|əˈpriːʃieɪt|v. 欣赏；感激；理解
+appropriate|əˈprəʊpriət|adj. 恰当的，合适的
+approximate|əˈprɒksɪmət|adj. 大约的 v. 近似
+arbitrary|ˈɑːbɪtrəri|adj. 任意的；专断的
+architecture|ˈɑːkɪtektʃə|n. 建筑学；建筑风格
+arise|əˈraɪz|v. 出现，产生；起因于
+artificial|ˌɑːtɪˈfɪʃl|adj. 人造的，人工的
+aspect|ˈæspekt|n. 方面；外观
+assess|əˈses|v. 评估，评定
+assign|əˈsaɪn|v. 分配；指派
+assist|əˈsɪst|v. 帮助，协助
+assume|əˈsjuːm|v. 假定；承担
+atmosphere|ˈætməsfɪə|n. 大气；气氛
+attach|əˈtætʃ|v. 附上；使依附
+attitude|ˈætɪtjuːd|n. 态度，看法
+attract|əˈtrækt|v. 吸引，引起
+authority|ɔːˈθɒrəti|n. 权威；当局；权限
+available|əˈveɪləbl|adj. 可获得的；有空的
+awareness|əˈweənəs|n. 意识，认识
+balance|ˈbæləns|n./v. 平衡；余额
+barrier|ˈbæriə|n. 障碍；屏障
+beneficial|ˌbenɪˈfɪʃl|adj. 有益的，有利的
+biodiversity|ˌbaɪəʊdaɪˈvɜːsəti|n. 生物多样性
+breakthrough|ˈbreɪkθruː|n. 突破，重大进展
+budget|ˈbʌdʒɪt|n. 预算 v. 编预算
+bureaucracy|bjʊəˈrɒkrəsi|n. 官僚制度，官僚作风
+capacity|kəˈpæsəti|n. 容量；能力
+carbon|ˈkɑːbən|n. 碳
+category|ˈkætəɡəri|n. 种类，类别
+cease|siːs|v. 停止，终止
+challenge|ˈtʃælɪndʒ|n./v. 挑战；质疑
+chronic|ˈkrɒnɪk|adj. 慢性的；长期的
+circulate|ˈsɜːkjəleɪt|v. 循环；传播
+cite|saɪt|v. 引用，引证
+civilisation|ˌsɪvəlaɪˈzeɪʃn|n. 文明，文明社会
+clarify|ˈklærəfaɪ|v. 澄清，阐明
+classify|ˈklæsɪfaɪ|v. 分类，归类
+climate|ˈklaɪmət|n. 气候；风气
+cognitive|ˈkɒɡnətɪv|adj. 认知的，认识的
+coherent|kəʊˈhɪərənt|adj. 连贯的，条理清楚的
+collapse|kəˈlæps|v./n. 倒塌；崩溃
+commercial|kəˈmɜːʃl|adj. 商业的 n. 广告
+commit|kəˈmɪt|v. 犯（罪）；承诺；投入
+commodity|kəˈmɒdəti|n. 商品，货物
+compensate|ˈkɒmpenseɪt|v. 补偿，赔偿
+competent|ˈkɒmpɪtənt|adj. 有能力的，胜任的
+complement|ˈkɒmplɪment|v. 补充 n. 补充物
+complex|ˈkɒmpleks|adj. 复杂的 n. 综合体
+comply|kəmˈplaɪ|v. 遵守，服从
+component|kəmˈpəʊnənt|n. 组成部分，成分
+comprehensive|ˌkɒmprɪˈhensɪv|adj. 全面的，综合的
+compulsory|kəmˈpʌlsəri|adj. 强制的，必修的
+conceive|kənˈsiːv|v. 构想；怀孕
+concentrate|ˈkɒnsntreɪt|v. 集中；浓缩
+concept|ˈkɒnsept|n. 概念，观念
+conclusion|kənˈkluːʒn|n. 结论；结束
+concrete|ˈkɒŋkriːt|adj. 具体的 n. 混凝土
+conduct|kənˈdʌkt|v. 进行；指挥 n. 行为
+conference|ˈkɒnfərəns|n. 会议，研讨会
+confine|kənˈfaɪn|v. 限制；禁闭
+confirm|kənˈfɜːm|v. 证实；确认
+conflict|ˈkɒnflɪkt|n./v. 冲突，矛盾
+conform|kənˈfɔːm|v. 遵守；符合
+consecutive|kənˈsekjətɪv|adj. 连续的，连贯的
+consequence|ˈkɒnsɪkwəns|n. 结果，后果
+conservation|ˌkɒnsəˈveɪʃn|n. 保护，保存
+considerable|kənˈsɪdərəbl|adj. 相当大的，可观的
+consist|kənˈsɪst|v. 由…组成；在于
+constant|ˈkɒnstənt|adj. 不断的；恒定的
+constitute|ˈkɒnstɪtjuːt|v. 构成，组成
+constraint|kənˈstreɪnt|n. 限制，约束
+consume|kənˈsjuːm|v. 消耗；消费
+contemporary|kənˈtemprəri|adj. 当代的 n. 同代人
+context|ˈkɒntekst|n. 上下文；背景
+continent|ˈkɒntɪnənt|n. 大陆，洲
+contradict|ˌkɒntrəˈdɪkt|v. 反驳；与…矛盾
+contribute|kənˈtrɪbjuːt|v. 贡献；促成；投稿
+controversial|ˌkɒntrəˈvɜːʃl|adj. 有争议的
+convention|kənˈvenʃn|n. 惯例；大会；公约
+convert|kənˈvɜːt|v. 转换，转变
+convince|kənˈvɪns|v. 使确信，说服
+cooperate|kəʊˈɒpəreɪt|v. 合作，协作
+coordinate|kəʊˈɔːdɪneɪt|v. 协调 n. 坐标
+correspond|ˌkɒrəˈspɒnd|v. 相符；通信
+criterion|kraɪˈtɪəriən|n. 标准，准则
+crucial|ˈkruːʃl|adj. 至关重要的，关键的
+cultivate|ˈkʌltɪveɪt|v. 耕作；培养
+curriculum|kəˈrɪkjələm|n. 课程，全部课程
+decline|dɪˈklaɪn|v./n. 下降；拒绝
+dedicate|ˈdedɪkeɪt|v. 奉献，致力于
+deficit|ˈdefɪsɪt|n. 赤字；不足
+definite|ˈdefɪnət|adj. 明确的；肯定的
+degrade|dɪˈɡreɪd|v. 降低；退化；降解
+deliberate|dɪˈlɪbərət|adj. 故意的；从容的
+demonstrate|ˈdemənstreɪt|v. 证明；演示；示威
+dense|dens|adj. 密集的；浓厚的
+deplete|dɪˈpliːt|v. 耗尽，使枯竭
+deposit|dɪˈpɒzɪt|n. 存款；沉积物 v. 存放
+derive|dɪˈraɪv|v. 源于；获得
+descend|dɪˈsend|v. 下降；遗传
+designate|ˈdezɪɡneɪt|v. 指定；命名
+deteriorate|dɪˈtɪəriəreɪt|v. 恶化，变坏
+determine|dɪˈtɜːmɪn|v. 决定；查明
+devise|dɪˈvaɪz|v. 设计，想出
+diminish|dɪˈmɪnɪʃ|v. 减少，缩小
+discipline|ˈdɪsəplɪn|n. 学科；纪律 v. 训练
+discrepancy|dɪsˈkrepənsi|n. 差异，不一致
+discriminate|dɪˈskrɪmɪneɪt|v. 区别；歧视
+displace|dɪsˈpleɪs|v. 取代；使离开家园
+dispose|dɪˈspəʊz|v. 处理，处置
+dispute|dɪˈspjuːt|n./v. 争论，争端
+distinct|dɪˈstɪŋkt|adj. 明显的；截然不同的
+distort|dɪˈstɔːt|v. 扭曲；歪曲
+distribute|dɪˈstrɪbjuːt|v. 分配；分布
+diverse|daɪˈvɜːs|adj. 多样的，不同的
+domestic|dəˈmestɪk|adj. 国内的；家庭的
+dominate|ˈdɒmɪneɪt|v. 支配，主导
+drain|dreɪn|v. 排水；耗尽 n. 排水管
+dramatic|drəˈmætɪk|adj. 戏剧性的；显著的
+duration|djuˈreɪʃn|n. 持续时间，期间
+dynamic|daɪˈnæmɪk|adj. 动态的；有活力的
+ecological|ˌiːkəˈlɒdʒɪkl|adj. 生态的，生态学的
+economy|ɪˈkɒnəmi|n. 经济；节约
+ecosystem|ˈiːkəʊsɪstəm|n. 生态系统
+efficient|ɪˈfɪʃnt|adj. 高效的，效率高的
+elaborate|ɪˈlæbərət|adj. 精心制作的 v. 详述
+element|ˈelɪmənt|n. 元素；要素
+eliminate|ɪˈlɪmɪneɪt|v. 消除，排除
+embrace|ɪmˈbreɪs|v. 拥抱；欣然接受
+emerge|iˈmɜːdʒ|v. 出现，浮现
+emission|iˈmɪʃn|n. 排放；发射
+emphasis|ˈemfəsɪs|n. 强调，重点
+empirical|ɪmˈpɪrɪkl|adj. 经验主义的，实证的
+enable|ɪˈneɪbl|v. 使能够，使成为可能
+enforce|ɪnˈfɔːs|v. 执行，强制实施
+enhance|ɪnˈhɑːns|v. 提高，增强
+enormous|ɪˈnɔːməs|adj. 巨大的，庞大的
+ensure|ɪnˈʃʊə|v. 确保，保证
+enterprise|ˈentəpraɪz|n. 企业；事业心
+enthusiasm|ɪnˈθjuːziæzəm|n. 热情，热忱
+entitle|ɪnˈtaɪtl|v. 使有权利；给…命名
+equate|iˈkweɪt|v. 使相等；等同看待
+equivalent|ɪˈkwɪvələnt|adj. 相等的 n. 等价物
+erode|ɪˈrəʊd|v. 侵蚀，腐蚀
+essential|ɪˈsenʃl|adj. 必要的；本质的
+establish|ɪˈstæblɪʃ|v. 建立；确立
+estimate|ˈestɪmeɪt|v./n. 估计，估算
+ethical|ˈeθɪkl|adj. 道德的，伦理的
+evaluate|ɪˈvæljueɪt|v. 评价，评估
+evident|ˈevɪdənt|adj. 明显的，显然的
+evolve|iˈvɒlv|v. 演变，进化
+exaggerate|ɪɡˈzædʒəreɪt|v. 夸大，夸张
+exceed|ɪkˈsiːd|v. 超过，超出
+exclusive|ɪkˈskluːsɪv|adj. 独有的；排他的
+exert|ɪɡˈzɜːt|v. 施加；尽力
+exhaust|ɪɡˈzɔːst|v. 耗尽；使疲惫 n. 废气
+exhibit|ɪɡˈzɪbɪt|v. 展示 n. 展品
+expand|ɪkˈspænd|v. 扩大，扩展
+expenditure|ɪkˈspendɪtʃə|n. 支出，花费
+explicit|ɪkˈsplɪsɪt|adj. 明确的，清晰的
+exploit|ɪkˈsplɔɪt|v. 开发；剥削
+expose|ɪkˈspəʊz|v. 暴露；揭露
+extend|ɪkˈstend|v. 延伸；扩展
+extensive|ɪkˈstensɪv|adj. 广泛的，大量的
+external|ɪkˈstɜːnl|adj. 外部的，外面的
+extract|ɪkˈstrækt|v. 提取；摘录 n. 提取物
+facilitate|fəˈsɪlɪteɪt|v. 促进，使便利
+factor|ˈfæktə|n. 因素，要素
+feasible|ˈfiːzəbl|adj. 可行的，行得通的
+fertile|ˈfɜːtaɪl|adj. 肥沃的；能生育的
+finite|ˈfaɪnaɪt|adj. 有限的
+flexible|ˈfleksəbl|adj. 灵活的；可弯曲的
+fluctuate|ˈflʌktʃueɪt|v. 波动，起伏
+forecast|ˈfɔːkɑːst|n./v. 预测，预报
+formal|ˈfɔːml|adj. 正式的；形式的
+formulate|ˈfɔːmjuleɪt|v. 制定；阐述
+fossil|ˈfɒsl|n. 化石 adj. 化石的
+foundation|faʊnˈdeɪʃn|n. 基础；基金会
+framework|ˈfreɪmwɜːk|n. 框架，结构
+frequent|ˈfriːkwənt|adj. 频繁的，经常的
+fundamental|ˌfʌndəˈmentl|adj. 基本的 n. 基本原理
+generate|ˈdʒenəreɪt|v. 产生，生成
+genuine|ˈdʒenjuɪn|adj. 真正的；真诚的
+globalisation|ˌɡləʊbəlaɪˈzeɪʃn|n. 全球化
+grant|ɡrɑːnt|n. 拨款 v. 授予
+habitat|ˈhæbɪtæt|n. 栖息地，生境
+hazard|ˈhæzəd|n. 危险，危害
+hierarchy|ˈhaɪərɑːki|n. 等级制度，层级
+hypothesis|haɪˈpɒθəsɪs|n. 假设，假说
+identical|aɪˈdentɪkl|adj. 完全相同的
+illustrate|ˈɪləstreɪt|v. 说明；举例；插图
+immune|ɪˈmjuːn|adj. 免疫的；免除的
+impact|ˈɪmpækt|n./v. 影响；冲击
+implement|ˈɪmplɪment|v. 实施 n. 工具
+implication|ˌɪmplɪˈkeɪʃn|n. 含义；影响；牵连
+impose|ɪmˈpəʊz|v. 强加；征收
+incentive|ɪnˈsentɪv|n. 激励，动机
+incidence|ˈɪnsɪdəns|n. 发生率；影响范围
+incline|ɪnˈklaɪn|v. 倾斜；倾向于
+incorporate|ɪnˈkɔːpəreɪt|v. 包含；合并
+indicate|ˈɪndɪkeɪt|v. 表明，指示
+indigenous|ɪnˈdɪdʒənəs|adj. 土生土长的，本地的
+individual|ˌɪndɪˈvɪdʒuəl|adj. 个别的 n. 个人
+induce|ɪnˈdjuːs|v. 引起；诱导
+industrial|ɪnˈdʌstriəl|adj. 工业的，产业的
+inevitable|ɪnˈevɪtəbl|adj. 不可避免的
+infer|ɪnˈfɜː|v. 推断，推论
+inflation|ɪnˈfleɪʃn|n. 通货膨胀；膨胀
+infrastructure|ˈɪnfrəstrʌktʃə|n. 基础设施
+inherent|ɪnˈhɪərənt|adj. 固有的，内在的
+initial|ɪˈnɪʃl|adj. 最初的 n. 首字母
+initiative|ɪˈnɪʃətɪv|n. 主动性；倡议
+innovation|ˌɪnəˈveɪʃn|n. 创新，革新
+insight|ˈɪnsaɪt|n. 洞察力，深刻见解
+integrate|ˈɪntɪɡreɪt|v. 整合，使成一体
+intense|ɪnˈtens|adj. 强烈的；紧张的
+interact|ˌɪntərˈækt|v. 相互作用，互动
+interpret|ɪnˈtɜːprɪt|v. 解释；口译
+intervene|ˌɪntəˈviːn|v. 干预，介入
+intrinsic|ɪnˈtrɪnsɪk|adj. 内在的，固有的
+investigate|ɪnˈvestɪɡeɪt|v. 调查，研究
+isolate|ˈaɪsəleɪt|v. 隔离，孤立
+justify|ˈdʒʌstɪfaɪ|v. 证明…正当，为…辩护
+labour|ˈleɪbə|n. 劳动；劳动力
+landscape|ˈlændskeɪp|n. 风景，景观
+legislation|ˌledʒɪsˈleɪʃn|n. 立法，法规
+legitimate|ɪˈdʒɪtɪmət|adj. 合法的；合理的
+liable|ˈlaɪəbl|adj. 有责任的；易于…的
+literacy|ˈlɪtərəsi|n. 读写能力，识字率
+maintain|meɪnˈteɪn|v. 维持；维修；主张
+majority|məˈdʒɒrəti|n. 多数，大多数
+manifest|ˈmænɪfest|v. 显示 adj. 明显的
+manipulate|məˈnɪpjuleɪt|v. 操纵，控制
+manufacture|ˌmænjuˈfæktʃə|v./n. 制造，生产
+marginal|ˈmɑːdʒɪnl|adj. 边缘的；微小的
+mechanism|ˈmekənɪzəm|n. 机制，机理
+media|ˈmiːdiə|n. 媒体，媒介
+mediate|ˈmiːdieɪt|v. 调解；影响
+migrate|maɪˈɡreɪt|v. 迁移，移居
+minimise|ˈmɪnɪmaɪz|v. 使最小化，减到最少
+modify|ˈmɒdɪfaɪ|v. 修改，调整
+monitor|ˈmɒnɪtə|v. 监控 n. 显示器
+motivate|ˈməʊtɪveɪt|v. 激励，激发
+mutual|ˈmjuːtʃuəl|adj. 相互的；共同的
+navigate|ˈnævɪɡeɪt|v. 导航；驾驭
+negligible|ˈneɡlɪdʒəbl|adj. 微不足道的
+norm|nɔːm|n. 标准，规范
+notion|ˈnəʊʃn|n. 概念，观念
+nourish|ˈnʌrɪʃ|v. 滋养，养育
+objective|əbˈdʒektɪv|n. 目标 adj. 客观的
+obtain|əbˈteɪn|v. 获得，得到
+obvious|ˈɒbviəs|adj. 明显的，显然的
+occupy|ˈɒkjupaɪ|v. 占据；占用
+occur|əˈkɜː|v. 发生，出现
+offset|ˈɒfset|v. 抵消 n. 补偿
+ongoing|ˈɒnɡəʊɪŋ|adj. 持续的，进行中的
+optimal|ˈɒptɪməl|adj. 最优的，最佳的
+orientation|ˌɔːriənˈteɪʃn|n. 方向；定位；入学教育
+outcome|ˈaʊtkʌm|n. 结果，成果
+overall|ˌəʊvərˈɔːl|adj. 总体的 adv. 总的来说
+overcome|ˌəʊvəˈkʌm|v. 克服，战胜
+overlap|ˌəʊvəˈlæp|v./n. 重叠，交叉
+overwhelm|ˌəʊvəˈwelm|v. 压倒；使不知所措
+paradox|ˈpærədɒks|n. 悖论，自相矛盾
+parallel|ˈpærəlel|adj. 平行的；类似的
+participate|pɑːˈtɪsɪpeɪt|v. 参与，参加
+particular|pəˈtɪkjələ|adj. 特定的；讲究的
+passive|ˈpæsɪv|adj. 被动的，消极的
+perceive|pəˈsiːv|v. 察觉，感知；认为
+permanent|ˈpɜːmənənt|adj. 永久的，长期的
+persist|pəˈsɪst|v. 坚持；持续
+perspective|pəˈspektɪv|n. 视角，观点
+phase|feɪz|n. 阶段，时期
+phenomenon|fəˈnɒmɪnən|n. 现象
+philosophy|fəˈlɒsəfi|n. 哲学；人生观
+policy|ˈpɒləsi|n. 政策，方针
+pollution|pəˈluːʃn|n. 污染
+portion|ˈpɔːʃn|n. 部分，一份
+potential|pəˈtenʃl|adj. 潜在的 n. 潜力
+poverty|ˈpɒvəti|n. 贫困，贫穷
+practical|ˈpræktɪkl|adj. 实际的；实用的
+precede|prɪˈsiːd|v. 先于，在…之前
+precise|prɪˈsaɪs|adj. 精确的，准确的
+predict|prɪˈdɪkt|v. 预测，预言
+predominant|prɪˈdɒmɪnənt|adj. 主要的，占优势的
+prejudice|ˈpredʒudɪs|n. 偏见 v. 使有偏见
+preliminary|prɪˈlɪmɪnəri|adj. 初步的 n. 准备工作
+preserve|prɪˈzɜːv|v. 保护，保存
+prestige|preˈstiːʒ|n. 声望，威信
+presume|prɪˈzjuːm|v. 假定，推测
+prevail|prɪˈveɪl|v. 盛行；获胜
+prevent|prɪˈvent|v. 阻止，预防
+priority|praɪˈɒrəti|n. 优先，优先事项
+profound|prəˈfaʊnd|adj. 深刻的；深远的
+prohibit|prəˈhɪbɪt|v. 禁止，阻止
+prominent|ˈprɒmɪnənt|adj. 突出的；著名的
+promote|prəˈməʊt|v. 促进；晋升；推销
+proportion|prəˈpɔːʃn|n. 比例，部分
+prospect|ˈprɒspekt|n. 前景，可能性
+prosperity|prɒˈsperəti|n. 繁荣，兴旺
+protest|ˈprəʊtest|n./v. 抗议，反对
+provision|prəˈvɪʒn|n. 提供；条款；储备
+psychology|saɪˈkɒlədʒi|n. 心理学；心理
+publicity|pʌbˈlɪsəti|n. 宣传，公众关注
+purchase|ˈpɜːtʃəs|v./n. 购买
+pursue|pəˈsjuː|v. 追求；从事
+qualification|ˌkwɒlɪfɪˈkeɪʃn|n. 资格，学历
+qualitative|ˈkwɒlɪtətɪv|adj. 定性的，质量的
+quantitative|ˈkwɒntɪtətɪv|adj. 定量的，数量的
+radical|ˈrædɪkl|adj. 根本的；激进的
+random|ˈrændəm|adj. 随机的，任意的
+rational|ˈræʃnəl|adj. 理性的，合理的
+recover|rɪˈkʌvə|v. 恢复；重新获得
+recreation|ˌrekriˈeɪʃn|n. 娱乐，消遣
+recruit|rɪˈkruːt|v. 招募 n. 新成员
+recycle|ˌriːˈsaɪkl|v. 回收利用
+refer|rɪˈfɜː|v. 提到；参考；转诊
+refine|rɪˈfaɪn|v. 提炼；改进
+reform|rɪˈfɔːm|n./v. 改革，改良
+regardless|rɪˈɡɑːdləs|adv. 无论如何，不管
+regulate|ˈreɡjuleɪt|v. 管理；调节
+reinforce|ˌriːɪnˈfɔːs|v. 加强，强化
+reject|rɪˈdʒekt|v. 拒绝，驳回
+relevant|ˈreləvənt|adj. 相关的，切题的
+reliable|rɪˈlaɪəbl|adj. 可靠的，可信的
+reluctant|rɪˈlʌktənt|adj. 不情愿的，勉强的
+remedy|ˈremədi|n. 补救办法 v. 补救
+renewable|rɪˈnjuːəbl|adj. 可再生的；可续期的
+reputation|ˌrepjuˈteɪʃn|n. 名声，声誉
+require|rɪˈkwaɪə|v. 需要，要求
+reserve|rɪˈzɜːv|v. 保留；预订 n. 储备
+reside|rɪˈzaɪd|v. 居住，定居
+resistance|rɪˈzɪstəns|n. 抵抗，阻力
+resolve|rɪˈzɒlv|v. 解决；决心
+resource|rɪˈsɔːs|n. 资源，财力
+respond|rɪˈspɒnd|v. 回应，反应
+restrict|rɪˈstrɪkt|v. 限制，约束
+retain|rɪˈteɪn|v. 保留，保持
+reveal|rɪˈviːl|v. 揭示，显露
+revenue|ˈrevənjuː|n. 收入，税收
+reverse|rɪˈvɜːs|v. 颠倒；撤销 adj. 相反的
+revise|rɪˈvaɪz|v. 修订；复习
+revolution|ˌrevəˈluːʃn|n. 革命；巨变
+rigid|ˈrɪdʒɪd|adj. 僵硬的；严格的
+rural|ˈrʊərəl|adj. 农村的，乡村的
+saturate|ˈsætʃəreɪt|v. 使饱和，浸透
+scenario|səˈnɑːriəʊ|n. 情景，设想
+scheme|skiːm|n. 计划，方案
+scope|skəʊp|n. 范围；机会
+sector|ˈsektə|n. 部门，行业
+secure|sɪˈkjʊə|adj. 安全的 v. 获得；使安全
+segment|ˈseɡmənt|n. 部分，片段
+sequence|ˈsiːkwəns|n. 顺序，序列
+settle|ˈsetl|v. 解决；定居；安顿
+severe|sɪˈvɪə|adj. 严重的；严厉的
+shift|ʃɪft|n./v. 转变；移动
+significant|sɪɡˈnɪfɪkənt|adj. 显著的；重要的
+simulate|ˈsɪmjuleɪt|v. 模拟，模仿
+sole|səʊl|adj. 唯一的 n. 脚底
+sophisticated|səˈfɪstɪkeɪtɪd|adj. 复杂的；老练的
+source|sɔːs|n. 来源，源头
+species|ˈspiːʃiːz|n. 物种，种类
+specify|ˈspesɪfaɪ|v. 具体说明，指定
+spectrum|ˈspektrəm|n. 光谱；范围
+sphere|sfɪə|n. 球体；领域
+stable|ˈsteɪbl|adj. 稳定的 n. 马厩
+statistics|stəˈtɪstɪks|n. 统计学；统计数据
+status|ˈsteɪtəs|n. 地位；状态
+stimulate|ˈstɪmjuleɪt|v. 刺激，激发
+strategy|ˈstrætədʒi|n. 策略，战略
+stress|stres|n. 压力；重音 v. 强调
+structure|ˈstrʌktʃə|n. 结构 v. 构建
+subsidy|ˈsʌbsədi|n. 补贴，津贴
+substance|ˈsʌbstəns|n. 物质；实质
+substitute|ˈsʌbstɪtjuːt|n. 替代品 v. 代替
+subtle|ˈsʌtl|adj. 微妙的；细微的
+sufficient|səˈfɪʃnt|adj. 足够的，充分的
+summarise|ˈsʌməraɪz|v. 概括，总结
+superficial|ˌsuːpəˈfɪʃl|adj. 表面的；肤浅的
+superior|suːˈpɪəriə|adj. 更好的 n. 上级
+supplement|ˈsʌplɪment|n. 补充 v. 增补
+survey|ˈsɜːveɪ|n./v. 调查；勘测
+survive|səˈvaɪv|v. 幸存，存活
+suspect|səˈspekt|v. 怀疑 n. 嫌疑人
+sustain|səˈsteɪn|v. 维持；支撑；遭受
+symbol|ˈsɪmbl|n. 象征，符号
+symptom|ˈsɪmptəm|n. 症状；征兆
+synthesis|ˈsɪnθəsɪs|n. 综合，合成
+systematic|ˌsɪstəˈmætɪk|adj. 系统的，有条理的
+tackle|ˈtækl|v. 处理，应对 n. 用具
+technique|tekˈniːk|n. 技术，技巧
+temporary|ˈtemprəri|adj. 暂时的，临时的
+tendency|ˈtendənsi|n. 趋势，倾向
+tension|ˈtenʃn|n. 紧张；张力
+territory|ˈterətri|n. 领土；领域
+theoretical|ˌθɪəˈretɪkl|adj. 理论的，理论上的
+thereby|ˌðeəˈbaɪ|adv. 因此，从而
+thorough|ˈθʌrə|adj. 彻底的，详尽的
+threaten|ˈθretn|v. 威胁，危及
+threshold|ˈθreʃhəʊld|n. 门槛；临界值
+tolerate|ˈtɒləreɪt|v. 容忍，忍受
+tough|tʌf|adj. 艰难的；坚韧的
+trace|treɪs|v. 追踪 n. 痕迹
+tradition|trəˈdɪʃn|n. 传统，惯例
+transfer|trænsˈfɜː|v./n. 转移，调动
+transform|trænsˈfɔːm|v. 转变，改造
+transition|trænˈzɪʃn|n. 过渡，转变
+transmit|trænsˈmɪt|v. 传送，传播
+transport|ˈtrænspɔːt|n./v. 运输
+trend|trend|n. 趋势，倾向
+trigger|ˈtrɪɡə|v. 引发 n. 扳机
+ultimate|ˈʌltɪmət|adj. 最终的；根本的
+undergo|ˌʌndəˈɡəʊ|v. 经历，经受
+underlying|ˌʌndəˈlaɪɪŋ|adj. 潜在的，根本的
+undertake|ˌʌndəˈteɪk|v. 承担，着手
+uniform|ˈjuːnɪfɔːm|adj. 统一的 n. 制服
+unique|juˈniːk|adj. 独特的，唯一的
+urban|ˈɜːbən|adj. 城市的，都市的
+utilise|ˈjuːtəlaɪz|v. 利用，使用
+valid|ˈvælɪd|adj. 有效的；合理的
+vanish|ˈvænɪʃ|v. 消失，突然不见
+variable|ˈveəriəbl|adj. 可变的 n. 变量
+vast|vɑːst|adj. 广阔的，巨大的
+vehicle|ˈviːəkl|n. 车辆；工具，媒介
+version|ˈvɜːʃn|n. 版本；说法
+via|ˈvaɪə|prep. 经由，通过
+viable|ˈvaɪəbl|adj. 可行的；能存活的
+vibrant|ˈvaɪbrənt|adj. 充满活力的；鲜艳的
+violate|ˈvaɪəleɪt|v. 违反，侵犯
+virtual|ˈvɜːtʃuəl|adj. 虚拟的；实际上的
+visible|ˈvɪzəbl|adj. 可见的，明显的
+voluntary|ˈvɒləntri|adj. 自愿的，志愿的
+vulnerable|ˈvʌlnərəbl|adj. 脆弱的，易受伤害的
+welfare|ˈwelfeə|n. 福利；幸福
+widespread|ˈwaɪdspred|adj. 广泛的，普遍的
+withstand|wɪðˈstænd|v. 承受，抵挡
+yield|jiːld|v. 产生；屈服 n. 产量
+`;
+
+window.WB_DATA.toeflWordsRaw = `
+abandon|əˈbændən|v. 放弃；遗弃
+absorption|əbˈzɔːpʃn|n. 吸收；专注
+abstract|ˈæbstrækt|adj. 抽象的 n. 摘要
+accelerate|əkˈseləreɪt|v. 加速；促进
+accompany|əˈkʌmpəni|v. 陪伴；伴随
+accumulate|əˈkjuːmjəleɪt|v. 积累，积聚
+acid|ˈæsɪd|n. 酸 adj. 酸的
+adapt|əˈdæpt|v. 适应；改编
+adjacent|əˈdʒeɪsnt|adj. 邻近的，毗连的
+adjust|əˈdʒʌst|v. 调整，调节
+aerobic|eəˈrəʊbɪk|adj. 有氧的
+aggregate|ˈæɡrɪɡət|n. 总数 adj. 总计的
+alga|ˈælɡə|n. 藻类，海藻
+align|əˈlaɪn|v. 对齐；使一致
+altitude|ˈæltɪtjuːd|n. 海拔，高度
+amino|əˈmiːnəʊ|adj. 氨基的
+amplify|ˈæmplɪfaɪ|v. 放大，增强
+analogy|əˈnælədʒi|n. 类比，类推
+ancestor|ˈænsestə|n. 祖先，祖宗
+anomaly|əˈnɒməli|n. 异常，反常
+anthropology|ˌænθrəˈpɒlədʒi|n. 人类学
+antibiotic|ˌæntibaɪˈɒtɪk|n. 抗生素
+apparatus|ˌæpəˈreɪtəs|n. 仪器，装置
+arbitrary|ˈɑːbɪtrəri|adj. 任意的；专断的
+archaeology|ˌɑːkiˈɒlədʒi|n. 考古学
+arid|ˈærɪd|adj. 干旱的，贫瘠的
+artery|ˈɑːtəri|n. 动脉；干线
+assimilate|əˈsɪməleɪt|v. 同化；吸收
+astronomy|əˈstrɒnəmi|n. 天文学
+atmospheric|ˌætməsˈferɪk|adj. 大气的
+atom|ˈætəm|n. 原子
+auditory|ˈɔːdətri|adj. 听觉的，耳的
+bacteria|bækˈtɪəriə|n. 细菌（复数）
+barren|ˈbærən|adj. 贫瘠的；不育的
+basin|ˈbeɪsn|n. 盆地；流域；水盆
+behavior|bɪˈheɪvjə|n. 行为，举止
+bilingual|ˌbaɪˈlɪŋɡwəl|adj. 双语的
+biochemistry|ˌbaɪəʊˈkemɪstri|n. 生物化学
+biological|ˌbaɪəˈlɒdʒɪkl|adj. 生物的，生物学的
+bloom|bluːm|v./n. 开花；繁荣
+boundary|ˈbaʊndri|n. 边界，界限
+breeding|ˈbriːdɪŋ|n. 繁殖，饲养
+calcium|ˈkælsiəm|n. 钙
+canopy|ˈkænəpi|n. 树冠层；遮篷
+carbon|ˈkɑːbən|n. 碳
+carnivore|ˈkɑːnɪvɔː|n. 食肉动物
+catalyst|ˈkætəlɪst|n. 催化剂；促进因素
+cell|sel|n. 细胞；电池
+cellular|ˈseljələ|adj. 细胞的
+ceramic|səˈræmɪk|n. 陶瓷 adj. 陶瓷的
+chain|tʃeɪn|n. 链条；一连串
+chromosome|ˈkrəʊməsəʊm|n. 染色体
+circuit|ˈsɜːkɪt|n. 电路；环行
+circulation|ˌsɜːkjəˈleɪʃn|n. 循环；发行量
+civilisation|ˌsɪvəlaɪˈzeɪʃn|n. 文明
+clay|kleɪ|n. 黏土，陶土
+climate|ˈklaɪmət|n. 气候
+climax|ˈklaɪmæks|n. 顶点，高潮
+cluster|ˈklʌstə|n. 群，簇 v. 聚集
+coastal|ˈkəʊstl|adj. 沿海的，海岸的
+cognitive|ˈkɒɡnətɪv|adj. 认知的
+coincide|ˌkəʊɪnˈsaɪd|v. 同时发生；一致
+collision|kəˈlɪʒn|n. 碰撞，冲突
+combustion|kəmˈbʌstʃən|n. 燃烧
+comet|ˈkɒmɪt|n. 彗星
+compensate|ˈkɒmpenseɪt|v. 补偿，弥补
+compile|kəmˈpaɪl|v. 汇编，编纂
+compose|kəmˈpəʊz|v. 组成；创作
+compound|ˈkɒmpaʊnd|n. 化合物 adj. 复合的
+comprehensive|ˌkɒmprɪˈhensɪv|adj. 全面的
+compress|kəmˈpres|v. 压缩，压紧
+condense|kənˈdens|v. 浓缩；凝结
+conduction|kənˈdʌkʃn|n. 传导
+conifer|ˈkɒnɪfə|n. 针叶树
+consecutive|kənˈsekjətɪv|adj. 连续的
+conserve|kənˈsɜːv|v. 保存，节约
+consolidate|kənˈsɒlɪdeɪt|v. 巩固，合并
+constituent|kənˈstɪtjuənt|n. 成分 adj. 构成的
+contaminate|kənˈtæmɪneɪt|v. 污染，弄脏
+contemplate|ˈkɒntəmpleɪt|v. 沉思；考虑
+continent|ˈkɒntɪnənt|n. 大陆，洲
+contract|ˈkɒntrækt|n. 合同 v. 收缩
+contradict|ˌkɒntrəˈdɪkt|v. 反驳；与…矛盾
+converge|kənˈvɜːdʒ|v. 汇聚，聚集
+convert|kənˈvɜːt|v. 转换，转变
+coral|ˈkɒrəl|n. 珊瑚
+core|kɔː|n. 核心，岩芯
+correlation|ˌkɒrəˈleɪʃn|n. 相关性，关联
+crater|ˈkreɪtə|n. 火山口；坑
+criterion|kraɪˈtɪəriən|n. 标准，准则
+crust|krʌst|n. 地壳；外壳
+crystal|ˈkrɪstl|n. 晶体 adj. 水晶的
+cultivate|ˈkʌltɪveɪt|v. 耕作；培养
+cumulative|ˈkjuːmjələtɪv|adj. 累积的
+debris|ˈdebriː|n. 碎片，残骸
+decompose|ˌdiːkəmˈpəʊz|v. 分解，腐烂
+deduce|dɪˈdjuːs|v. 推断，演绎
+deficient|dɪˈfɪʃnt|adj. 缺乏的，不足的
+deforestation|ˌdiːˌfɒrɪˈsteɪʃn|n. 森林砍伐
+dehydrate|ˌdiːhaɪˈdreɪt|v. 脱水，使干燥
+delta|ˈdeltə|n. 三角洲
+dense|dens|adj. 密集的；浓厚的
+deposit|dɪˈpɒzɪt|n. 沉积物；存款 v. 沉积
+deprive|dɪˈpraɪv|v. 剥夺，使丧失
+derive|dɪˈraɪv|v. 源于；获得
+descendant|dɪˈsendənt|n. 后代，子孙
+detect|dɪˈtekt|v. 察觉，发现
+deteriorate|dɪˈtɪəriəreɪt|v. 恶化，变坏
+devastate|ˈdevəsteɪt|v. 摧毁，破坏
+deviation|ˌdiːviˈeɪʃn|n. 偏差，偏离
+diameter|daɪˈæmɪtə|n. 直径
+dietary|ˈdaɪətəri|adj. 饮食的
+differentiate|ˌdɪfəˈrenʃieɪt|v. 区分；分化
+diffuse|dɪˈfjuːz|v. 扩散 adj. 弥漫的
+dilute|daɪˈluːt|v. 稀释 adj. 稀释的
+dimension|dɪˈmenʃn|n. 维度；尺寸
+disperse|dɪˈspɜːs|v. 分散，散开
+displace|dɪsˈpleɪs|v. 取代；使离开
+dispose|dɪˈspəʊz|v. 处理，处置
+dissolve|dɪˈzɒlv|v. 溶解；解散
+distinct|dɪˈstɪŋkt|adj. 明显的；截然不同的
+distort|dɪˈstɔːt|v. 扭曲；歪曲
+distribute|dɪˈstrɪbjuːt|v. 分配；分布
+diverse|daɪˈvɜːs|adj. 多样的
+dormant|ˈdɔːmənt|adj. 休眠的，蛰伏的
+drainage|ˈdreɪnɪdʒ|n. 排水，排水系统
+drought|draʊt|n. 干旱
+dwell|dwel|v. 居住；细想
+ecology|iˈkɒlədʒi|n. 生态学
+ecosystem|ˈiːkəʊsɪstəm|n. 生态系统
+efficient|ɪˈfɪʃnt|adj. 高效的
+elaborate|ɪˈlæbərət|adj. 精心制作的 v. 详述
+electromagnetic|ɪˌlektrəʊmæɡˈnetɪk|adj. 电磁的
+element|ˈelɪmənt|n. 元素；要素
+elevate|ˈelɪveɪt|v. 提升，举起
+embryo|ˈembriəʊ|n. 胚胎
+emerge|iˈmɜːdʒ|v. 出现，浮现
+emission|iˈmɪʃn|n. 排放；发射
+empirical|ɪmˈpɪrɪkl|adj. 实证的
+endangered|ɪnˈdeɪndʒəd|adj. 濒危的
+endure|ɪnˈdjʊə|v. 忍受；持续
+enhance|ɪnˈhɑːns|v. 提高，增强
+entire|ɪnˈtaɪə|adj. 全部的，整个的
+enzyme|ˈenzaɪm|n. 酶
+episode|ˈepɪsəʊd|n. 事件；一集
+equilibrium|ˌiːkwɪˈlɪbriəm|n. 平衡，均衡
+equivalent|ɪˈkwɪvələnt|adj. 相等的 n. 等价物
+erosion|ɪˈrəʊʒn|n. 侵蚀，腐蚀
+evaporate|ɪˈvæpəreɪt|v. 蒸发；消失
+evolve|iˈvɒlv|v. 演变，进化
+excavate|ˈekskəveɪt|v. 挖掘，开凿
+exert|ɪɡˈzɜːt|v. 施加；尽力
+exhaust|ɪɡˈzɔːst|v. 耗尽 n. 废气
+exhibit|ɪɡˈzɪbɪt|v. 展示 n. 展品
+exotic|ɪɡˈzɒtɪk|adj. 外来的；异国的
+expand|ɪkˈspænd|v. 扩大，扩展
+explicit|ɪkˈsplɪsɪt|adj. 明确的
+extinct|ɪkˈstɪŋkt|adj. 灭绝的；熄灭的
+extract|ɪkˈstrækt|v. 提取 n. 提取物
+fabric|ˈfæbrɪk|n. 织物；结构
+facet|ˈfæsɪt|n. 方面；刻面
+fatigue|fəˈtiːɡ|n. 疲劳，疲乏
+fauna|ˈfɔːnə|n. 动物群
+feasible|ˈfiːzəbl|adj. 可行的
+feedback|ˈfiːdbæk|n. 反馈，回馈
+ferment|fəˈment|v. 发酵 n. 发酵剂
+fertile|ˈfɜːtaɪl|adj. 肥沃的；能生育的
+fiber|ˈfaɪbə|n. 纤维
+finite|ˈfaɪnaɪt|adj. 有限的
+flora|ˈflɔːrə|n. 植物群
+fluctuate|ˈflʌktʃueɪt|v. 波动，起伏
+formation|fɔːˈmeɪʃn|n. 形成；构造
+fossil|ˈfɒsl|n. 化石
+friction|ˈfrɪkʃn|n. 摩擦；摩擦阻力
+fungus|ˈfʌŋɡəs|n. 真菌
+fusion|ˈfjuːʒn|n. 融合；核聚变
+galaxy|ˈɡæləksi|n. 星系
+gene|dʒiːn|n. 基因
+genetic|dʒəˈnetɪk|adj. 遗传的，基因的
+geology|dʒiˈɒlədʒi|n. 地质学
+germinate|ˈdʒɜːmɪneɪt|v. 发芽，萌发
+glacier|ˈɡlæsiə|n. 冰川，冰河
+glucose|ˈɡluːkəʊs|n. 葡萄糖
+gradient|ˈɡreɪdiənt|n. 梯度；坡度
+gradual|ˈɡrædʒuəl|adj. 逐渐的，渐进的
+granite|ˈɡrænɪt|n. 花岗岩
+gravity|ˈɡrævəti|n. 重力，引力；严重性
+groundwater|ˈɡraʊndwɔːtə|n. 地下水
+habitat|ˈhæbɪtæt|n. 栖息地，生境
+hemisphere|ˈhemɪsfɪə|n. 半球
+herbivore|ˈhɜːbɪvɔː|n. 食草动物
+heredity|həˈredəti|n. 遗传，遗传性
+hibernation|ˌhaɪbəˈneɪʃn|n. 冬眠
+hormone|ˈhɔːməʊn|n. 激素，荷尔蒙
+humidity|hjuːˈmɪdəti|n. 湿度，潮湿
+hybrid|ˈhaɪbrɪd|n. 杂交种 adj. 混合的
+hypothesis|haɪˈpɒθəsɪs|n. 假设，假说
+igneous|ˈɪɡniəs|adj. 火成的（岩石）
+illustrate|ˈɪləstreɪt|v. 说明；举例
+immune|ɪˈmjuːn|adj. 免疫的
+impact|ˈɪmpækt|n./v. 影响；冲击
+implication|ˌɪmplɪˈkeɪʃn|n. 含义；影响
+incidence|ˈɪnsɪdəns|n. 发生率
+inertia|ɪˈnɜːʃə|n. 惯性；惰性
+infinite|ˈɪnfɪnət|adj. 无限的，无穷的
+infrared|ˌɪnfrəˈred|adj. 红外线的
+inhabit|ɪnˈhæbɪt|v. 居住于，栖息于
+inherit|ɪnˈherɪt|v. 继承，遗传
+inhibit|ɪnˈhɪbɪt|v. 抑制，阻止
+innovation|ˌɪnəˈveɪʃn|n. 创新，革新
+insect|ˈɪnsekt|n. 昆虫
+insight|ˈɪnsaɪt|n. 洞察力
+insulate|ˈɪnsjuleɪt|v. 绝缘；隔离
+intact|ɪnˈtækt|adj. 完整无损的
+intense|ɪnˈtens|adj. 强烈的；紧张的
+interior|ɪnˈtɪəriə|adj. 内部的 n. 内部
+internal|ɪnˈtɜːnl|adj. 内部的；国内的
+interpret|ɪnˈtɜːprɪt|v. 解释；口译
+intrinsic|ɪnˈtrɪnsɪk|adj. 内在的，固有的
+invertebrate|ɪnˈvɜːtɪbrət|n. 无脊椎动物
+ion|ˈaɪən|n. 离子
+irrigation|ˌɪrɪˈɡeɪʃn|n. 灌溉
+isolate|ˈaɪsəleɪt|v. 隔离，孤立
+kinetic|kɪˈnetɪk|adj. 动力的，运动的
+larva|ˈlɑːvə|n. 幼虫
+latitude|ˈlætɪtjuːd|n. 纬度
+lava|ˈlɑːvə|n. 熔岩
+legend|ˈledʒənd|n. 传说；图例
+lever|ˈliːvə|n. 杠杆 v. 撬动
+lichen|ˈlaɪkən|n. 地衣
+liquid|ˈlɪkwɪd|n. 液体 adj. 液态的
+literacy|ˈlɪtərəsi|n. 读写能力
+lunar|ˈluːnə|adj. 月球的，月亮的
+magnetic|mæɡˈnetɪk|adj. 磁性的；有魅力的
+magnitude|ˈmæɡnɪtjuːd|n. 大小；震级；重要性
+mammal|ˈmæml|n. 哺乳动物
+mantle|ˈmæntl|n. 地幔；斗篷
+marine|məˈriːn|adj. 海洋的 n. 海军陆战队员
+marsh|mɑːʃ|n. 沼泽，湿地
+mass|mæs|n. 质量；大量 adj. 大规模的
+mechanism|ˈmekənɪzəm|n. 机制，机理
+medieval|ˌmediˈiːvl|adj. 中世纪的
+membrane|ˈmembreɪn|n. 膜，薄膜
+metabolism|məˈtæbəlɪzəm|n. 新陈代谢
+meteorite|ˈmiːtiəraɪt|n. 陨石
+microbe|ˈmaɪkrəʊb|n. 微生物
+migrate|maɪˈɡreɪt|v. 迁移，移居
+mineral|ˈmɪnərəl|n. 矿物 adj. 矿物的
+molecule|ˈmɒlɪkjuːl|n. 分子
+momentum|məˈmentəm|n. 动量；势头
+monitor|ˈmɒnɪtə|v. 监控 n. 显示器
+mosaic|məʊˈzeɪɪk|n. 马赛克；镶嵌图案
+mutation|mjuːˈteɪʃn|n. 突变，变异
+native|ˈneɪtɪv|adj. 本土的 n. 本地人
+nectar|ˈnektə|n. 花蜜
+negligible|ˈneɡlɪdʒəbl|adj. 微不足道的
+nerve|nɜːv|n. 神经；勇气
+nutrient|ˈnjuːtriənt|n. 营养物，养分
+observation|ˌɒbzəˈveɪʃn|n. 观察；评论
+offspring|ˈɒfsprɪŋ|n. 后代，幼崽
+orbit|ˈɔːbɪt|n. 轨道 v. 环绕
+organ|ˈɔːɡən|n. 器官；机构
+organic|ɔːˈɡænɪk|adj. 有机的；器官的
+organism|ˈɔːɡənɪzəm|n. 生物体，有机体
+oscillate|ˈɒsɪleɪt|v. 振荡，摆动
+oxidation|ˌɒksɪˈdeɪʃn|n. 氧化作用
+oxygen|ˈɒksɪdʒən|n. 氧，氧气
+ozone|ˈəʊzəʊn|n. 臭氧
+parasite|ˈpærəsaɪt|n. 寄生物，寄生虫
+particle|ˈpɑːtɪkl|n. 微粒，粒子
+perception|pəˈsepʃn|n. 感知，知觉
+peripheral|pəˈrɪfərəl|adj. 外围的，周边的
+permeable|ˈpɜːmiəbl|adj. 可渗透的
+pesticide|ˈpestɪsaɪd|n. 杀虫剂，农药
+phenomenon|fəˈnɒmɪnən|n. 现象
+photosynthesis|ˌfəʊtəʊˈsɪnθəsɪs|n. 光合作用
+physiology|ˌfɪziˈɒlədʒi|n. 生理学
+pigment|ˈpɪɡmənt|n. 色素，颜料
+plankton|ˈplæŋktən|n. 浮游生物
+plateau|ˈplætəʊ|n. 高原；平台期
+pollinate|ˈpɒləneɪt|v. 给…授粉
+polymer|ˈpɒlɪmə|n. 聚合物
+population|ˌpɒpjuˈleɪʃn|n. 人口；种群
+porous|ˈpɔːrəs|adj. 多孔的，能渗透的
+precipitation|prɪˌsɪpɪˈteɪʃn|n. 降水；沉淀
+predator|ˈpredətə|n. 捕食者，掠食动物
+predominant|prɪˈdɒmɪnənt|adj. 主要的，占优势的
+prehistoric|ˌpriːhɪˈstɒrɪk|adj. 史前的
+prey|preɪ|n. 猎物 v. 捕食
+proliferate|prəˈlɪfəreɪt|v. 激增，扩散
+propagate|ˈprɒpəɡeɪt|v. 繁殖；传播
+protein|ˈprəʊtiːn|n. 蛋白质
+prototype|ˈprəʊtətaɪp|n. 原型，样机
+pupa|ˈpjuːpə|n. 蛹
+radiation|ˌreɪdiˈeɪʃn|n. 辐射，放射
+ratio|ˈreɪʃiəʊ|n. 比率，比例
+recede|rɪˈsiːd|v. 后退，消退
+receptor|rɪˈseptə|n. 受体，感受器
+recycle|ˌriːˈsaɪkl|v. 回收利用
+refraction|rɪˈfrækʃn|n. 折射
+regenerate|rɪˈdʒenəreɪt|v. 再生，复兴
+regulate|ˈreɡjuleɪt|v. 管理；调节
+relic|ˈrelɪk|n. 遗迹，遗物
+reproduce|ˌriːprəˈdjuːs|v. 繁殖；复制
+reptile|ˈreptaɪl|n. 爬行动物
+reservoir|ˈrezəvwɑː|n. 水库；储藏
+residue|ˈrezɪdjuː|n. 残余物，残渣
+resilient|rɪˈzɪliənt|adj. 有弹性的；适应力强的
+respiration|ˌrespəˈreɪʃn|n. 呼吸作用
+restore|rɪˈstɔː|v. 恢复；修复
+retain|rɪˈteɪn|v. 保留，保持
+reverse|rɪˈvɜːs|v. 颠倒 adj. 相反的
+rotation|rəʊˈteɪʃn|n. 旋转，自转
+salinity|səˈlɪnəti|n. 盐度，含盐量
+sandstone|ˈsændstəʊn|n. 砂岩
+sap|sæp|n. 树液，汁液
+satellite|ˈsætəlaɪt|n. 卫星；附属机构
+saturate|ˈsætʃəreɪt|v. 使饱和，浸透
+scatter|ˈskætə|v. 散开，撒播
+sediment|ˈsedɪmənt|n. 沉积物，沉淀
+seismic|ˈsaɪzmɪk|adj. 地震的
+sequence|ˈsiːkwəns|n. 顺序，序列
+shelter|ˈʃeltə|n. 庇护所 v. 遮蔽
+shrub|ʃrʌb|n. 灌木
+solar|ˈsəʊlə|adj. 太阳的，太阳能的
+solidify|səˈlɪdɪfaɪ|v. 凝固，固化
+soluble|ˈsɒljəbl|adj. 可溶的
+species|ˈspiːʃiːz|n. 物种
+specimen|ˈspesɪmən|n. 标本，样本
+spectrum|ˈspektrəm|n. 光谱；范围
+spore|spɔː|n. 孢子
+stimulus|ˈstɪmjələs|n. 刺激，刺激物
+submerge|səbˈmɜːdʒ|v. 淹没，浸没
+substance|ˈsʌbstəns|n. 物质；实质
+subtropical|ˌsʌbˈtrɒpɪkl|adj. 亚热带的
+succession|səkˈseʃn|n. 演替；连续
+sustain|səˈsteɪn|v. 维持；支撑
+symbiosis|ˌsɪmbaɪˈəʊsɪs|n. 共生关系
+synthesis|ˈsɪnθəsɪs|n. 合成，综合
+tectonic|tekˈtɒnɪk|adj. 地质构造的，板块的
+temperate|ˈtempərət|adj. 温带的；温和的
+terrestrial|təˈrestriəl|adj. 陆地的；地球的
+thermal|ˈθɜːml|adj. 热的，热量的
+tissue|ˈtɪʃuː|n. 组织；纸巾
+toxic|ˈtɒksɪk|adj. 有毒的
+trajectory|trəˈdʒektəri|n. 轨迹，弹道
+transmit|trænsˈmɪt|v. 传送，传播
+tributary|ˈtrɪbjətri|n. 支流
+tropical|ˈtrɒpɪkl|adj. 热带的
+tundra|ˈtʌndrə|n. 苔原，冻原
+ultraviolet|ˌʌltrəˈvaɪələt|adj. 紫外线的
+underground|ˈʌndəɡraʊnd|adj. 地下的
+uniform|ˈjuːnɪfɔːm|adj. 统一的 n. 制服
+vacuum|ˈvækjuːm|n. 真空
+vapor|ˈveɪpə|n. 蒸汽，水汽
+vegetation|ˌvedʒəˈteɪʃn|n. 植被，植物
+velocity|vəˈlɒsəti|n. 速度，速率
+vertebrate|ˈvɜːtɪbrət|n. 脊椎动物
+vessel|ˈvesl|n. 血管；容器；船
+vibrate|vaɪˈbreɪt|v. 振动，摆动
+virus|ˈvaɪrəs|n. 病毒
+viscosity|vɪˈskɒsəti|n. 黏性，黏度
+volcanic|vɒlˈkænɪk|adj. 火山的
+vulnerable|ˈvʌlnərəbl|adj. 脆弱的，易受伤害的
+watershed|ˈwɔːtəʃed|n. 分水岭，流域
+wavelength|ˈweɪvleŋθ|n. 波长
+weathering|ˈweðərɪŋ|n. 风化作用
+wetland|ˈwetlənd|n. 湿地，沼泽地
+yield|jiːld|v. 产生；屈服 n. 产量
+`;
+
+;
+/* ---- en_ielts.js ---- */
+/* ===== 雅思：阅读 / 听力 / 口语 ===== */
+window.WB_DATA = window.WB_DATA || {};
+
+/* ---------------- 雅思阅读（仿真题，按剑桥雅思题型编写） ---------------- */
+window.WB_DATA.ieltsReadings = [
+  {
+    id: 'IR1',
+    src: '剑桥雅思 16 Test 2 Passage 1 题型',
+    topic: '自然科学 · 昆虫与农业',
+    words: 780,
+    title: 'The Hidden Workforce: Pollinators Under Pressure',
+    titleZh: '隐形劳动力：承压的传粉者',
+    text: `For roughly a third of the world's food crops, reproduction depends on an unpaid labour force that most consumers never notice. Bees, hoverflies, butterflies and beetles move pollen between flowers, and in doing so they set the fruit and seed that eventually appear in supermarkets. Economists have tried to put a number on this service: one widely cited estimate valued insect pollination at close to 200 billion dollars a year globally. That figure is contested, but the direction of the argument is not. Pollination is an agricultural input as real as fertiliser or irrigation, and unlike either of those it is largely supplied free of charge by wild ecosystems.
+
+The trouble is that the suppliers are in decline. Long-term monitoring schemes in Europe and North America have recorded substantial losses in both the abundance and the diversity of wild bees over the past half century. The pattern is not uniform. Some species are expanding their ranges northwards as winters grow milder, while others have vanished from regions where they were once common. What concerns ecologists most is not the disappearance of any single species but the erosion of redundancy: a field visited by twenty pollinator species can absorb the loss of a few, whereas a field visited by two cannot.
+
+Several explanations have been advanced, and they are not mutually exclusive. The first is habitat loss. Intensive agriculture replaces hedgerows, field margins and flower-rich meadows with monocultures, removing both nesting sites and the flowers that sustain pollinators between crop blooms. The second is pesticide exposure. Neonicotinoids, a class of insecticide absorbed by the plant and present in its nectar and pollen, have been shown in laboratory and semi-field studies to impair bees' navigation, foraging efficiency and reproductive success. Regulatory bodies have responded by restricting some uses, though the evidence base remains disputed, partly because field-scale studies are expensive and difficult to control. The third explanation is climate change, which can shift the timing of flowering so that it no longer coincides with the emergence of the insects that pollinate those plants.
+
+A fourth factor is less often discussed but may be equally important: disease. The commercial movement of managed honeybee colonies, and the international trade in bumblebees for greenhouse pollination, have spread pathogens into wild populations that had no prior exposure. A parasite that is merely debilitating in a managed hive can be catastrophic in a small, isolated wild population with no immunity.
+
+Farming's response has been uneven. In parts of Europe, agri-environment schemes pay farmers to sow flower strips along field edges and to delay mowing until after the nesting season. Studies of such strips report increases in pollinator abundance, though evidence that this translates into higher crop yields is thinner. In the United States, where voluntary conservation programmes dominate, uptake has been concentrated on larger farms with the resources to absorb the administrative burden, raising questions about equity. Meanwhile a growing number of growers rent hives, importing managed colonies to guarantee pollination. This can raise yields in the short term, but it does nothing for wild pollinators and may accelerate disease transmission.
+
+Some researchers argue that the framing of the problem has itself been a barrier. Treating pollination as an ecosystem service to be valued in monetary terms has helped win political attention, but it can also encourage a narrow focus on the handful of crops that depend most heavily on insect visitors. The wider ecological functions performed by the same insects — nutrient cycling, pest control, the support of plant communities that stabilise soils — are harder to price and consequently easier to ignore.`,
+    questions: [
+      {
+        q: 'According to the passage, why do ecologists focus on "redundancy" rather than on individual species losses?',
+        o: [
+          'Because individual species losses are impossible to measure accurately.',
+          'Because a community with many pollinator species can tolerate some losses, while a species-poor one cannot.',
+          'Because redundant species are economically worthless.',
+          'Because redundancy is the only factor that regulators consider.'
+        ],
+        a: 1,
+        e: '第二段末句：a field visited by twenty pollinator species can absorb the loss of a few, whereas a field visited by two cannot。生态学家关注的是"冗余度"的削弱，而非单一物种的消失。'
+      },
+      {
+        q: 'The passage states that evidence linking neonicotinoids to harm in real field conditions is:',
+        o: [
+          'conclusive and universally accepted.',
+          'entirely absent.',
+          'disputed, partly because field-scale studies are hard to control.',
+          'based only on commercial honeybee colonies.'
+        ],
+        a: 2,
+        e: '第三段：Regulatory bodies have responded by restricting some uses, though the evidence base remains disputed, partly because field-scale studies are expensive and difficult to control。'
+      },
+      {
+        q: 'Which factor does the passage describe as less often discussed but potentially equally important?',
+        o: ['Habitat loss', 'Pesticide exposure', 'Climate change', 'Disease spread through trade'],
+        a: 3,
+        e: '第四段开头：A fourth factor is less often discussed but may be equally important: disease。'
+      },
+      {
+        q: 'What limitation does the passage identify in agri-environment schemes that sow flower strips?',
+        o: [
+          'They reduce crop yields in the short term.',
+          'Evidence that increased pollinator abundance raises crop yields is weaker.',
+          'Farmers refuse to participate in any country.',
+          'They only work for greenhouse crops.'
+        ],
+        a: 1,
+        e: '第五段：Studies of such strips report increases in pollinator abundance, though evidence that this translates into higher crop yields is thinner。'
+      },
+      {
+        q: 'The final paragraph suggests that valuing pollination in monetary terms:',
+        o: [
+          'has been entirely counterproductive.',
+          'helps attract political attention but may narrow the focus to a few crops.',
+          'is the only way to protect wild insects.',
+          'has been rejected by all researchers.'
+        ],
+        a: 1,
+        e: '末段：has helped win political attention, but it can also encourage a narrow focus on the handful of crops that depend most heavily on insect visitors。'
+      }
+    ]
+  },
+  {
+    id: 'IR2',
+    src: '剑桥雅思 15 Test 4 Passage 2 题型',
+    topic: '社会科学 · 城市规划',
+    words: 760,
+    title: 'Why Some Streets Feel Alive',
+    titleZh: '为什么有些街道让人感到有生气',
+    text: `In the 1960s, the writer and activist Jane Jacobs made an observation that planners have been arguing about ever since. Some streets, she noticed, feel safe and busy at almost any hour, while others, superficially similar in width and traffic, feel deserted and threatening. The difference, she argued, lay not in the buildings but in a dense and subtle social order maintained by the people who use the street.
+
+Jacobs identified what she called "eyes on the street" as the key mechanism. A shopkeeper watching the pavement from behind a counter, residents glancing out of upstairs windows, people waiting at a bus stop — none of them is formally policing anything, yet their combined presence discourages antisocial behaviour. The effect depends on continuity. A single lit window on an otherwise dark block provides little reassurance; a steady flow of people across the day does. This is why Jacobs argued against zoning that separates workplaces from homes, since such separation empties a district for a third of every day and removes exactly the mixture of users on which informal surveillance depends.
+
+Her ideas fell out of favour in the decades that followed, when large-scale redevelopment and the separation of land uses were the dominant planning orthodoxy. They were revived in the 1990s, partly through the work of the architect Jan Gehl, whose studies of public space in Copenhagen tracked how people actually behave rather than how planners assume they behave. Gehl's teams counted pedestrians, timed how long people paused, and mapped where they chose to sit. The results were often surprising. Benches placed along a facade attracted far more users than identical benches placed in the middle of a square, because people prefer to sit with their backs protected. Edges, not centres, are where public life concentrates.
+
+Contemporary research has added a quantitative dimension. Studies using mobile phone location data have confirmed that footfall in a district is strongly predicted by the diversity of ground-floor uses, not by the density of residential units above. A street with a bakery, a hardware shop, a clinic and a bar generates more pedestrian activity across more hours than a street of identical apartments, even at the same overall density. This finding has direct implications for policy: converting ground floors to residential use, often done to increase housing supply, may quietly erode the street life that makes a neighbourhood desirable in the first place.
+
+Not everyone is convinced. Critics point out that "liveliness" is a culturally specific value, and that measuring it risks privileging the preferences of the researchers doing the measuring. A quiet residential street may be exactly what its residents want; labelling it deficient because it lacks cafes is a form of imposed taste. There is also a distributional question. Improvements that raise a district's attractiveness tend to raise its rents, and the people who benefit least from the new amenities are frequently those displaced by them. Jacobs herself, writing in New York, was describing a working-class neighbourhood whose character changed dramatically as it became fashionable.
+
+The most defensible conclusion may be a modest one. The evidence does not support the claim that any single street pattern reliably produces social vitality. It does support a narrower proposition: that a fine-grained mix of uses, maintained over long hours and at a human scale, makes informal social contact more likely, and that planning rules which forbid such mixtures make it harder to achieve.`,
+    questions: [
+      {
+        q: 'According to Jacobs, why does separating workplaces from homes weaken informal surveillance?',
+        o: [
+          'Because office workers are more likely to commit crimes.',
+          'Because it empties the district for part of each day, removing the mix of users.',
+          'Because it makes buildings taller.',
+          'Because it increases traffic speeds.'
+        ],
+        a: 1,
+        e: '第二段末句：such separation empties a district for a third of every day and removes exactly the mixture of users on which informal surveillance depends。'
+      },
+      {
+        q: 'Gehl\'s research found that benches attracted more users when they were:',
+        o: [
+          'in the middle of a square.',
+          'along a facade, where people\'s backs are protected.',
+          'painted in bright colours.',
+          'placed near bus stops.'
+        ],
+        a: 1,
+        e: '第三段：Benches placed along a facade attracted far more users than identical benches placed in the middle of a square, because people prefer to sit with their backs protected。'
+      },
+      {
+        q: 'Mobile phone data studies found that footfall is best predicted by:',
+        o: [
+          'residential density above ground floor.',
+          'the diversity of ground-floor uses.',
+          'the width of the street.',
+          'the number of bus routes.'
+        ],
+        a: 1,
+        e: '第四段：footfall in a district is strongly predicted by the diversity of ground-floor uses, not by the density of residential units above。'
+      },
+      {
+        q: 'What is the critics\' main objection mentioned in the passage?',
+        o: [
+          'The data are fabricated.',
+          '"Liveliness" is culturally specific and measuring it may impose researchers\' tastes.',
+          'Jacobs was not a trained planner.',
+          'Mobile phone data are illegal to use.'
+        ],
+        a: 1,
+        e: '第五段：Critics point out that "liveliness" is a culturally specific value, and that measuring it risks privileging the preferences of the researchers doing the measuring。'
+      },
+      {
+        q: 'The passage\'s final conclusion is best described as:',
+        o: [
+          'a strong claim that one street pattern produces vitality.',
+          'a modest claim that mixed uses at human scale make informal contact more likely.',
+          'a rejection of all quantitative research.',
+          'a proposal to ban ground-floor conversion.'
+        ],
+        a: 1,
+        e: '末段：It does support a narrower proposition: that a fine-grained mix of uses, maintained over long hours and at a human scale, makes informal social contact more likely。'
+      }
+    ]
+  },
+  {
+    id: 'IR3',
+    src: '剑桥雅思 14 Test 1 Passage 3 题型',
+    topic: '科技 · 材料科学',
+    words: 740,
+    title: 'Learning from Spider Silk',
+    titleZh: '向蜘蛛丝学习',
+    text: `Weight for weight, spider silk is tougher than steel and more elastic than rubber. A single strand of the silk used in a web's frame can absorb several times the energy that would break a comparable filament of nylon, and it does so without any of the high-temperature, high-pressure processing that synthetic fibre manufacture requires. Spiders produce it at ambient temperature from a watery protein solution, using nothing more exotic than water as a solvent.
+
+For decades this has made spider silk an attractive target for materials scientists. The obstacle is production. Spiders are territorial and cannibalistic; farming them at the density needed for industrial output is impossible. Their silk glands are also small, yielding only tiny quantities per animal. Early attempts to harvest silk from silkworms instead ran into a different problem: silkworm silk is strong but far less extensible, and its properties cannot simply be tuned to match the spider product.
+
+The breakthrough came from molecular biology rather than from arachnology. Researchers identified the genes encoding the silk proteins, called spidroins, and transferred them into hosts that are easy to grow at scale: bacteria, yeast, and later plants and goats. Each host brings its own difficulties. Bacteria produce protein quickly but often fail to fold it correctly, yielding a material that looks right on paper but performs poorly. Yeast can fold more reliably but produces lower yields. Transgenic goats, engineered to secrete silk protein in their milk, produce material of good quality but raise ethical and regulatory questions that slow commercial development.
+
+Even with pure spidroin in hand, spinning a fibre is not straightforward. A spider does not simply extrude a solid thread; it passes the protein solution through a narrowing duct, simultaneously removing water and lowering the pH, so that the protein molecules align and lock together. Reproducing this precisely in a factory has proved harder than producing the protein itself. Early artificial spinning used harsh solvents that partly degraded the protein; more recent approaches use water-based systems that mimic the spider's own chemistry and have achieved fibres with a useful fraction of natural silk's toughness.
+
+What would such a material be used for? The most frequently cited applications are medical. Silk is biodegradable and provokes little immune response, making it attractive for sutures, for scaffolds on which to grow tissue, and for drug delivery particles. Because the degradation rate can be tuned by altering the protein's structure, a silk-based implant can be designed to dissolve over weeks or over years. Beyond medicine, there is interest in protective clothing, in parachutes, and in lightweight composites for vehicles.
+
+Sceptics make two points. First, the gap between laboratory demonstration and industrial production is wide, and several well-publicised silk ventures have collapsed after failing to close it. Second, the environmental case is less clear-cut than it first appears: fermentation and transgenic animal systems consume energy and land, and the solvents used in some spinning processes are not benign. The honest position is that spider silk is a remarkable material whose promise has been repeatedly overstated, and whose realistic near-term applications are likely to be narrow, high-value and medical rather than the mass-market textiles that early coverage anticipated.`,
+    questions: [
+      {
+        q: 'What makes spider silk attractive to materials scientists, according to the first paragraph?',
+        o: [
+          'It is cheap to produce.',
+          'It combines high toughness and elasticity, and is produced at ambient temperature in water.',
+          'It is easy to farm.',
+          'It is stronger than any synthetic fibre.'
+        ],
+        a: 1,
+        e: '第一段：Weight for weight, spider silk is tougher than steel and more elastic than rubber… Spiders produce it at ambient temperature from a watery protein solution。'
+      },
+      {
+        q: 'Why is farming spiders for industrial output described as impossible?',
+        o: [
+          'Spiders produce no silk in captivity.',
+          'Spiders are territorial and cannibalistic, and their glands yield tiny quantities.',
+          'Spiders require high temperatures.',
+          'Spider silk cannot be harvested.'
+        ],
+        a: 1,
+        e: '第二段：Spiders are territorial and cannibalistic; farming them at the density needed for industrial output is impossible. Their silk glands are also small。'
+      },
+      {
+        q: 'What problem does the passage associate with using bacteria as a host?',
+        o: [
+          'They grow too slowly.',
+          'They often fail to fold the protein correctly, so the material performs poorly.',
+          'They are expensive to maintain.',
+          'They raise ethical objections.'
+        ],
+        a: 1,
+        e: '第三段：Bacteria produce protein quickly but often fail to fold it correctly, yielding a material that looks right on paper but performs poorly。'
+      },
+      {
+        q: 'What does a spider do when spinning silk that is hard to reproduce?',
+        o: [
+          'It heats the protein to boiling point.',
+          'It passes the solution through a narrowing duct while removing water and lowering pH.',
+          'It adds a chemical solvent.',
+          'It weaves the fibre in a vacuum.'
+        ],
+        a: 1,
+        e: '第四段：it passes the protein solution through a narrowing duct, simultaneously removing water and lowering the pH, so that the protein molecules align and lock together。'
+      },
+      {
+        q: 'What is the passage\'s overall assessment of spider silk\'s prospects?',
+        o: [
+          'It will soon replace all synthetic textiles.',
+          'Its promise has been overstated; realistic near-term uses are narrow, high-value and medical.',
+          'It has no commercial future at all.',
+          'It is environmentally harmless in every production route.'
+        ],
+        a: 1,
+        e: '末段：spider silk is a remarkable material whose promise has been repeatedly overstated, and whose realistic near-term applications are likely to be narrow, high-value and medical。'
+      }
+    ]
+  }
+];
+
+/* ---------------- 雅思听力（仿真录音稿，按剑桥雅思 Section 题型编写） ---------------- */
+window.WB_DATA.ieltsListenings = [
+  {
+    id: 'IL1',
+    src: '剑桥雅思 17 Test 1 Section 2 题型',
+    type: '独白 · 社区设施介绍',
+    script: `Good morning, everyone, and welcome to the Riverside Community Centre. My name is Helen Marsh, and I'm the centre's coordinator. I'll be giving you a short introduction to what's available here and how to sign up.
+
+First, the building itself. The centre opened in 2019 and is funded jointly by the city council and a local charitable trust. We're open from seven in the morning until ten at night on weekdays, and from nine to six at weekends. The main entrance on Mill Street is step-free, and there's a ramp at the side entrance for anyone who needs it.
+
+Let me go through the facilities room by room. On the ground floor, immediately to your left as you come in, is the café. It's run by a social enterprise that employs people who've had difficulty finding work, and all the profits go back into training. The café closes at four, half an hour before the rest of the building, so do bear that in mind.
+
+Straight ahead is the main hall. It seats up to two hundred and can be hired for events. The rate for local residents is twenty-two pounds an hour, and for commercial organisations it's thirty-five. We do ask for a deposit of one hundred pounds, refundable if the hall is left clean.
+
+Upstairs you'll find the meeting rooms — there are four of them, named after local rivers: the Thames, the Lea, the Wandle and the Brent. The Thames is the largest and has a projector. The other three are smaller and better suited to groups of six to ten people. Booking is done online; the system opens fourteen days in advance, and we'd ask you to cancel at least forty-eight hours before if you can't make it, so the room can be released.
+
+The sports hall is at the back of the building, behind the café. It's used for badminton, five-a-side football and table tennis. Court hire is twelve pounds an hour, and we provide the equipment. There's a changing room with showers next door.
+
+Now, a couple of things that are new this year. We've just started a weekly repair café on the first Saturday of every month, from ten until one. Volunteers will help you fix small electrical items, bicycles, clothing and furniture — free of charge, though donations are welcome. You just need to bring the item and, if you have it, the spare part.
+
+And finally, the garden project. We have a small plot behind the sports hall that we're turning into a community garden. We're looking for volunteers to help with planting and watering, particularly over the summer. If you're interested, there's a sign-up sheet at reception, or you can email garden at riverside centre dot org dot uk. That's garden, all one word, at riverside centre dot org dot uk.
+
+Are there any questions before we move on to the tour?`,
+    questions: [
+      {
+        q: 'What time does the café close?',
+        o: ['3:30 pm', '4:00 pm', '6:00 pm', '10:00 pm'],
+        a: 1,
+        e: '录音：The café closes at four, half an hour before the rest of the building。注意后半句是干扰信息。'
+      },
+      {
+        q: 'How much is the deposit for hiring the main hall?',
+        o: ['£22', '£35', '£100', '£120'],
+        a: 2,
+        e: '录音：We do ask for a deposit of one hundred pounds, refundable if the hall is left clean。£22 和 £35 是时租价，不是押金。'
+      },
+      {
+        q: 'Which meeting room has a projector?',
+        o: ['The Lea', 'The Wandle', 'The Brent', 'The Thames'],
+        a: 3,
+        e: '录音：The Thames is the largest and has a projector。'
+      },
+      {
+        q: 'How far in advance can rooms be booked online?',
+        o: ['7 days', '10 days', '14 days', '48 hours'],
+        a: 2,
+        e: '录音：the system opens fourteen days in advance。48 小时是取消时限，属于干扰项。'
+      },
+      {
+        q: 'What should people bring to the repair café?',
+        o: [
+          'A registration form',
+          'The item and, if possible, the spare part',
+          'A donation of £10',
+          'Their own tools'
+        ],
+        a: 1,
+        e: '录音：You just need to bring the item and, if you have it, the spare part。服务免费，捐款自愿。'
+      }
+    ]
+  },
+  {
+    id: 'IL2',
+    src: '剑桥雅思 16 Test 3 Section 4 题型',
+    type: '讲座 · 学术独白',
+    script: `In this lecture I want to look at how cities managed their waste in the nineteenth century, and why the solutions they chose still shape what we do today.
+
+Before industrialisation, most waste was organic and most of it was reused. Food scraps went to pigs or to the garden; rags went to papermakers; bones went to glue makers. The volume was small because the population was small and because manufacturing was dispersed. That changed very quickly. Between 1800 and 1900, the population of London grew from about one million to more than six million. Coal replaced wood as the main fuel, and the ash — millions of tons of it — had to go somewhere.
+
+The immediate crisis was not solid waste but sewage. In the 1840s and 1850s, London's drains emptied into the Thames, which was also the source of drinking water for a large part of the city. The result was a series of cholera outbreaks, the worst of which killed more than ten thousand people in 1854. The engineer Joseph Bazalgette proposed a system of intercepting sewers that would carry the waste east of the city and discharge it into the estuary. It was approved in 1858 — the year of what became known as the Great Stink, when the smell of the river became so bad that Parliament considered moving.
+
+Bazalgette's system is often described as a triumph, and in public health terms it was. Cholera disappeared from the city. But it solved one problem by creating another: the sewers discharged raw sewage into the estuary, and by the 1880s the pollution had become a scandal in its own right. The response was to treat the sewage before discharge, and later to apply it to land as fertiliser. Both approaches were expensive, and both were adopted only after sustained public pressure.
+
+Solid waste followed a different path. The dominant technology from the 1870s was the destructor — essentially a large incinerator that burned refuse and used the heat to generate steam, which could drive turbines. By 1900 there were more than two hundred destructors in Britain. They were popular with municipal engineers because they reduced the volume of waste by about ninety per cent and produced something saleable. They were unpopular with residents because of the smoke.
+
+What's striking, looking back, is how similar the debates were to ours. Proponents of incineration argued that it recovered energy and reduced landfill. Opponents argued that it created air pollution and discouraged recycling, and that it locked cities into generating waste in order to feed the plant. Those are precisely the arguments made today about energy-from-waste facilities. The difference is scale, and the fact that we now have the analytical tools to measure the emissions that nineteenth-century engineers could only smell.
+
+I'll finish with a caution. It's tempting to read this history as a story of progress, in which each generation solved the previous generation's problem. In practice each solution displaced the problem — to the river, then to the air, then to the landfill — and the displacement was usually borne by whoever had least political power. That pattern, I'd suggest, is the real lesson, and it hasn't changed.`,
+    questions: [
+      {
+        q: 'Why did waste volumes increase so sharply in the nineteenth century?',
+        o: [
+          'Because recycling was banned.',
+          'Because of rapid population growth and the shift from wood to coal as fuel.',
+          'Because of a change in the weather.',
+          'Because factories were closed.'
+        ],
+        a: 1,
+        e: '录音：Between 1800 and 1900, the population of London grew… Coal replaced wood as the main fuel, and the ash… had to go somewhere。'
+      },
+      {
+        q: 'What was the immediate public health crisis in London in the 1840s and 1850s?',
+        o: [
+          'Air pollution from factories',
+          'Cholera outbreaks caused by sewage contaminating drinking water',
+          'A shortage of drinking water',
+          'Flooding of the sewers'
+        ],
+        a: 1,
+        e: '录音：London\'s drains emptied into the Thames, which was also the source of drinking water… The result was a series of cholera outbreaks。'
+      },
+      {
+        q: 'What problem did Bazalgette\'s sewer system create?',
+        o: [
+          'It was too expensive to build.',
+          'It discharged raw sewage into the estuary, causing pollution.',
+          'It caused the Great Stink.',
+          'It stopped working within a decade.'
+        ],
+        a: 1,
+        e: '录音：But it solved one problem by creating another: the sewers discharged raw sewage into the estuary。'
+      },
+      {
+        q: 'Why were destructors popular with municipal engineers?',
+        o: [
+          'They produced no smoke.',
+          'They reduced waste volume by about ninety per cent and produced something saleable.',
+          'They were cheap to build.',
+          'They created jobs.'
+        ],
+        a: 1,
+        e: '录音：They were popular with municipal engineers because they reduced the volume of waste by about ninety per cent and produced something saleable。'
+      },
+      {
+        q: 'What is the lecturer\'s main concluding point?',
+        o: [
+          'Technology always solves environmental problems.',
+          'Each solution displaced the problem, usually onto those with least political power.',
+          'Nineteenth-century engineers were incompetent.',
+          'Recycling is a modern invention.'
+        ],
+        a: 1,
+        e: '录音末段：each solution displaced the problem… and the displacement was usually borne by whoever had least political power。'
+      }
+    ]
+  },
+  {
+    id: 'IL3',
+    src: '剑桥雅思 15 Test 2 Section 1 题型',
+    type: '对话 · 日常场景',
+    script: `MAN: Hello, is this the Westgate Bike Hire?
+
+WOMAN: Yes, that's right. How can I help?
+
+MAN: I'm visiting for a week and I'd like to hire a bike. Can you tell me about your rates?
+
+WOMAN: Of course. We charge eighteen pounds for a full day, or ninety pounds for the week. If you only need it for a few hours, it's six pounds an hour, with a maximum of eighteen pounds in any one day.
+
+MAN: The weekly rate sounds reasonable. Is that per bike?
+
+WOMAN: Yes, per bike. We do a discount for two or more — fifteen per cent off the weekly rate. And children's bikes are half price.
+
+MAN: I'll just need the one. What do I need to bring?
+
+WOMAN: A photo ID and something with your address on it — a utility bill or a bank statement is fine. We also take a deposit of fifty pounds, which we refund when you return the bike.
+
+MAN: Is a driving licence enough?
+
+WOMAN: A driving licence works for the ID, but we still need proof of address. If you don't have a bill with you, a letter from your hotel will do.
+
+MAN: Right. And what about insurance?
+
+WOMAN: Basic insurance is included — that covers theft and damage up to two hundred pounds. If you want full cover with no excess, it's an extra four pounds a day, or twenty for the week.
+
+MAN: I'll take the full cover for the week. Do the bikes come with a lock and a helmet?
+
+WOMAN: A lock yes, and lights are fitted as standard. Helmets are free to borrow but we do ask for a two-pound deposit, returned when you bring it back. We'd strongly recommend wearing one — the cycle paths here are good but the roads can be busy.
+
+MAN: Understood. One more thing — can I return the bike to a different branch? I'm travelling on to the coast at the end of the week.
+
+WOMAN: You can, but there's a twenty-five pound charge for returning to another branch, and you'd need to tell us forty-eight hours in advance so we can arrange transport.
+
+MAN: That's fine. I'll come in tomorrow morning to collect it.
+
+WOMAN: We open at eight. Could I take a name and number?
+
+MAN: It's Daniel Okonkwo. O-K-O-N-K-W-O.
+
+WOMAN: Thank you. See you tomorrow.`,
+    questions: [
+      {
+        q: 'How much does a weekly hire cost for one bike, before any discount?',
+        o: ['£18', '£50', '£90', '£108'],
+        a: 2,
+        e: '录音：We charge eighteen pounds for a full day, or ninety pounds for the week。£18 是日租价。'
+      },
+      {
+        q: 'What must the customer bring in addition to photo ID?',
+        o: [
+          'A credit card',
+          'Proof of address, such as a utility bill or hotel letter',
+          'A passport photograph',
+          'A booking confirmation'
+        ],
+        a: 1,
+        e: '录音：A driving licence works for the ID, but we still need proof of address… a letter from your hotel will do。'
+      },
+      {
+        q: 'What does the basic insurance cover?',
+        o: [
+          'Everything with no excess',
+          'Theft and damage up to £200',
+          'Only theft',
+          'Nothing — insurance is extra'
+        ],
+        a: 1,
+        e: '录音：Basic insurance is included — that covers theft and damage up to two hundred pounds。'
+      },
+      {
+        q: 'How much is the helmet deposit?',
+        o: ['Free', '£2', '£4', '£20'],
+        a: 1,
+        e: '录音：Helmets are free to borrow but we do ask for a two-pound deposit, returned when you bring it back。'
+      },
+      {
+        q: 'What is required to return the bike to a different branch?',
+        o: [
+          'Nothing extra',
+          'A £25 charge and 48 hours\' notice',
+          'A £50 charge',
+          'Written permission from the hotel'
+        ],
+        a: 1,
+        e: '录音：there\'s a twenty-five pound charge for returning to another branch, and you\'d need to tell us forty-eight hours in advance。'
+      }
+    ]
+  }
+];
+
+/* ---------------- 雅思口语（Part 1/2/3 仿真题 + 高分范例） ---------------- */
+window.WB_DATA.ieltsSpeaking = [
+  {
+    id: 'IS1',
+    part: 'Part 1',
+    topic: 'Work or Study',
+    q: 'Do you work or are you a student?',
+    qZh: '你工作还是学生？',
+    prep: 0,
+    dur: 30,
+    points: [
+      '直接回答，不要绕弯子',
+      '给一个具体细节（专业 / 职位 / 单位）',
+      '可以加一句个人感受'
+    ],
+    sample: `I'm a PhD student at a medical university in China, and my research focuses on wound healing — specifically why diabetic wounds are so slow to close. I spend most of my time in the lab running cell experiments, and I also do a fair amount of reading, because the field moves quite fast. It's demanding, but I find it genuinely interesting, especially the part where a hypothesis you've been chasing for months finally starts to make sense.`,
+    sampleZh: `我是中国一所医科大学的博士生，研究方向是创面愈合——具体来说是糖尿病创面为什么愈合得那么慢。大部分时间我在实验室做细胞实验，也读很多文献，因为这个领域进展很快。很辛苦，但我觉得很有意思，尤其是追了几个月的假设终于开始讲得通的时候。`,
+    tips: [
+      '不要说 "I am a student" 就停住——考官需要听到语言量',
+      '专业词汇用对了是加分项，但不要堆砌',
+      '结尾的个人感受让回答更自然'
+    ]
+  },
+  {
+    id: 'IS2',
+    part: 'Part 2',
+    topic: 'Describe a skill you learned that was difficult',
+    q: 'Describe a skill you found difficult to learn. You should say: what the skill was; when and where you learned it; how you learned it; and explain why you found it difficult.',
+    qZh: '描述一项你觉得很难学的技能。',
+    prep: 60,
+    dur: 120,
+    points: [
+      '1 分钟准备：写 4-6 个关键词，不要写句子',
+      '结构：是什么 → 何时何地 → 怎么学 → 为什么难',
+      '至少给一个具体细节（数字、场景、失败经历）',
+      '最后可以补一句现在的感受或收获'
+    ],
+    sample: `The skill I'd like to talk about is microsurgery — specifically, suturing blood vessels that are less than a millimetre across. I started learning it about two years ago, during the second year of my PhD, in the surgical training centre at our hospital.
+
+The way we learned it was quite structured. We began on silicone tubes, then moved to chicken vessels, and only after several months did we work on live animal models. Each session lasted about three hours and we'd usually do the same stitch pattern over and over. Our supervisor would watch through a microscope and point out exactly where the needle had gone in at the wrong angle.
+
+I found it difficult for two reasons. The first is purely physical: under a microscope, your hands shake in a way you never notice in normal life, and you have to learn to rest your wrists on the table to steady them. The second is psychological — a single misplaced stitch can block the vessel, and you can see it happening in real time through the eyepiece. That pressure is hard to get used to.
+
+What helped most was repetition, honestly. After about a hundred vessels it stopped feeling like a test and started feeling like a routine. I'm still not fast, but I'm consistent now, and that matters more.`,
+    sampleZh: `我想说的是显微外科——具体是把直径不到一毫米的血管缝合起来。大概两年前开始学，博士二年级，在我们医院的外科训练中心。
+
+学习方式挺系统的。先用硅胶管练，然后换成鸡血管，练了好几个月才上活体动物模型。每次课大约三小时，同一个缝合方式反复练。导师会透过显微镜看，指出你进针角度错在哪。
+
+我觉得难有两个原因。第一是纯生理的：在显微镜下，你的手会抖，平时根本注意不到，必须学会把手腕靠在台面上稳住。第二是心理的——一针缝偏就可能堵住血管，而且你透过目镜能实时看到。那种压力很难适应。
+
+说实话，最有用的就是重复。缝到一百根左右，它就不再像考试，而像例行公事。我现在还不快，但稳定了，这更重要。`,
+    tips: [
+      'Part 2 必须说满 1 分 30 秒以上，少于 1 分钟会明显扣分',
+      '四个提示点都要覆盖，顺序可以调整',
+      '"difficult" 要具体化——说清楚难在哪里，而不是反复说 "very hard"'
+    ]
+  },
+  {
+    id: 'IS3',
+    part: 'Part 3',
+    topic: 'Skills and learning',
+    q: 'Do you think practical skills are valued enough in education today?',
+    qZh: '你认为当今教育足够重视实践技能吗？',
+    prep: 0,
+    dur: 60,
+    points: [
+      'Part 3 要给出观点 + 理由 + 例子，比 Part 1 更长更抽象',
+      '可以用 "It depends" 开头，但要落到明确立场',
+      '主动做对比（过去 vs 现在、不同国家）',
+      '结尾可以承认反方合理性，显示思辨'
+    ],
+    sample: `I'd say probably not, at least in the system I grew up in. Chinese education, and I think this is true in a lot of East Asia, is still heavily weighted towards written examinations, and those reward recall and speed more than they reward the ability to actually do something with your hands.
+
+You can see the consequences in vocational training. There's a real shortage of skilled technicians — people who can maintain complex machinery, or do precision welding — and yet vocational schools struggle to attract students, because families see them as a second-best option. Meanwhile universities produce a lot of graduates whose degrees don't map onto any particular job.
+
+That said, I wouldn't want to overstate it. Some professions do have strong practical components — medicine is the obvious one, and in my own training the hands-on part is taken seriously. So the problem isn't that practical skills are ignored everywhere; it's that they're valued inconsistently, and often the status hierarchy runs against them.
+
+If I were designing policy, I'd probably try to raise the standing of vocational qualifications rather than simply adding more practical modules to academic degrees. The bottleneck seems to be prestige, not curriculum.`,
+    sampleZh: `我觉得不够，至少在我成长的教育体系里是这样。中国教育——我想东亚很多地方都这样——仍然严重偏向笔试，而笔试奖励的是记忆和速度，不是动手做事的能力。
+
+后果在职业教育里看得很清楚。熟练技工严重短缺——能维护复杂机械、做精密焊接的人——可职业学校却招不到学生，因为家庭把它看作次优选择。与此同时大学培养出大量毕业生，学位和具体岗位对不上。
+
+不过我不想夸大。有些职业确实有很强的实践成分——医学是明显的例子，在我自己的训练里动手部分是受重视的。所以问题不是实践技能到处被忽视，而是它的受重视程度不一致，而且往往地位排序对它不利。
+
+如果让我设计政策，我大概会想办法提高职业资格的声望，而不是简单地在学术学位里加更多实践课。瓶颈似乎是声望，不是课程。`,
+    tips: [
+      'Part 3 回答控制在 45-60 秒，比 Part 1 长',
+      '一定要有具体例子（职业培训、医学训练）',
+      '承认反方（That said, I wouldn\'t want to overstate it）是高分标志'
+    ]
+  },
+  {
+    id: 'IS4',
+    part: 'Part 1',
+    topic: 'Hometown',
+    q: 'Where is your hometown and what is it like?',
+    qZh: '你的家乡在哪里，是什么样的？',
+    prep: 0,
+    dur: 30,
+    points: [
+      '地点 + 一两个特征 + 你的感受',
+      '避免只列形容词，给一个画面感的细节',
+      '时态：描述现状用一般现在时'
+    ],
+    sample: `My hometown is a medium-sized city in southern China, about an hour by train from Guangzhou. It's known locally for its food, which is honestly the thing I miss most when I'm away — the breakfast culture there is very strong, and people eat out for breakfast almost every day. It's changed a lot in the last ten years; there's a new metro and a lot more high-rise housing, but the old market district is still there, and that's the part that still feels like home to me.`,
+    sampleZh: `我的家乡是中国南方一个中等城市，坐火车到广州大约一小时。本地以吃闻名，说实话那是我离开时最想念的东西——那里的早餐文化很强，几乎每天都有人出去吃早饭。过去十年变化很大，有了新地铁和更多高层住宅，但老城区市场还在，那才是我觉得像家的部分。`,
+    tips: [
+      '"known for its food" + 具体细节（早餐文化）比空泛的 "it\'s a beautiful city" 好得多',
+      '提到变化（has changed a lot）能自然用上现在完成时',
+      '结尾回到个人感受，收得住'
+    ]
+  },
+  {
+    id: 'IS5',
+    part: 'Part 2',
+    topic: 'Describe a person who influenced you',
+    q: 'Describe a person who has influenced you. You should say: who this person is; how you know them; what they are like; and explain how they have influenced you.',
+    qZh: '描述一个影响过你的人。',
+    prep: 60,
+    dur: 120,
+    points: [
+      '不要选太泛的对象（"my mother" 容易落入俗套），找一个具体的职业人物更好写',
+      '影响要具体：改变了你的什么做法或看法',
+      '用一件小事说明性格，比一堆形容词有效'
+    ],
+    sample: `The person I'd like to describe is my first research supervisor, Professor Chen. I met her when I joined her lab as a master's student, about five years ago, and she's still the person I go to when I'm stuck.
+
+She's in her late fifties now, and she has a reputation in our field for being extremely rigorous. The first thing she ever said to me, on my first day, was: "Show me your lab notebook." I hadn't brought one. She didn't get angry — she just said that a result you can't reproduce isn't a result, and sent me to buy a notebook.
+
+That sounds trivial, but it changed how I work. Before that I treated experiments as something you did and then wrote up afterwards, from memory. Now I write everything down as it happens, including the failures, and honestly the failures have turned out to be more useful than the successes.
+
+The other thing she taught me, mostly by example, is how to be wrong gracefully. She'll say in a group meeting, "I was wrong about that," quite openly, and then explain what changed her mind. In a field where people protect their reputations quite fiercely, that's unusual, and it made it much easier for the rest of us to admit when our own ideas didn't work.
+
+So I'd say her influence has been less about any specific technique and more about a standard of honesty — with your data, and with yourself.`,
+    sampleZh: `我想说的是我第一位科研导师，陈教授。五年前我作为硕士生加入她的实验室时认识她，到现在遇到卡壳我还是会去找她。
+
+她快六十了，在我们领域以极其严谨出名。她对我说的第一句话，是我第一天到实验室时："把你的实验记录本给我看。"我没带。她没生气，只说了一句：无法重复的结果不算结果，然后让我去买本子。
+
+听起来是小事，但它改变了我的工作方式。在那之前，我把实验当成"先做完，之后再凭记忆写"。现在我边做边记，包括失败的，而且说实话失败比成功更有用。
+
+她教我的另一件事，主要是以身作则，是如何体面地承认自己错了。她会在组会上很坦然地说"那个我判断错了"，然后解释是什么让她改变看法。在一个大家都很护着自己声誉的领域，这很少见，也让我们其他人更容易承认自己的想法行不通。
+
+所以她的影响与其说在具体技术上，不如说是一种诚实的标准——对数据，也对自己。`,
+    tips: [
+      '选一个有职业辨识度的人物，比泛泛的家人更容易写具体',
+      '用一个小故事（要记录本）说明性格，比形容词有效',
+      '结尾提炼出"影响的本质"，是 Part 2 高分的收尾方式'
+    ]
+  }
+];
+
+;
+/* ---- en_toefl.js ---- */
+/* ===== 托福：阅读 / 听力 / 口语 ===== */
+window.WB_DATA = window.WB_DATA || {};
+
+/* ---------------- 托福阅读（仿真题，按 TPO 题型编写） ---------------- */
+window.WB_DATA.toeflReadings = [
+  {
+    id: 'TR1',
+    src: 'TPO 54 Passage 1 题型',
+    topic: '自然科学 · 生物学',
+    words: 720,
+    title: 'The Economics of Cooperative Breeding',
+    titleZh: '合作繁殖的进化经济学',
+    text: `Most birds that raise young do so in pairs. A male and a female build a nest, incubate the eggs and feed the chicks together, and once the young fledge the pair may separate or may remain together for another season. This arrangement is simple and, in most environments, adequate. But in a small number of species — perhaps eight or nine per cent of birds worldwide — breeding pairs are assisted by additional adults that help to feed and defend the offspring without producing any of their own.
+
+Such behaviour presented early evolutionary theorists with an obvious puzzle. Natural selection is expected to favour individuals that maximise their own reproductive output; an adult that spends a season feeding another bird's chicks is, on the face of it, wasting its reproductive effort. The standard solution invokes kin selection. If helpers are close relatives of the chicks they assist — usually older siblings — then the genes they help to propagate are partly their own. A helper that raises two full siblings gains, in genetic terms, exactly what it would have gained by raising one of its own offspring.
+
+Kin selection explains why helpers are willing, but not why they delay breeding at all. The answer usually lies in ecological constraints. In many cooperative breeders, suitable territories are saturated: all the good nesting sites are occupied by established pairs, and a young bird attempting to breed on its own faces a high probability of failure. Remaining on the parental territory and helping is then the better of two poor options. This is why cooperative breeding is concentrated in certain habitats — particularly in Australia and southern Africa, where long-lived, sedentary species occupy stable territories that rarely become vacant.
+
+The system is not static. Helpers typically inherit the territory when the breeding pair dies, so helping can be understood as queuing. The length of the queue matters: in species where territories turn over quickly, young birds leave and attempt to breed independently; where turnover is slow, they stay and help for several seasons. Some species have evolved a further refinement in which helpers of one sex disperse while the other remains, producing the strongly female-biased or male-biased dispersal patterns that field biologists have documented in a number of Australian species.
+
+The benefits to the breeding pair are measurable. Studies of superb fairy-wrens in Australia, one of the most intensively studied cooperative breeders, have shown that pairs with helpers fledge significantly more young than pairs without, and that the effect is largest when food is scarce. Helpers also reduce the workload of the breeding female, which may allow her to begin a second clutch sooner. In some species the breeding female lays a second clutch while helpers are still feeding the first, a feat that would be impossible without assistance.
+
+There is a cost, however, and it is not always obvious. Helpers increase the number of birds at the nest, which may attract predators. They may also compete with the breeding female for food, and in a few species helpers have been observed destroying eggs — usually those of a female to whom they are not related. Whether helping is genuinely altruistic therefore depends on the details of relatedness in each population, which is why the cooperative breeding literature has become so closely tied to long-term studies in which individual birds are marked and followed for their entire lives.`,
+    questions: [
+      {
+        q: 'Why does the passage describe cooperative breeding as a puzzle for evolutionary theory?',
+        o: [
+          'Because it is very rare among birds.',
+          'Because helpers appear to waste reproductive effort by raising others\' chicks.',
+          'Because it only occurs in Australia.',
+          'Because helpers produce more offspring than breeders.'
+        ],
+        a: 1,
+        e: '第二段：an adult that spends a season feeding another bird\'s chicks is, on the face of it, wasting its reproductive effort。'
+      },
+      {
+        q: 'According to the passage, kin selection explains:',
+        o: [
+          'why helpers delay breeding.',
+          'why helpers are willing to help, but not why they delay breeding.',
+          'how territories are inherited.',
+          'why some species are female-biased in dispersal.'
+        ],
+        a: 1,
+        e: '第三段首句：Kin selection explains why helpers are willing, but not why they delay breeding at all。'
+      },
+      {
+        q: 'The word "saturated" in paragraph 3 is closest in meaning to:',
+        o: ['empty', 'fully occupied', 'unstable', 'expanding'],
+        a: 1,
+        e: '词汇题。saturated 在此指"全部被占据"，后文 all the good nesting sites are occupied by established pairs 即为解释。'
+      },
+      {
+        q: 'What determines how long young birds remain as helpers?',
+        o: [
+          'The size of the territory.',
+          'The rate at which territories become available.',
+          'The number of predators.',
+          'The sex of the helper.'
+        ],
+        a: 1,
+        e: '第四段：in species where territories turn over quickly, young birds leave…; where turnover is slow, they stay and help for several seasons。'
+      },
+      {
+        q: 'What does the passage identify as a cost of having helpers?',
+        o: [
+          'Helpers eat all the food.',
+          'More birds at the nest may attract predators, and helpers may compete for food.',
+          'Helpers always destroy eggs.',
+          'Helpers prevent the female from laying a second clutch.'
+        ],
+        a: 1,
+        e: '末段：Helpers increase the number of birds at the nest, which may attract predators. They may also compete with the breeding female for food。注意原文只说 a few species 有毁蛋行为。'
+      }
+    ]
+  },
+  {
+    id: 'TR2',
+    src: 'TPO 45 Passage 2 题型',
+    topic: '社会科学 · 历史',
+    words: 700,
+    title: 'Windmills and the Dutch Landscape',
+    titleZh: '风车与荷兰景观',
+    text: `The windmill is often treated as a symbol of the Netherlands, but its historical importance there was less symbolic than hydraulic. Much of the western Netherlands lies below sea level, and from the medieval period onwards the inhabitants had to remove water continuously in order to keep the land dry enough to farm. The earliest technology for this was the water wheel, driven by a stream, but streams are scarce in a landscape that is almost entirely flat. Wind was the obvious alternative.
+
+The post mill, introduced in the Low Countries around the end of the twelfth century, was the first design to exploit it effectively. The whole body of the mill, including the sails, could be rotated about a central post so that the sails faced the wind. This was workable but limited: the mill had to be turned by hand or by horse, and the structure could not be made very large because the post had to bear its full weight.
+
+The invention that changed matters was the hollow post mill and, later, the tower mill, in which only the cap rotated rather than the entire body. This allowed much larger structures to be built, and it made wind power practical for a task that required continuous operation. By the sixteenth century, windmills were being used not only to grind grain but to pump water, saw timber, press oil and make paper.
+
+The critical development was the application of windmills to drainage. In the early seventeenth century, a series of large lakes in the western provinces were drained using rows of windmills, each lifting water a short distance and passing it to the next, so that water could be raised from a low polder and discharged into a river or canal several metres above it. This cascade arrangement was inefficient — each mill lost energy — but it was cheap to build and could be extended incrementally as funds allowed. Whole regions were brought into agricultural production this way.
+
+The consequences went beyond agriculture. Land reclamation created a class of investors who held title to the new polders, and it created a labour market for the mill operators, who were skilled and relatively well paid. It also created a maintenance burden: windmills require constant attention, their sails need to be kept in repair, and the drainage system fails if even one mill in a cascade stops. Dutch water boards, the organisations responsible for maintaining these systems, became among the oldest continuously functioning democratic institutions in Europe, and their records provide an unusually detailed picture of rural life.
+
+Windmills declined in the nineteenth century for reasons that had little to do with wind. Steam engines could be sited anywhere and ran regardless of weather, and they were increasingly cheap to fuel once coal could be transported by canal and rail. The last working drainage windmills in the Netherlands were replaced in the twentieth century by electric pumps. What survived was the landscape — the polders, the ditches, the dykes — and, of course, the image.`,
+    questions: [
+      {
+        q: 'Why was wind power adopted in the Netherlands rather than water wheels?',
+        o: [
+          'Windmills were cheaper to build.',
+          'Streams are scarce in an almost entirely flat landscape.',
+          'Water wheels were invented later.',
+          'Windmills could grind grain better.'
+        ],
+        a: 1,
+        e: '第一段末：streams are scarce in a landscape that is almost entirely flat. Wind was the obvious alternative。'
+      },
+      {
+        q: 'What was the main limitation of the post mill?',
+        o: [
+          'It could not face the wind.',
+          'It had to be turned by hand or horse and could not be built very large.',
+          'It could only grind grain.',
+          'It required coal.'
+        ],
+        a: 1,
+        e: '第二段：the mill had to be turned by hand or by horse, and the structure could not be made very large because the post had to bear its full weight。'
+      },
+      {
+        q: 'The tower mill represented an advance because:',
+        o: [
+          'it was made of stone.',
+          'only the cap rotated, allowing much larger structures.',
+          'it did not need sails.',
+          'it used steam as a backup.'
+        ],
+        a: 1,
+        e: '第三段：the tower mill, in which only the cap rotated rather than the entire body. This allowed much larger structures to be built。'
+      },
+      {
+        q: 'Why were rows of windmills used in drainage?',
+        o: [
+          'Because one mill could not lift water high enough, so water was passed from mill to mill.',
+          'Because they were cheaper than a single large mill.',
+          'Because the wind direction changed frequently.',
+          'Because each mill served a different farm.'
+        ],
+        a: 0,
+        e: '第四段：each lifting water a short distance and passing it to the next, so that water could be raised from a low polder and discharged into a river or canal several metres above it。'
+      },
+      {
+        q: 'According to the passage, what happened to Dutch water boards?',
+        o: [
+          'They were abolished in the nineteenth century.',
+          'They became among the oldest continuously functioning democratic institutions in Europe.',
+          'They were controlled by the monarchy.',
+          'They only managed windmills, not dykes.'
+        ],
+        a: 1,
+        e: '第五段：Dutch water boards… became among the oldest continuously functioning democratic institutions in Europe。'
+      }
+    ]
+  },
+  {
+    id: 'TR3',
+    src: 'TPO 50 Passage 3 题型',
+    topic: '自然科学 · 地球科学',
+    words: 710,
+    title: 'Reading the Ice',
+    titleZh: '解读冰层',
+    text: `An ice sheet is not a static mass. Snow falls on its surface, is buried by subsequent snowfall, and is compressed until the air between the grains is expelled and the snow becomes ice. Each year's layer is slightly different from the last, and the differences are preserved. A vertical core drilled through an ice sheet therefore contains a layered record extending back, in the case of the Antarctic, more than eight hundred thousand years.
+
+The most widely used signal in ice cores is the ratio of two oxygen isotopes, oxygen-16 and oxygen-18. Water molecules containing the heavier isotope evaporate less readily and condense more readily, so the ratio in snowfall depends on the temperature at which the water vapour condensed. Colder conditions produce snow depleted in oxygen-18. By measuring the ratio along a core and calibrating against known temperature relationships, researchers can reconstruct a continuous temperature record.
+
+The record has been enormously influential. It shows that the climate of the past million years has oscillated between glacial and interglacial states on a cycle of roughly one hundred thousand years, with shorter cycles superimposed. It shows that the transitions into and out of glacial periods were sometimes extremely rapid — several degrees of warming within a few decades in some cases — which was unexpected when the first cores were analysed. And it shows that the current interglacial is unusually stable.
+
+Ice cores also trap air. As snow compacts, bubbles of atmosphere are sealed off, providing direct samples of the ancient atmosphere rather than proxies for it. These bubbles have established that atmospheric carbon dioxide concentrations varied between about 180 parts per million during glacial periods and 280 parts per million during interglacials, over the same hundred-thousand-year cycle. The correlation with temperature is close, and the causal direction — whether carbon dioxide drives temperature or follows it — was the subject of a long and sometimes heated debate. The current consensus is that carbon dioxide acts as an amplifier: orbital changes initiate the cycle, and the resulting changes in ocean circulation and biological productivity release carbon dioxide, which then amplifies the warming.
+
+There are complications. Ice flows, and deep layers are thinned and folded by the pressure above them, so the oldest ice is compressed into a few metres and the annual layers are no longer distinguishable. Dating the deepest parts of a core depends on models of ice flow rather than on counting layers, and those models carry uncertainty. There is also the problem of continuity: at some sites the deepest ice is missing altogether, melted away from below by geothermal heat, so the record has gaps.
+
+Nevertheless, the ice core record has a quality that other palaeoclimate archives lack. Tree rings give excellent annual resolution but only a few thousand years. Ocean sediments extend much further back but are blurred by the slow mixing of sediment by organisms. Ice cores combine a long span with a resolution fine enough to see individual years in the upper layers, and, uniquely, they preserve the atmosphere itself.`,
+    questions: [
+      {
+        q: 'Why does the ratio of oxygen isotopes in snowfall depend on temperature?',
+        o: [
+          'Because heavier isotopes evaporate less readily and condense more readily.',
+          'Because oxygen is produced by plants.',
+          'Because temperature affects the ratio of nitrogen to oxygen.',
+          'Because colder snow contains more air.'
+        ],
+        a: 0,
+        e: '第二段：Water molecules containing the heavier isotope evaporate less readily and condense more readily, so the ratio in snowfall depends on the temperature。'
+      },
+      {
+        q: 'What did ice cores reveal that was unexpected when first analysed?',
+        o: [
+          'That glacial cycles last one hundred thousand years.',
+          'That transitions into and out of glacial periods could be extremely rapid.',
+          'That the current interglacial is unusually stable.',
+          'That carbon dioxide was present in the atmosphere.'
+        ],
+        a: 1,
+        e: '第三段：It shows that the transitions into and out of glacial periods were sometimes extremely rapid… which was unexpected when the first cores were analysed。'
+      },
+      {
+        q: 'What is the current consensus on the relationship between carbon dioxide and temperature?',
+        o: [
+          'Carbon dioxide has no effect on temperature.',
+          'Carbon dioxide drives the orbital cycle.',
+          'Carbon dioxide acts as an amplifier of changes initiated by orbital cycles.',
+          'Temperature has no effect on carbon dioxide.'
+        ],
+        a: 2,
+        e: '第四段末：carbon dioxide acts as an amplifier: orbital changes initiate the cycle, and the resulting changes… release carbon dioxide, which then amplifies the warming。'
+      },
+      {
+        q: 'Why is dating the deepest parts of an ice core difficult?',
+        o: [
+          'Because the ice is too cold to sample.',
+          'Because ice flow thins and folds deep layers, so annual layers are no longer distinguishable.',
+          'Because the deepest ice contains no air bubbles.',
+          'Because the deepest ice is too young.'
+        ],
+        a: 1,
+        e: '第五段：deep layers are thinned and folded by the pressure above them… the annual layers are no longer distinguishable. Dating… depends on models of ice flow。'
+      },
+      {
+        q: 'What advantage of ice cores does the final paragraph emphasise?',
+        o: [
+          'They are cheaper to obtain than tree rings.',
+          'They combine a long time span with fine resolution and preserve the atmosphere itself.',
+          'They extend further back than ocean sediments.',
+          'They require no calibration.'
+        ],
+        a: 1,
+        e: '末段：Ice cores combine a long span with a resolution fine enough to see individual years… and, uniquely, they preserve the atmosphere itself。'
+      }
+    ]
+  }
+];
+
+/* ---------------- 托福听力（仿真录音稿，按 TPO 题型编写） ---------------- */
+window.WB_DATA.toeflListenings = [
+  {
+    id: 'TL1',
+    src: 'TPO 62 Conversation 题型',
+    type: '对话 · 学生与教务',
+    script: `STUDENT: Hi, Professor Alvarez. Do you have a minute?
+
+PROFESSOR: Of course, come in. Is this about the seminar paper?
+
+STUDENT: Sort of. I wanted to talk to you about the research design before I go any further, because I think I may have made a mistake at the very beginning.
+
+PROFESSOR: All right, tell me.
+
+STUDENT: Well, my original plan was to survey about two hundred students about their sleep habits and then correlate that with their grades. I got IRB approval, I sent out the questionnaire, and I've got about a hundred and forty responses back. But looking at them, I'm worried the sample is skewed. Most of the people who responded are from my own department, and they're mostly the ones who are already interested in the topic.
+
+PROFESSOR: That's a real problem, and it's good that you caught it now rather than in the write-up. Self-selection bias. What are your options?
+
+STUDENT: I could try to recruit from other departments to balance it out. But the semester's half over and I don't think I'd get many responses before the deadline.
+
+PROFESSOR: Probably not. What else?
+
+STUDENT: I could reframe the paper. Instead of claiming to describe students in general, I could present it as a pilot study, and be explicit about the limitation. That seems more honest, but I'm worried it'll look thin.
+
+PROFESSOR: Hmm. Actually, a well-argued pilot study is a perfectly respectable piece of work, and being explicit about the limits of your data is a strength, not a weakness. The people who get into trouble are the ones who over-claim. But I want to push you a bit further. Is there anything in the data you already have that's interesting on its own terms?
+
+STUDENT: Well — actually, yes. I did include a question about whether students work part-time, and there's a pretty clear split. The students who work more than fifteen hours a week report much shorter sleep, but their grades aren't much lower. That surprised me.
+
+PROFESSOR: That's interesting. That's a finding, not a failure. You could build the paper around that — the relationship between work hours, sleep and academic performance — and use the rest of the data as context.
+
+STUDENT: So I'd shift the research question rather than the data?
+
+PROFESSOR: Exactly. And I'd suggest you say something in the methods section about how the question emerged from the data, rather than pretending you designed it that way from the start. That's normal practice in exploratory work.
+
+STUDENT: That makes me feel a lot better. Should I send you a revised outline?
+
+PROFESSOR: Yes, by Friday if you can. And one more thing — go back to the IRB. If you're changing the research question, even slightly, they need to know.
+
+STUDENT: Right. I hadn't thought of that. Thanks, Professor.`,
+    questions: [
+      {
+        q: 'Why does the student want to speak with the professor?',
+        o: [
+          'To ask for an extension on the deadline.',
+          'To discuss a problem with the research design of the seminar paper.',
+          'To request a letter of recommendation.',
+          'To complain about the IRB process.'
+        ],
+        a: 1,
+        e: '开头：I wanted to talk to you about the research design before I go any further, because I think I may have made a mistake at the very beginning。'
+      },
+      {
+        q: 'What problem does the student identify with the data?',
+        o: [
+          'Too few responses were received.',
+          'The sample is skewed by self-selection bias.',
+          'The questionnaire was too long.',
+          'The grades data are missing.'
+        ],
+        a: 1,
+        e: 'Most of the people who responded are from my own department… 教授确认：Self-selection bias。'
+      },
+      {
+        q: 'What does the professor say about presenting the work as a pilot study?',
+        o: [
+          'It would be unacceptable for a seminar paper.',
+          'It is respectable if the limitations are stated explicitly.',
+          'It would require collecting new data.',
+          'It is what all students should do.'
+        ],
+        a: 1,
+        e: 'a well-argued pilot study is a perfectly respectable piece of work, and being explicit about the limits of your data is a strength, not a weakness。'
+      },
+      {
+        q: 'What unexpected pattern does the student mention?',
+        o: [
+          'Students who work more sleep less but do not have much lower grades.',
+          'Students in other departments sleep more.',
+          'Grades are unrelated to sleep.',
+          'Part-time work improves grades.'
+        ],
+        a: 0,
+        e: 'The students who work more than fifteen hours a week report much shorter sleep, but their grades aren\'t much lower。'
+      },
+      {
+        q: 'What does the professor advise the student to do at the end?',
+        o: [
+          'Abandon the paper.',
+          'Collect two hundred more responses.',
+          'Return to the IRB because the research question is changing.',
+          'Publish the results immediately.'
+        ],
+        a: 2,
+        e: 'go back to the IRB. If you\'re changing the research question, even slightly, they need to know。'
+      }
+    ]
+  },
+  {
+    id: 'TL2',
+    src: 'TPO 58 Lecture 题型',
+    type: '讲座 · 生物学',
+    script: `Today I want to talk about a group of animals that most people find unpleasant, and that ecologists find fascinating: vultures. And specifically, I want to use them to make a point about how ecosystems can be disrupted by the loss of a single functional group.
+
+There are two main groups of vultures, and they're not closely related — this is a case of convergent evolution. The New World vultures, in the Americas, and the Old World vultures, in Africa, Asia and Europe, arrived at similar body plans and similar behaviours independently. Both have broad wings suited to soaring, both have keen eyesight, and both have relatively weak beaks and talons compared with eagles, because they don't kill their food.
+
+Their ecological role is what's called a specialised scavenger. Now, scavenging sounds simple, but it's actually a demanding niche. A vulture has to find a carcass before it decomposes, which means covering enormous distances. A griffon vulture can stay aloft for six or seven hours a day and routinely travels a hundred and fifty kilometres. It also has to survive the toxins in rotting meat, and vultures have exceptionally acidic stomachs — a pH of about one — which neutralises most pathogens.
+
+Here's where it gets interesting. Because vultures remove carcasses so efficiently, they suppress the transmission of disease. Studies in India estimated that vultures were removing tens of millions of animal carcasses a year. When vulture populations crashed in the 1990s — and we'll come to why — the carcasses stayed in the landscape, and they were consumed instead by feral dogs and rats. Dog populations expanded, and rabies cases in humans increased. So the loss of a scavenger became a public health problem.
+
+What caused the crash? It wasn't hunting or habitat loss, at least not primarily. It was a veterinary drug called diclofenac, an anti-inflammatory widely used in cattle. Vultures that fed on the carcasses of treated cattle died of kidney failure. The drug was identified in 2003, and it was banned for veterinary use in India, Pakistan and Nepal in 2006. But the populations have been very slow to recover, because vultures are long-lived and breed slowly — a pair may raise a single chick every year or two. Some species lost more than ninety-nine per cent of their numbers, and recovery is measured in decades.
+
+There's a broader lesson here, and it's the one I want you to take away. Conservation tends to focus on species that are conspicuous, or charismatic, or economically valuable. Vultures are none of those, at least to most people. But the function they perform — the removal of dead biomass — is not optional in a landscape with dense livestock and human populations. Removing it doesn't just remove a bird; it reallocates that function to other species, with consequences that are hard to predict and expensive to manage.`,
+    questions: [
+      {
+        q: 'What does the professor say about the relationship between New and Old World vultures?',
+        o: [
+          'They are closely related.',
+          'They evolved similar traits independently through convergent evolution.',
+          'Old World vultures evolved from New World vultures.',
+          'They are the same species in different regions.'
+        ],
+        a: 1,
+        e: 'There are two main groups of vultures, and they\'re not closely related — this is a case of convergent evolution。'
+      },
+      {
+        q: 'Why do vultures have exceptionally acidic stomachs?',
+        o: [
+          'To digest bones more quickly.',
+          'To neutralise pathogens in rotting meat.',
+          'To store water.',
+          'To regulate body temperature.'
+        ],
+        a: 1,
+        e: 'vultures have exceptionally acidic stomachs — a pH of about one — which neutralises most pathogens。'
+      },
+      {
+        q: 'What happened in India when vulture populations crashed?',
+        o: [
+          'Cattle populations declined.',
+          'Feral dogs and rats increased, and rabies cases in humans rose.',
+          'The government banned cattle farming.',
+          'Other scavengers disappeared too.'
+        ],
+        a: 1,
+        e: 'they were consumed instead by feral dogs and rats. Dog populations expanded, and rabies cases in humans increased。'
+      },
+      {
+        q: 'What caused the vulture population crash?',
+        o: [
+          'Hunting',
+          'Habitat loss',
+          'A veterinary drug, diclofenac, used in cattle',
+          'Climate change'
+        ],
+        a: 2,
+        e: 'It was a veterinary drug called diclofenac… Vultures that fed on the carcasses of treated cattle died of kidney failure。'
+      },
+      {
+        q: 'Why has recovery been slow even after the drug was banned?',
+        o: [
+          'The ban was not enforced.',
+          'Vultures are long-lived and breed slowly.',
+          'The drug is still used illegally everywhere.',
+          'There is no suitable habitat left.'
+        ],
+        a: 1,
+        e: 'the populations have been very slow to recover, because vultures are long-lived and breed slowly — a pair may raise a single chick every year or two。'
+      }
+    ]
+  },
+  {
+    id: 'TL3',
+    src: 'TPO 49 Lecture 题型',
+    type: '讲座 · 艺术史',
+    script: `We've been talking about the Renaissance, and I want to spend today on a question that seems simple but isn't: why did perspective — linear perspective, the mathematical kind — get invented in Florence in the early fifteenth century, and not somewhere else, or some other time?
+
+The technique itself is not complicated once you have the idea. You establish a vanishing point on the picture plane, and all lines receding into depth converge on it. Objects shrink in proportion to their distance. That's it. The geometry had been available for centuries — the Greeks had Euclid, and Islamic scholars in the medieval period had worked out the optics in considerable detail. So the mathematics was not the bottleneck.
+
+What was new, I'd argue, was a particular way of looking at the world. Linear perspective is not just a drawing technique; it's a claim. It claims that the space you see is a uniform, measurable grid, and that a painting is a window onto that grid. That's a philosophical position as much as an artistic one, and it fits very comfortably with the broader intellectual climate of fifteenth-century Florence, where measurement, proportion and the surveying of land were becoming culturally central.
+
+There's a practical dimension too. Brunelleschi, who is usually credited with the first demonstrations, was an architect and engineer before he was anything else. He had spent years surveying buildings and working out how to build a dome without wooden centring. Perspective was, for him, a tool with obvious applications — you could use it to draw a building before you built it, and to check whether the design would work. So the invention came out of a practical problem, not out of pure aesthetics.
+
+Now, one caution. The story that perspective was "discovered" in 1420 and then spread inexorably is too neat. We know that painters used approximate perspective before Brunelleschi's demonstration, and we know that some painters in the sixteenth century ignored it deliberately. El Greco, for instance, painted with multiple viewpoints, and his patrons did not consider this a mistake. Perspective was one option among several, and it became dominant for reasons that were as much institutional as mathematical — the academies taught it, so it became the standard against which other approaches were measured.
+
+And a second caution, which is more interesting. When we look at a Renaissance painting today, we see it as a picture. But many of these works were made for specific architectural settings — a chapel, a refectory, a wall — and the perspective was calculated for a viewer standing in a particular place. If you move, the illusion weakens. So the painting wasn't really a window onto a world; it was a stage set for a specific audience in a specific room. That's a very different thing, and it's easy to forget when we see these works in a museum.`,
+    questions: [
+      {
+        q: 'What is the professor\'s main question in the lecture?',
+        o: [
+          'How linear perspective is drawn mathematically.',
+          'Why linear perspective was invented in Florence in the early fifteenth century.',
+          'Who painted the first perspective picture.',
+          'Why Renaissance art is valuable today.'
+        ],
+        a: 1,
+        e: 'why did perspective… get invented in Florence in the early fifteenth century, and not somewhere else, or some other time。'
+      },
+      {
+        q: 'Why does the professor say mathematics was not the bottleneck?',
+        o: [
+          'Because the geometry had been available for centuries.',
+          'Because painters did not use mathematics.',
+          'Because Euclid was Italian.',
+          'Because perspective requires no mathematics.'
+        ],
+        a: 0,
+        e: 'The geometry had been available for centuries — the Greeks had Euclid, and Islamic scholars… had worked out the optics。'
+      },
+      {
+        q: 'What does the professor claim linear perspective actually is?',
+        o: [
+          'Only a drawing technique.',
+          'A philosophical claim about space as a uniform, measurable grid.',
+          'A religious doctrine.',
+          'An engineering error.'
+        ],
+        a: 1,
+        e: 'Linear perspective is not just a drawing technique; it\'s a claim. It claims that the space you see is a uniform, measurable grid。'
+      },
+      {
+        q: 'Why was Brunelleschi well placed to develop perspective?',
+        o: [
+          'He was a painter trained in Florence.',
+          'He was an architect and engineer with practical surveying experience.',
+          'He had studied in Greece.',
+          'He was a patron of the arts.'
+        ],
+        a: 1,
+        e: 'Brunelleschi… was an architect and engineer before he was anything else. He had spent years surveying buildings。'
+      },
+      {
+        q: 'What point does the professor make about Renaissance paintings in their original settings?',
+        o: [
+          'They were designed as portable objects.',
+          'Their perspective was calculated for a viewer in a particular place, like a stage set.',
+          'They were not intended to be seen by anyone.',
+          'They used no perspective at all.'
+        ],
+        a: 1,
+        e: 'the perspective was calculated for a viewer standing in a particular place… it was a stage set for a specific audience in a specific room。'
+      }
+    ]
+  }
+];
+
+/* ---------------- 托福口语（Task 1-4 仿真题 + 高分范例） ---------------- */
+window.WB_DATA.toeflSpeaking = [
+  {
+    id: 'TS1',
+    part: 'Task 1',
+    topic: 'Independent Speaking',
+    q: 'Some students prefer to study in a group; others prefer to study alone. Which do you prefer and why?',
+    qZh: '有些学生喜欢小组学习，有些喜欢独自学习。你更喜欢哪种，为什么？',
+    prep: 15,
+    dur: 45,
+    points: [
+      '15 秒准备，45 秒作答',
+      '结构：明确立场（1 句）→ 理由 1 + 细节（15 秒）→ 理由 2 + 细节（15 秒）',
+      '一定要给具体细节（科目、经历、数字），不要空谈',
+      '宁可少说一个理由，也不要超时被打断'
+    ],
+    sample: `I definitely prefer studying alone, for two reasons.
+
+First, I can control the pace. When I'm working through a statistics textbook, some sections I get immediately and others I need to read three times. In a group, I'd either be holding people back or rushing past something I hadn't understood. Alone, I can spend forty minutes on one page if I need to.
+
+Second, and this is maybe more important for me, studying alone forces me to actually understand the material rather than just recognising it. In a group discussion it's very easy to nod along and feel like you know something, and then discover in the exam that you can't reproduce the argument. When I'm alone, there's nobody to fill in the gaps for me.
+
+So — alone, mainly because of pace and because it makes me honest about what I actually know.`,
+    sampleZh: `我肯定更喜欢独自学习，两个原因。
+
+第一，我能控制节奏。读统计教材时，有些章节我一读就懂，有些要读三遍。在小组里，我要么拖慢别人，要么匆匆掠过自己没懂的地方。独自学，需要的话我可以一页花四十分钟。
+
+第二，这点对我可能更重要：独自学习逼我真正理解材料，而不只是"看着眼熟"。小组讨论时很容易点头附和，觉得自己懂了，考试时才发现讲不出论证。独自学时，没人替我填补空白。
+
+所以——独自，主要因为节奏，也因为它让我对自己到底掌握了什么保持诚实。`,
+    tips: [
+      '开头第一句必须给立场，不要绕',
+      '两个理由各配一个具体场景（统计教材、考试）',
+      '结尾用一句话复述立场，让回答有闭合感'
+    ]
+  },
+  {
+    id: 'TS2',
+    part: 'Task 2',
+    topic: 'Campus Situation',
+    q: 'Read a campus notice, then listen to a student\'s opinion, then summarise the student\'s opinion and the reasons given.',
+    qZh: '阅读校园通知，听学生观点，然后概括该学生的观点及理由。',
+    prep: 30,
+    dur: 60,
+    points: [
+      '结构固定：先概括阅读（10-15 秒）→ 再转述听力观点 + 两个理由（40 秒）',
+      '阅读部分只要一句话，不要复述细节',
+      '听力部分是得分重点，两个理由都要说全',
+      '用 The man disagrees… First… Second… 这样的连接词'
+    ],
+    reading: `The university library has announced that, starting next semester, the third floor will be converted from open study space into a silent reading room with assigned seating. Students will need to reserve a seat online up to 48 hours in advance. The library says the change is intended to reduce noise complaints and to make better use of space that is currently underused in the mornings.`,
+    readingZh: `大学图书馆宣布，下学期起三楼将由开放自习区改为带固定座位的静音阅览室。学生需提前最多 48 小时在线预约座位。图书馆称此举旨在减少噪音投诉，并更好地利用上午使用率不高的空间。`,
+    script: `The man disagrees with the plan.
+
+First, he points out that the third floor is the only place in the library with large tables where groups can spread out their materials. He says that he and his lab partners meet there every week to work through problem sets together, and that if it becomes a silent room with assigned seats, they'll have nowhere to go. The group study rooms on the second floor, he says, are always booked and only hold four people.
+
+Second, he thinks the reservation system will create more problems than it solves. He says students don't know two days in advance exactly when they'll need to study — their schedules change, experiments run late — and if they reserve a seat and then can't use it, they'll be penalised, or worse, they'll just not bother and study in their dorm rooms instead. He thinks the noise complaints come from a small number of people and could be handled by posting a monitor on the floor rather than redesigning the whole space.`,
+    scriptZh: `该男生反对这个计划。
+
+第一，他指出三楼是图书馆唯一有大桌子、能让小组摊开材料的地方。他说他和实验室伙伴每周在那里一起做习题，如果变成带固定座位的静音室，他们就没地方去了。他说二楼的小组讨论室总是订满，而且只能坐四个人。
+
+第二，他认为预约系统带来的问题比解决的还多。他说学生没法提前两天知道确切什么时候需要学习——课表会变，实验会拖——如果预约了却用不了，要么被处罚，要么干脆不去图书馆，改在宿舍学。他认为噪音投诉来自少数人，派个管理员巡场就能解决，不需要重新设计整个空间。`,
+    sample: `The university plans to convert the library's third floor into a silent reading room with seats that students must reserve online up to forty-eight hours ahead.
+
+The man disagrees for two reasons.
+
+First, he says the third floor is the only place in the library with large tables where groups can spread out their materials. He and his lab partners meet there every week to work through problem sets, and the group study rooms on the second floor are always booked and only hold four people.
+
+Second, he thinks the reservation system will cause more problems than it solves. Students don't know two days in advance when they'll need to study, because schedules change and experiments run late. If they reserve a seat and can't use it they'll be penalised, or they'll simply stop coming to the library. He suggests the noise complaints come from a small number of people and could be handled by posting a monitor on the floor instead.`,
+    sampleZh: `学校计划把图书馆三楼改成静音阅览室，学生需提前最多 48 小时在线预约座位。
+
+该男生反对，有两个理由。
+
+第一，他说三楼是图书馆唯一有大桌子、能让小组摊开材料的地方。他和实验室伙伴每周在那里做习题，而二楼的小组讨论室总是订满，且只能坐四个人。
+
+第二，他认为预约系统带来的问题比解决的还多。学生没法提前两天知道什么时候需要学习，因为课表会变、实验会拖。如果预约了却用不了，要么被处罚，要么干脆不来图书馆了。他建议噪音投诉来自少数人，派个管理员巡场就能解决。`,
+    tips: [
+      '阅读部分一句话概括即可：The library plans to turn the third floor into a silent room with assigned seats.',
+      '听力两个理由必须都说：①三楼是唯一能小组摊开材料的地方 ②预约系统不实用',
+      '结尾可以补一句学生的替代建议（派管理员巡场），显示听得完整'
+    ]
+  },
+  {
+    id: 'TS3',
+    part: 'Task 3',
+    topic: 'Academic Concept',
+    q: 'Read a definition of an academic concept, then listen to a lecture example, then explain the concept using the example.',
+    qZh: '阅读学术概念定义，听讲座例子，然后用该例子解释这个概念。',
+    prep: 30,
+    dur: 60,
+    points: [
+      '结构：先用一句话给出概念定义（来自阅读）→ 再用听力例子说明（40 秒）',
+      '不要复述阅读的全部内容，只取定义核心',
+      '例子里的具体细节（物种、数字、结果）是得分点',
+      '最后一句可以点明"例子如何体现概念"'
+    ],
+    reading: `Facultative symbiosis is a relationship in which two species live closely together and both benefit, but in which neither is obligate — that is, either partner can survive and reproduce without the other if conditions require it. This distinguishes facultative symbiosis from obligate mutualism, where the partners cannot live independently.`,
+    readingZh: `兼性共生是指两个物种密切生活且双方获益，但任何一方都不是专性依赖——即在条件需要时，任一方都能脱离对方存活并繁殖。这使兼性共生区别于专性互利共生（后者双方无法独立生存）。`,
+    script: `OK, so facultative symbiosis. Let me give you an example that's been studied quite a lot — ants and aphids.
+
+Aphids are small insects that feed on plant sap. They excrete a sugary substance called honeydew, and ants will collect it. In return, the ants protect the aphids from predators like ladybirds, and they'll sometimes carry the aphids to better feeding sites. So both benefit — that's mutualism.
+
+But here's the key point. It's facultative, not obligate. If you remove the ants from a colony of aphids, the aphids survive perfectly well. They may be eaten at a higher rate, but the population persists. And if you remove the aphids, the ants simply switch to another food source — they're generalist foragers, they'll take nectar or other insects. Neither species is dependent on the other for survival.
+
+Now, compare that with, say, the relationship between leafcutter ants and the fungus they cultivate. Those ants cannot survive without the fungus — it's their only food — and the fungus has been domesticated to the point where it can't survive outside the nest. That's obligate. So the ant-aphid case is a good illustration of the difference: the benefits are real, but they're optional.`,
+    scriptZh: `好，兼性共生。我举一个研究得比较多的例子——蚂蚁和蚜虫。
+
+蚜虫是吸食植物汁液的小昆虫，会分泌一种叫蜜露的含糖物质，蚂蚁会收集它。作为回报，蚂蚁保护蚜虫免受瓢虫等捕食者侵害，有时还会把蚜虫搬到更好的取食点。所以双方都获益——这是互利共生。
+
+但关键在于：它是兼性的，不是专性的。如果把蚂蚁从蚜虫群落中移除，蚜虫照样活得很好，被捕食率可能更高，但种群会延续。如果移除蚜虫，蚂蚁就换一种食物——它们是泛食者，会取食花蜜或其他昆虫。两个物种都不依赖对方生存。
+
+现在对比一下切叶蚁和它们培养的真菌。那些蚂蚁离开真菌就活不了——那是它们唯一的食物——而真菌已被驯化到无法在巢外存活。那是专性的。所以蚂蚁-蚜虫这个案例很好地说明了区别：收益是真实的，但它们是可选的。`,
+    sample: `The concept is facultative symbiosis: a mutually beneficial relationship in which neither partner is obligated to the other — either can survive alone.
+
+The professor illustrates it with ants and aphids. Aphids feed on plant sap and excrete honeydew, which ants collect. In return, ants protect the aphids from predators such as ladybirds and sometimes carry them to better feeding sites. Both partners benefit, so it is mutualism.
+
+The key point is that the relationship is optional. If the ants are removed, the aphids survive — they may be eaten more often, but the population persists. If the aphids are removed, the ants simply switch to nectar or other insects, because they are generalist foragers. Neither species depends on the other.
+
+The professor contrasts this with leafcutter ants and the fungus they farm: those ants cannot live without the fungus, and the fungus cannot survive outside the nest. That relationship is obligate, whereas the ant-aphid one is facultative.`,
+    sampleZh: `这个概念是兼性共生：一种互利关系，其中任何一方都不依赖另一方——任一方都能独立存活。
+
+教授用蚂蚁和蚜虫举例。蚜虫吸食植物汁液并分泌蜜露，蚂蚁收集蜜露；作为回报，蚂蚁保护蚜虫免受瓢虫等捕食者侵害，有时还把蚜虫搬到更好的取食点。双方都获益，所以是互利共生。
+
+关键在于这种关系是可选的。移除蚂蚁，蚜虫照样存活——被捕食率可能更高，但种群延续。移除蚜虫，蚂蚁就改吃花蜜或其他昆虫，因为它们是泛食者。两个物种都不依赖对方。
+
+教授把它与切叶蚁和它们种植的真菌作对比：那些蚂蚁离开真菌无法生存，真菌也无法在巢外存活。那种关系是专性的，而蚂蚁-蚜虫是兼性的。`,
+    tips: [
+      '定义只用一句话：Facultative symbiosis is a mutually beneficial relationship in which neither partner depends on the other for survival.',
+      '例子要具体：蚜虫分泌蜜露、蚂蚁提供保护、移除任一方都能存活',
+      '最好再补一句对比（切叶蚁与真菌是专性），体现听力的完整结构'
+    ]
+  },
+  {
+    id: 'TS4',
+    part: 'Task 4',
+    topic: 'Lecture Summary',
+    q: 'Listen to part of a lecture and summarise the two ways the professor describes for how organisms cope with a particular challenge.',
+    qZh: '听一段讲座，概括教授所说的生物应对某种挑战的两种方式。',
+    prep: 20,
+    dur: 60,
+    points: [
+      'Task 4 只有听力，没有阅读',
+      '结构：先用一句话点明主题 → 方式一 + 例子 → 方式二 + 例子',
+      '两个方式必须都说，各配一个具体例子',
+      '用 The professor discusses two strategies… The first… The second… 这样的框架'
+    ],
+    script: `Today I want to look at how desert plants deal with the same basic problem — they need water, and there isn't much of it — and they've come up with two quite different strategies.
+
+The first strategy is to avoid the problem entirely by storing water when it's available. Cacti are the classic example. Their leaves have been reduced to spines, which reduces water loss, and the stem has become thick and fleshy, with a large volume of water-storing tissue inside. A saguaro cactus can hold hundreds of litres after a rainstorm and then survive for months on that reserve. The key point is that during the dry period, the plant isn't really doing anything clever — it's just spending down a bank account it filled earlier.
+
+The second strategy is the opposite. Instead of storing, these plants essentially shut down. They're called drought-deciduous, and the classic example is the ocotillo, which grows in the same deserts. When it rains, the ocotillo produces leaves very quickly — within days — and flowers. When the soil dries out, it drops every leaf and becomes essentially a bundle of bare stems. It's not dead; it's dormant. Its metabolism drops to almost nothing, and it can stay like that for months, then leaf out again after the next rain.
+
+So the contrast is interesting. The cactus invests in a large storage structure and keeps operating, slowly, all year. The ocotillo invests in nothing permanent — it just abandons its expensive parts and waits. Both work in the same habitat, which tells you there isn't a single optimal solution to the water problem.`,
+    questions: [],
+    sample: `The professor discusses two strategies that desert plants use to cope with a lack of water.
+
+The first is water storage. Cacti are the example. Their leaves are reduced to spines to limit water loss, and their thick stems store large amounts of water — a saguaro can hold hundreds of litres after rain and live on that reserve for months. The plant keeps functioning slowly throughout the dry period.
+
+The second strategy is the opposite: drought deciduousness. The ocotillo, which lives in the same desert, produces leaves within days of rain, then drops all of them when the soil dries and becomes dormant, with metabolism almost at zero. It stays bare for months and leafs out again after the next rain.
+
+The professor points out that both strategies work in the same habitat, which suggests there is no single optimal solution.`,
+    sampleZh: `教授讲了沙漠植物应对缺水的两种策略。
+
+第一是储水。仙人掌是例子：叶子退化成刺以减少失水，粗壮的茎储存大量水分——一棵巨柱仙人掌雨后能储几百升，靠这些储备活好几个月，整个旱季缓慢维持运转。
+
+第二是相反的策略：旱季落叶。刺木生长在同一片沙漠，下雨后几天内就长叶，土壤一干就全部落叶进入休眠，代谢几乎归零，光秃秃地待几个月，下次降雨再发叶。
+
+教授指出两种策略在同一生境中都有效，说明这个问题没有唯一最优解。`,
+    tips: [
+      '开头一句话点明主题，不要描述讲座背景',
+      '两个策略各配一个植物名（saguaro / ocotillo），专有名词是得分点',
+      '结尾补上教授的评价（no single optimal solution）能显示听懂了结论'
+    ]
+  },
+  {
+    id: 'TS5',
+    part: 'Task 1',
+    topic: 'Independent Speaking',
+    q: 'Do you agree or disagree with the following statement? It is better to complete a task and then review it than to check your work as you go.',
+    qZh: '你是否同意：先完成任务再检查，比边做边检查更好？',
+    prep: 15,
+    dur: 45,
+    points: [
+      '同意或不同意都可以，关键是理由充分',
+      '避免绝对化（"always"），可以说"it depends, but generally…"',
+      '用自己领域的真实例子最有说服力'
+    ],
+    sample: `I'd disagree, at least for the kind of work I do.
+
+When I'm writing a paper or analysing data, checking as I go saves me from a specific kind of disaster: building an argument on top of a mistake. If I get a calculation wrong in the first step and only review at the end, everything downstream is compromised, and I have to throw away hours of work. Checking incrementally means I catch it while the cost is still low.
+
+That said, I don't think continuous checking is always right either. For creative work — drafting, brainstorming — interrupting yourself every few minutes breaks the flow, and it's better to get the whole thing down and then edit. So I'd say the answer depends on whether the task is cumulative or generative. For cumulative work, check as you go; for generative work, finish first, then review.`,
+    sampleZh: `我不同意，至少对我这类工作来说。
+
+写论文或分析数据时，边做边检查能让我避免一种特定的灾难：在错误之上构建论证。如果第一步算错、只在最后检查，下游全部作废，几小时的工作要扔掉。增量检查意味着在代价还小的时候发现问题。
+
+不过我也不认为持续检查总是对的。创作类工作——起草、头脑风暴——每几分钟打断自己会破坏心流，最好是先写完再改。所以我认为答案取决于任务是累积型还是生成型：累积型边做边查，生成型先完成再回顾。`,
+    tips: [
+      '用 "I\'d disagree" 而不是 "I disagree" 更自然',
+      '举例要具体到自己的工作（写论文、分析数据）',
+      '主动补充条件（That said…）显示思辨深度，是高分特征'
+    ]
+  }
+];
 
 ;
 /* ---- med_vocab.js ---- */
@@ -3594,49 +5587,82 @@ window.WB_DATA.quizExtra = {
   var PHRASES = D.phrases || [];
   var READINGS = D.readings || [];
   var LISTENINGS = D.listenings || [];
-  var IELTS = D.ielts || {};
-  var TOEFL = D.toefl || {};
   var PCATS = D.phraseCats || [];
+
+  /* 雅思 / 托福 数据 */
+  function parseWords(raw) {
+    return String(raw || '').trim().split('\n').filter(function (l) { return l.trim(); }).map(function (l) {
+      var p = l.split('|');
+      return { w: p[0], ph: p[1] || '', m: p[2] || '' };
+    });
+  }
+  var EXAMS = {
+    ielts: {
+      key: 'ielts', label: '雅思', en: 'IELTS', icon: '🎯',
+      words: parseWords(D.ieltsWordsRaw),
+      readings: D.ieltsReadings || [],
+      listenings: D.ieltsListenings || [],
+      speaking: D.ieltsSpeaking || [],
+      perDay: 30
+    },
+    toefl: {
+      key: 'toefl', label: '托福', en: 'TOEFL', icon: '🎓',
+      words: parseWords(D.toeflWordsRaw),
+      readings: D.toeflReadings || [],
+      listenings: D.toeflListenings || [],
+      speaking: D.toeflSpeaking || [],
+      perDay: 30
+    }
+  };
 
   var K_VOCAB = 'en_vocab_hist', K_READ = 'en_read_hist', K_LIS = 'en_listen_hist';
   var K_LEARNED = 'en_vocab_learned';
 
+  var activeTimers = [];
+  function clearTimers() {
+    activeTimers.forEach(function (t) { clearInterval(t); });
+    activeTimers = [];
+  }
+
   function mod(n, m) { return ((n % m) + m) % m; }
 
-  /* 已学单词集合（持久化） */
-  function learnedSet() {
-    var a = U.storeGet(K_LEARNED, []);
+  /* 已学单词集合（持久化，按考试分前缀） */
+  function learnedSet(prefix) {
+    var a = U.storeGet(K_LEARNED + '_' + (prefix || 'cet'), []);
     return Array.isArray(a) ? a : [];
   }
-  function isLearned(w) { return learnedSet().indexOf(w) >= 0; }
-  function setLearned(w, on) {
-    var a = learnedSet(), i = a.indexOf(w);
+  function isLearned(w, prefix) { return learnedSet(prefix).indexOf(w) >= 0; }
+  function setLearned(w, on, prefix) {
+    var k = K_LEARNED + '_' + (prefix || 'cet');
+    var a = learnedSet(prefix), i = a.indexOf(w);
     if (on && i < 0) a.push(w);
     else if (!on && i >= 0) a.splice(i, 1);
-    if (a.length > 2000) a = a.slice(-2000);
-    U.storeSet(K_LEARNED, a);
+    if (a.length > 3000) a = a.slice(-3000);
+    U.storeSet(k, a);
   }
 
   /* ---------------- 词汇 ---------------- */
-  function vocabBatch(dayOffset) {
+  function vocabBatch(list, per, dayOffset) {
     var idx = WB.dayIdx(0) + (dayOffset || 0);
-    var per = 50, n = WORDS.length;
+    var n = list.length;
     if (!n) return [];
     var start = mod(idx * per, n), out = [];
-    for (var i = 0; i < Math.min(per, n); i++) out.push(WORDS[(start + i) % n]);
+    for (var i = 0; i < Math.min(per, n); i++) out.push(list[(start + i) % n]);
     return out;
   }
-  function saveVocabToday(list) {
-    var h = U.storeGet(K_VOCAB, []);
+  function saveVocabToday(list, prefix) {
+    var k = 'en_vocab_hist_' + (prefix || 'cet');
+    var h = U.storeGet(k, []);
     var t = U.todayStr();
     var i = h.findIndex(function (x) { return x.d === t; });
     var rec = { d: t, n: list.length, w: list.map(function (x) { return { w: x.w, ph: x.ph, m: x.m }; }) };
     if (i >= 0) h[i] = rec; else h.push(rec);
     if (h.length > 90) h = h.slice(-90);
-    U.storeSet(K_VOCAB, h);
+    U.storeSet(k, h);
   }
-  function reviewList() {
-    var h = U.storeGet(K_VOCAB, []), t = U.todayStr();
+  function reviewList(prefix) {
+    var k = 'en_vocab_hist_' + (prefix || 'cet');
+    var h = U.storeGet(k, []), t = U.todayStr();
     var prev = null;
     for (var i = h.length - 1; i >= 0; i--) { if (h[i].d < t) { prev = h[i]; break; } }
     if (!prev) return { list: [], from: '' };
@@ -3644,8 +5670,8 @@ window.WB_DATA.quizExtra = {
     return { list: U.pickN(prev.w, Math.min(20, prev.w.length), rnd), from: prev.d };
   }
 
-  function vocabCard(w, i) {
-    var done = isLearned(w.w);
+  function vocabCard(w, prefix) {
+    var done = isLearned(w.w, prefix);
     return '<div class="wcard' + (done ? ' learned' : '') + '" data-w="' + U.esc(w.w) + '">' +
       '<div class="w"><b>' + U.esc(w.w) + '</b><span class="sp"></span>' +
       '<button type="button" class="btn xs"' + U.spkAttr(w.w, 'en-US', { rate: 0.9 }) + '>🔊</button></div>' +
@@ -3657,24 +5683,99 @@ window.WB_DATA.quizExtra = {
   }
 
   /* ---------------- 阅读 / 听力 ---------------- */
-  function pickReading(off) {
-    if (!READINGS.length) return null;
-    return READINGS[mod(WB.dayIdx(0) + (off || 0), READINGS.length)];
-  }
-  function pickListening(off) {
-    if (!LISTENINGS.length) return null;
-    return LISTENINGS[mod(WB.dayIdx(0) + (off || 0), LISTENINGS.length)];
+  function pickByDay(arr, off) {
+    if (!arr || !arr.length) return null;
+    return arr[mod(WB.dayIdx(0) + (off || 0), arr.length)];
   }
 
-  /* ---------------- 雅思 / 托福 ---------------- */
-  function bandPool(bank, band) {
-    var arr = bank[band] || [];
-    return arr.map(function (c) {
-      return { q: '【' + c.t + '】' + c.q.q, o: c.q.o, a: c.q.a, e: c.d + ' ' + c.q.e };
-    });
+  /* 通用：渲染阅读区（六级 / 雅思 / 托福共用） */
+  function renderReadingBox(cb, r, opt) {
+    opt = opt || {};
+    var qs = r.questions || [];
+    var node = document.createElement('div');
+    node.innerHTML =
+      '<div class="row mb8"><span class="tag dark">' + U.esc(r.src) + '</span>' +
+      '<span class="tag n">' + U.esc(r.topic) + '</span><span class="tag n">约 ' + r.words + ' 词</span>' +
+      '<span class="sp"></span>' +
+      '<button type="button" class="btn sm"' + U.spkAttr(r.text, 'en-US', { rate: 0.92 }) + '>🔊 朗读全文</button>' +
+      '<button type="button" class="btn sm" data-act="rhist" data-histkey="' + U.esc(opt.histKey || K_READ) + '">📜 历史阅读</button></div>' +
+      '<h4 style="margin:2px 0 3px;font-size:14px">' + U.esc(r.title) + '</h4>' +
+      (r.titleZh ? '<div class="small" style="color:var(--brand-2);margin-bottom:6px">🇨🇳 ' + U.esc(r.titleZh) + '</div>' : '') +
+      '<div class="small" style="line-height:1.85;color:var(--ink-2);max-height:340px;overflow:auto;padding-right:6px;white-space:pre-wrap">' + U.esc(r.text) + '</div>' +
+      '<div class="hr"></div>';
+    cb.innerHTML = '';
+    cb.appendChild(node);
+    cb.appendChild(WB.quiz(qs, {
+      onDone: function (score, right, total, picked) {
+        var k = opt.histKey || K_READ;
+        var h = U.storeGet(k, []);
+        h.push({
+          d: U.todayStr(), ts: Date.now(), score: score, right: right, total: total,
+          src: r.src, title: r.title, tag: opt.tag || '',
+          items: qs.map(function (q, i) { return { q: q.q, o: q.o, a: q.a, e: q.e, p: picked[i] }; })
+        });
+        if (h.length > 60) h = h.slice(-60);
+        U.storeSet(k, h);
+        U.toast('阅读成绩已记录');
+      }
+    }));
   }
 
-  /* ---------------- 综合测验池 ---------------- */
+  /* 通用：渲染听力区 */
+  function renderListeningBox(cb, l, opt) {
+    opt = opt || {};
+    var node = document.createElement('div');
+    node.innerHTML =
+      '<div class="row mb8"><span class="tag dark">' + U.esc(l.src) + '</span>' +
+      '<span class="tag n">' + U.esc(l.type) + '</span>' +
+      '<span class="sp"></span>' +
+      '<button type="button" class="btn pri sm"' + U.spkAttr(l.script, 'en-US', { rate: 0.9 }) + '>▶ 播放录音</button>' +
+      '<button type="button" class="btn sm" data-act="lshow">📄 显示原文</button>' +
+      '<button type="button" class="btn sm" data-act="lhist" data-histkey="' + U.esc(opt.histKey || K_LIS) + '">📜 历史听力</button></div>' +
+      '<div class="hint b mb8">录音由浏览器语音合成朗读（模拟录音，离线可用）；建议先盲听一遍，再看原文核对。</div>' +
+      '<div class="small" data-lscript style="display:none;white-space:pre-wrap;line-height:1.8;color:var(--ink-2);background:#F7FAFE;border-left:3px solid var(--brand-3);border-radius:0 8px 8px 0;padding:8px 10px;margin-bottom:8px">' + U.esc(l.script) + '</div>';
+    cb.innerHTML = '';
+    cb.appendChild(node);
+    cb.appendChild(WB.quiz(l.questions, {
+      onDone: function (score, right, total, picked) {
+        var k = opt.histKey || K_LIS;
+        var h = U.storeGet(k, []);
+        h.push({
+          d: U.todayStr(), ts: Date.now(), score: score, right: right, total: total, src: l.src, tag: opt.tag || '',
+          items: l.questions.map(function (q, i) { return { q: q.q, o: q.o, a: q.a, e: q.e, p: picked[i] }; })
+        });
+        if (h.length > 60) h = h.slice(-60);
+        U.storeSet(k, h);
+        U.toast('听力成绩已记录');
+      }
+    }));
+  }
+
+  /* 通用：历史记录面板 */
+  function renderHist(body, key, title, renderFn) {
+    var h = U.storeGet(key, []);
+    body.innerHTML = '<div class="row mb8"><button type="button" class="btn sm" data-act="back">← 返回</button>' +
+      '<b>' + U.esc(title) + '</b><span class="sp"></span><span class="muted small">共 ' + h.length + ' 次</span></div>' +
+      '<div class="list" data-hlist></div>';
+    var box = body.querySelector('[data-hlist]');
+    if (!h.length) { box.innerHTML = U.emptyBox('📭', '还没有历史记录'); return; }
+    box.innerHTML = h.slice().reverse().map(renderFn).join('');
+  }
+
+  function histItemScore(r) {
+    return '<div class="meta"><span class="tag ' + (r.score >= 80 ? 'g' : r.score >= 60 ? 'o' : 'r') + '">' + r.score + ' 分</span>' +
+      '<span>答对 ' + r.right + '/' + r.total + '</span>' + (r.tag ? '<span class="tag n">' + U.esc(r.tag) + '</span>' : '') + '</div>';
+  }
+  function histItemDetail(r) {
+    return '<div class="small" data-detail style="display:none;margin-top:8px">' + r.items.map(function (q, i) {
+      return '<div style="margin-bottom:6px"><b>' + (i + 1) + '. ' + U.esc(q.q) + '</b><br>' +
+        '<span class="muted">你选：</span>' + (q.p >= 0 ? String.fromCharCode(65 + q.p) + '．' + U.esc(q.o[q.p]) : '未作答') + '<br>' +
+        '<span style="color:var(--ok)">正确：' + String.fromCharCode(65 + q.a) + '．' + U.esc(q.o[q.a]) + '</span><br>' +
+        '<span class="muted">' + U.esc(q.e) + '</span></div>';
+    }).join('') + '</div>';
+  }
+
+  /* ---------------- 综合测验池（六级） ---------------- */
   var mixedCache = null;
   function mixedPool() {
     if (mixedCache) return mixedCache;
@@ -3690,11 +5791,17 @@ window.WB_DATA.quizExtra = {
       var o = U.shuffle([p.zh].concat(others), rnd);
       pool.push({ q: '「' + p.en + '」的中文意思是？', o: o, a: o.indexOf(p.zh), e: p.en + ' ' + p.ph + ' — ' + p.zh + '。例：' + p.ex });
     });
-    READINGS.forEach(function (r) {
-      r.questions.forEach(function (q) { pool.push(q); });
-    });
-    LISTENINGS.forEach(function (l) {
-      l.questions.forEach(function (q) { pool.push(q); });
+    READINGS.forEach(function (r) { r.questions.forEach(function (q) { pool.push(q); }); });
+    LISTENINGS.forEach(function (l) { l.questions.forEach(function (q) { pool.push(q); }); });
+    /* 雅思 / 托福 阅读与听力题也并入综合题库 */
+    ['ielts', 'toefl'].forEach(function (k) {
+      var E = EXAMS[k];
+      (E.readings || []).forEach(function (r) {
+        (r.questions || []).forEach(function (q) { pool.push({ q: '【' + E.label + '阅读】' + q.q, o: q.o, a: q.a, e: q.e }); });
+      });
+      (E.listenings || []).forEach(function (l) {
+        (l.questions || []).forEach(function (q) { pool.push({ q: '【' + E.label + '听力】' + q.q, o: q.o, a: q.a, e: q.e }); });
+      });
     });
     mixedCache = pool;
     return pool;
@@ -3704,7 +5811,13 @@ window.WB_DATA.quizExtra = {
   WB.register({
     id: 'english', icon: '🔤', title: '英语', group: '每日',
     mount: function (host) {
-      var st = { tab: 'cet', cet: 'vocab', band: '听力策略', off: 0 };
+      clearTimers();
+      var st = {
+        tab: 'cet', cet: 'vocab', phrase: '',
+        ex: { ielts: 'vocab', toefl: 'vocab' },
+        off: { cet: 0, ielts: 0, toefl: 0 },
+        hist: null
+      };
 
       host.innerHTML =
         '<div class="card">' +
@@ -3732,111 +5845,133 @@ window.WB_DATA.quizExtra = {
             return '<button type="button" class="chip' + (st.cet === s[0] ? ' on' : '') + '" data-cet-tab="' + s[0] + '">' + s[1] + '</button>';
           }).join('') + '</div><div data-cet-body></div>';
         var cb = body.querySelector('[data-cet-body]');
-        if (st.cet === 'vocab') renderVocab(cb);
-        else if (st.cet === 'read') renderRead(cb);
-        else renderListen(cb);
+        if (st.cet === 'vocab') renderVocab(cb, WORDS, 50, 'cet');
+        else if (st.cet === 'read') {
+          var r = pickByDay(READINGS, st.off.cet);
+          if (!r) { cb.innerHTML = U.emptyBox('📄', '暂无阅读材料'); return; }
+          renderReadingBox(cb, r, { histKey: K_READ });
+        } else {
+          var l = pickByDay(LISTENINGS, st.off.cet);
+          if (!l) { cb.innerHTML = U.emptyBox('🎧', '暂无听力材料'); return; }
+          renderListeningBox(cb, l, { histKey: K_LIS });
+        }
       }
 
-      function renderVocab(cb) {
-        var batch = vocabBatch(st.off);
-        saveVocabToday(batch);
-        var rev = reviewList();
+      function renderVocab(cb, list, per, prefix) {
+        var batch = vocabBatch(list, per, st.off[prefix === 'cet' ? 'cet' : prefix]);
+        saveVocabToday(batch, prefix);
+        var rev = reviewList(prefix);
         cb.innerHTML =
           '<div class="row mb8"><span class="tag dark">新词 ' + batch.length + ' 个</span>' +
-          '<span class="muted small">今日第 ' + (WB.dayIdx(0) + 1) + ' 天 · 词库共 ' + WORDS.length + ' 词 · 每天不重复</span>' +
+          '<span class="muted small">今日第 ' + (WB.dayIdx(0) + 1) + ' 天 · 词库共 ' + list.length + ' 词 · 每天不重复</span>' +
           '<span class="sp"></span>' +
           '<button type="button" class="btn sm" data-act="showall">👁 显示全部中文</button>' +
-          '<button type="button" class="btn sm" data-act="vhist">📜 历史词汇</button></div>' +
-          '<div class="wgrid" data-vgrid>' + batch.map(vocabCard).join('') + '</div>' +
+          '<button type="button" class="btn sm" data-act="vhist" data-histkey="en_vocab_hist_' + prefix + '">📜 历史词汇</button></div>' +
+          '<div class="wgrid" data-vgrid>' + batch.map(function (w) { return vocabCard(w, prefix); }).join('') + '</div>' +
           (rev.list.length ?
             '<div class="hr"></div><div class="row mb8"><span class="tag o">复习 ' + rev.list.length + ' 个</span>' +
             '<span class="muted small">来自 ' + U.esc(rev.from) + ' 学过的单词（随机抽取）</span></div>' +
-            '<div class="wgrid" data-rgrid>' + rev.list.map(vocabCard).join('') + '</div>'
+            '<div class="wgrid" data-rgrid>' + rev.list.map(function (w) { return vocabCard(w, prefix); }).join('') + '</div>'
             : '<div class="hint b mt12">复习区：明天起这里会自动出现前一天随机 20 个单词。先完成今天的学习吧。</div>');
       }
 
-      function renderRead(cb) {
-        var r = pickReading(st.off);
-        if (!r) { cb.innerHTML = U.emptyBox('📄', '暂无阅读材料'); return; }
-        var qs = r.questions;
-        var node = document.createElement('div');
-        node.innerHTML =
-          '<div class="row mb8"><span class="tag dark">' + U.esc(r.src) + '</span>' +
-          '<span class="tag n">' + U.esc(r.topic) + '</span><span class="tag n">约 ' + r.words + ' 词</span>' +
-          '<span class="sp"></span>' +
-          '<button type="button" class="btn sm"' + U.spkAttr(r.text, 'en-US', { rate: 0.92 }) + '>🔊 朗读全文</button>' +
-          '<button type="button" class="btn sm" data-act="rhist">📜 历史阅读</button></div>' +
-          '<h4 style="margin:2px 0 6px;font-size:14px">' + U.esc(r.title) + '</h4>' +
-          '<div class="small" style="line-height:1.85;color:var(--ink-2);max-height:340px;overflow:auto;padding-right:6px;white-space:pre-wrap">' + U.esc(r.text) + '</div>' +
-          '<div class="hr"></div>';
-        cb.innerHTML = '';
-        cb.appendChild(node);
-        cb.appendChild(WB.quiz(qs, {
-          onDone: function (score, right, total, picked) {
-            var h = U.storeGet(K_READ, []);
-            h.push({
-              d: U.todayStr(), ts: Date.now(), score: score, right: right, total: total, src: r.src, title: r.title,
-              items: qs.map(function (q, i) { return { q: q.q, o: q.o, a: q.a, e: q.e, p: picked[i] }; })
-            });
-            if (h.length > 60) h = h.slice(-60);
-            U.storeSet(K_READ, h);
-            U.toast('阅读成绩已记录');
-          }
-        }));
-      }
-
-      function renderListen(cb) {
-        var l = pickListening(st.off);
-        if (!l) { cb.innerHTML = U.emptyBox('🎧', '暂无听力材料'); return; }
-        var node = document.createElement('div');
-        node.innerHTML =
-          '<div class="row mb8"><span class="tag dark">' + U.esc(l.src) + '</span>' +
-          '<span class="tag n">' + U.esc(l.type) + '</span>' +
-          '<span class="sp"></span>' +
-          '<button type="button" class="btn pri sm"' + U.spkAttr(l.script, 'en-US', { rate: 0.9 }) + '>▶ 播放录音</button>' +
-          '<button type="button" class="btn sm" data-act="lshow">📄 显示原文</button>' +
-          '<button type="button" class="btn sm" data-act="lhist">📜 历史听力</button></div>' +
-          '<div class="hint b mb8">录音由浏览器语音合成朗读（离线可用）；建议先盲听一遍，再看原文核对。</div>' +
-          '<div class="small" data-lscript style="display:none;white-space:pre-wrap;line-height:1.8;color:var(--ink-2);background:#F7FAFE;border-left:3px solid var(--brand-3);border-radius:0 8px 8px 0;padding:8px 10px;margin-bottom:8px">' + U.esc(l.script) + '</div>';
-        cb.innerHTML = '';
-        cb.appendChild(node);
-        cb.appendChild(WB.quiz(l.questions, {
-          onDone: function (score, right, total, picked) {
-            var h = U.storeGet(K_LIS, []);
-            h.push({
-              d: U.todayStr(), ts: Date.now(), score: score, right: right, total: total, src: l.src,
-              items: l.questions.map(function (q, i) { return { q: q.q, o: q.o, a: q.a, e: q.e, p: picked[i] }; })
-            });
-            if (h.length > 60) h = h.slice(-60);
-            U.storeSet(K_LIS, h);
-            U.toast('听力成绩已记录');
-          }
-        }));
-      }
-
       /* ---- 雅思 / 托福 ---- */
-      function renderExam(bank, isIelts) {
-        var bands = Object.keys(bank);
-        if (!bands.length) { body.innerHTML = U.emptyBox('📚', '题库加载中'); return; }
-        if (bands.indexOf(st.band) < 0) st.band = bands[0];
+      function renderExam(examKey) {
+        var E = EXAMS[examKey];
+        var subs = [
+          ['vocab', '📖 ' + E.label + '词汇'],
+          ['read', '📄 阅读理解'],
+          ['listen', '🎧 每日听力'],
+          ['speak', '🗣 口语训练']
+        ];
+        var cur = st.ex[examKey];
         body.innerHTML =
-          '<div class="chips mb8" data-band>' + bands.map(function (b) {
-            return '<button type="button" class="chip' + (st.band === b ? ' on' : '') + '" data-band-v="' + U.esc(b) + '">' + U.esc(b) +
-              '<span class="tiny muted"> ' + bank[b].length + '</span></button>';
-          }).join('') + '</div>' +
-          '<div class="hint b mb8">' + (isIelts ? '雅思' : '托福') + ' 5 大板块 · 每板块 ' + bank[st.band].length +
-          ' 张卡片，每天轮换 5 张，答完出分并自动记录历史。</div>' +
-          '<div data-band-body></div>';
-        var bb = body.querySelector('[data-band-body]');
-        var cards = bank[st.band];
-        bb.innerHTML = '<div class="list mb8">' + cards.slice(0, 5).map(function (c) {
-          return '<div class="item"><div class="it-h"><div class="sp"><h4>' + U.esc(c.t) + '</h4>' +
-            '<div class="small muted" style="margin-top:3px">' + U.esc(c.d) + '</div></div>' +
-            '<button type="button" class="btn sm"' + U.spkAttr(c.t + '。' + c.d, 'zh-CN') + '>🔊</button></div></div>';
-        }).join('') + '</div>';
-        var qbox = document.createElement('div');
-        bb.appendChild(qbox);
-        WB.quizCard(qbox, 'en_' + (isIelts ? 'ielts' : 'toefl') + '_' + st.band, bandPool(bank, st.band), { offset: 7, count: 5 });
+          '<div class="hint b mb8">' + E.icon + ' ' + E.en + ' 四大板块 · 按官方题型结构编写仿真题，卡片标注真题来源 · 每日自动轮换</div>' +
+          '<div class="chips mb8" data-ex-tab>' + subs.map(function (s) {
+            return '<button type="button" class="chip' + (cur === s[0] ? ' on' : '') + '" data-ex-tab-v="' + s[0] + '">' + s[1] + '</button>';
+          }).join('') + '</div><div data-ex-body></div>';
+        var eb = body.querySelector('[data-ex-body]');
+        if (cur === 'vocab') renderVocab(eb, E.words, E.perDay, examKey);
+        else if (cur === 'read') {
+          var r = pickByDay(E.readings, st.off[examKey]);
+          if (!r) { eb.innerHTML = U.emptyBox('📄', '暂无阅读材料'); return; }
+          renderReadingBox(eb, r, { histKey: 'en_read_hist_' + examKey, tag: E.label });
+        } else if (cur === 'listen') {
+          var l = pickByDay(E.listenings, st.off[examKey]);
+          if (!l) { eb.innerHTML = U.emptyBox('🎧', '暂无听力材料'); return; }
+          renderListeningBox(eb, l, { histKey: 'en_listen_hist_' + examKey, tag: E.label });
+        } else {
+          renderSpeaking(eb, E, examKey);
+        }
+      }
+
+      /* ---- 口语训练 ---- */
+      function renderSpeaking(cb, E, examKey) {
+        var arr = E.speaking || [];
+        if (!arr.length) { cb.innerHTML = U.emptyBox('🗣', '暂无口语题库'); return; }
+        var picked = U.pickN(arr, Math.min(3, arr.length), U.rndFor(WB.seedOf(31) + (examKey === 'toefl' ? 97 : 0)));
+        cb.innerHTML =
+          '<div class="row mb8"><span class="tag dark">今日 ' + picked.length + ' 题</span>' +
+          '<span class="muted small">' + E.label + '口语 · 每天轮换 3 题 · 含计时器、答题要点与高分范例</span>' +
+          '<span class="sp"></span>' +
+          '<button type="button" class="btn sm" data-act="sprand">🔄 换一组</button></div>' +
+          '<div class="hint b mb8">💡 先按计时器自己说一遍，再看范例对照。范例是参考答案，不是标准答案——用自己的经历替换细节分数更高。</div>' +
+          '<div class="list" data-splist></div>';
+        var list = cb.querySelector('[data-splist]');
+        list.innerHTML = picked.map(function (s, i) { return speakCard(s, examKey, i); }).join('');
+      }
+
+      function speakCard(s, examKey, idx) {
+        var uid = examKey + '_' + s.id + '_' + idx;
+        return '<div class="item" data-sp="' + uid + '" data-prep="' + (s.prep || 0) + '" data-dur="' + (s.dur || 60) + '">' +
+          '<div class="it-h"><div class="sp">' +
+          '<div class="meta"><span class="tag dark">' + U.esc(s.part) + '</span><span class="tag n">' + U.esc(s.topic) + '</span></div>' +
+          '<h4 style="margin:5px 0 3px">' + U.esc(s.q) + '</h4>' +
+          (s.qZh ? '<div class="small muted">' + U.esc(s.qZh) + '</div>' : '') +
+          '</div>' +
+          '<button type="button" class="btn sm"' + U.spkAttr(s.q, 'en-US', { rate: 0.92 }) + '>🔊 读题</button>' +
+          '</div>' +
+
+          /* 计时器 */
+          '<div class="row mb8" style="margin-top:8px;gap:6px">' +
+          '<span class="tag n" data-clock>准备 ' + (s.prep || 0) + 's / 作答 ' + (s.dur || 60) + 's</span>' +
+          '<button type="button" class="btn sm pri" data-act="sp-start">▶ 开始计时</button>' +
+          '<button type="button" class="btn sm" data-act="sp-reset">↺ 重置</button>' +
+          '</div>' +
+
+          /* 阅读材料（托福 Task2/3） */
+          (s.reading ? '<div class="small" style="margin-top:6px">' +
+            '<button type="button" class="btn xs" data-act="sp-read">📄 展开阅读材料</button>' +
+            '<div data-sp-reading style="display:none;margin-top:6px;padding:8px 10px;background:#F7FAFE;border-left:3px solid var(--brand-3);border-radius:0 8px 8px 0;line-height:1.75;color:var(--ink-2);white-space:pre-wrap">' +
+            U.esc(s.reading) + (s.readingZh ? '\n\n【中文】' + s.readingZh : '') + '</div></div>' : '') +
+
+          /* 听力材料（托福 Task2/3/4） */
+          (s.script ? '<div class="small" style="margin-top:6px">' +
+            '<button type="button" class="btn xs"' + U.spkAttr(s.script, 'en-US', { rate: 0.9 }) + '>🔊 播放听力材料</button> ' +
+            '<button type="button" class="btn xs" data-act="sp-script">📄 展开听力原文</button>' +
+            '<div data-sp-script style="display:none;margin-top:6px;padding:8px 10px;background:#F7FAFE;border-left:3px solid var(--brand-3);border-radius:0 8px 8px 0;line-height:1.75;color:var(--ink-2);white-space:pre-wrap">' +
+            U.esc(s.script) + (s.scriptZh ? '\n\n【中文】' + s.scriptZh : '') + '</div></div>' : '') +
+
+          /* 答题要点 */
+          '<div class="small" style="margin-top:8px"><b>答题要点</b>' +
+          '<div class="meta" style="margin-top:4px;flex-direction:column;align-items:flex-start;gap:2px">' +
+          (s.points || []).map(function (p) { return '<div>· ' + U.esc(p) + '</div>'; }).join('') + '</div></div>' +
+
+          /* 范例 */
+          '<div class="row mb8" style="margin-top:8px">' +
+          '<button type="button" class="btn sm" data-act="sp-sample">📖 展开高分范例</button>' +
+          '<button type="button" class="btn sm"' + U.spkAttr(s.sample || '', 'en-US', { rate: 0.9 }) + '>🔊 朗读范例</button>' +
+          '<button type="button" class="btn sm" data-act="sp-copy">📋 复制范例</button>' +
+          '</div>' +
+          '<div data-sp-sample style="display:none">' +
+          '<div class="small" style="padding:10px 12px;background:#F7FAFE;border-left:3px solid var(--brand);border-radius:0 8px 8px 0;line-height:1.8;color:var(--ink-2);white-space:pre-wrap">' + U.esc(s.sample || '') + '</div>' +
+          (s.sampleZh ? '<div class="small" style="margin-top:8px;padding:10px 12px;background:#FBFBFD;border-radius:8px;line-height:1.8;color:var(--ink-3);white-space:pre-wrap">🇨🇳 ' + U.esc(s.sampleZh) + '</div>' : '') +
+          '</div>' +
+
+          /* 技巧提示 */
+          (s.tips && s.tips.length ? '<div class="hint g" style="margin-top:8px">' +
+            s.tips.map(function (t) { return '<div>· ' + U.esc(t) + '</div>'; }).join('') + '</div>' : '') +
+          '</div>';
       }
 
       /* ---- 短语 ---- */
@@ -3870,29 +6005,24 @@ window.WB_DATA.quizExtra = {
         }).join('');
       }
 
-      /* ---- 历史面板 ---- */
-      function showHist(key, title, renderFn) {
-        var h = U.storeGet(key, []);
-        body.innerHTML = '<div class="row mb8"><button type="button" class="btn sm" data-act="back">← 返回</button>' +
-          '<b>' + U.esc(title) + '</b><span class="sp"></span><span class="muted small">共 ' + h.length + ' 次</span></div>' +
-          '<div class="list" data-hlist></div>';
-        var box = body.querySelector('[data-hlist]');
-        if (!h.length) { box.innerHTML = U.emptyBox('📭', '还没有历史记录'); return; }
-        box.innerHTML = h.slice().reverse().map(renderFn).join('');
-      }
-
       /* ---- 事件 ---- */
       host.addEventListener('click', function (e) {
         var t = e.target.closest('[data-tab]');
         if (t) {
-          st.tab = t.getAttribute('data-tab'); st.off = 0;
+          clearTimers();
+          st.tab = t.getAttribute('data-tab');
           host.querySelectorAll('[data-tab]').forEach(function (b) { b.classList.toggle('on', b === t); });
           renderBody(); return;
         }
         var ct = e.target.closest('[data-cet-tab]');
-        if (ct) { st.cet = ct.getAttribute('data-cet-tab'); st.off = 0; renderCET(); return; }
-        var bv = e.target.closest('[data-band-v]');
-        if (bv) { st.band = bv.getAttribute('data-band-v'); renderBody(); return; }
+        if (ct) { st.cet = ct.getAttribute('data-cet-tab'); st.off.cet = 0; renderCET(); return; }
+        var et = e.target.closest('[data-ex-tab-v]');
+        if (et) {
+          clearTimers();
+          st.ex[st.tab] = et.getAttribute('data-ex-tab-v');
+          st.off[st.tab] = 0;
+          renderExam(st.tab); return;
+        }
         var pc = e.target.closest('[data-pc]');
         if (pc) {
           body.querySelectorAll('[data-pc]').forEach(function (b) { b.classList.remove('on'); });
@@ -3901,6 +6031,7 @@ window.WB_DATA.quizExtra = {
         var act = e.target.closest('[data-act]');
         if (act) {
           var a = act.getAttribute('data-act');
+
           if (a === 'showall') {
             var means = body.querySelectorAll('.mean');
             var wantHide = false;
@@ -3911,7 +6042,8 @@ window.WB_DATA.quizExtra = {
             return;
           }
           if (a === 'vhist') {
-            showHist(K_VOCAB, '历史词汇', function (r) {
+            var vk = act.getAttribute('data-histkey') || K_VOCAB;
+            renderHist(body, vk, '历史词汇', function (r) {
               return '<div class="item"><div class="it-h"><div class="sp"><h4>' + U.esc(r.d) + ' · ' + r.n + ' 词</h4>' +
                 '<div class="small muted" style="margin-top:4px">' + r.w.slice(0, 50).map(function (x) { return U.esc(x.w); }).join(' · ') + '</div></div>' +
                 '<button type="button" class="btn sm" data-open>展开</button></div>' +
@@ -3921,33 +6053,13 @@ window.WB_DATA.quizExtra = {
             });
             return;
           }
-          if (a === 'rhist') {
-            showHist(K_READ, '历史阅读记录', function (r) {
-              return '<div class="item"><div class="it-h"><div class="sp"><h4>' + U.relDay(r.d) + ' · ' + U.esc(r.title) + '</h4>' +
-                '<div class="meta"><span class="tag ' + (r.score >= 80 ? 'g' : r.score >= 60 ? 'o' : 'r') + '">' + r.score + ' 分</span>' +
-                '<span>' + U.esc(r.src) + '</span><span>答对 ' + r.right + '/' + r.total + '</span></div></div>' +
-                '<button type="button" class="btn sm" data-open>展开</button></div>' +
-                '<div class="small" data-detail style="display:none;margin-top:8px">' + r.items.map(function (q, i) {
-                  return '<div style="margin-bottom:6px"><b>' + (i + 1) + '. ' + U.esc(q.q) + '</b><br>' +
-                    '<span class="muted">你选：</span>' + (q.p >= 0 ? String.fromCharCode(65 + q.p) + '．' + U.esc(q.o[q.p]) : '未作答') + '<br>' +
-                    '<span style="color:var(--ok)">正确：' + String.fromCharCode(65 + q.a) + '．' + U.esc(q.o[q.a]) + '</span><br>' +
-                    '<span class="muted">' + U.esc(q.e) + '</span></div>';
-                }).join('') + '</div></div>';
-            });
-            return;
-          }
-          if (a === 'lhist') {
-            showHist(K_LIS, '历史听力记录', function (r) {
-              return '<div class="item"><div class="it-h"><div class="sp"><h4>' + U.relDay(r.d) + ' · ' + U.esc(r.src) + '</h4>' +
-                '<div class="meta"><span class="tag ' + (r.score >= 80 ? 'g' : r.score >= 60 ? 'o' : 'r') + '">' + r.score + ' 分</span>' +
-                '<span>答对 ' + r.right + '/' + r.total + '</span></div></div>' +
-                '<button type="button" class="btn sm" data-open>展开</button></div>' +
-                '<div class="small" data-detail style="display:none;margin-top:8px">' + r.items.map(function (q, i) {
-                  return '<div style="margin-bottom:6px"><b>' + (i + 1) + '. ' + U.esc(q.q) + '</b><br>' +
-                    '<span class="muted">你选：</span>' + (q.p >= 0 ? String.fromCharCode(65 + q.p) + '．' + U.esc(q.o[q.p]) : '未作答') + '<br>' +
-                    '<span style="color:var(--ok)">正确：' + String.fromCharCode(65 + q.a) + '．' + U.esc(q.o[q.a]) + '</span><br>' +
-                    '<span class="muted">' + U.esc(q.e) + '</span></div>';
-                }).join('') + '</div></div>';
+          if (a === 'rhist' || a === 'lhist') {
+            var hk = act.getAttribute('data-histkey') || (a === 'rhist' ? K_READ : K_LIS);
+            var isR = a === 'rhist';
+            renderHist(body, hk, isR ? '历史阅读记录' : '历史听力记录', function (r) {
+              return '<div class="item"><div class="it-h"><div class="sp"><h4>' + U.relDay(r.d) + ' · ' + U.esc(r.title || r.src) + '</h4>' +
+                histItemScore(r) + '</div>' +
+                '<button type="button" class="btn sm" data-open>展开</button></div>' + histItemDetail(r) + '</div>';
             });
             return;
           }
@@ -3958,6 +6070,76 @@ window.WB_DATA.quizExtra = {
           }
           if (a === 'back') { renderBody(); return; }
           if (a === 'prand') { renderPhrase(); U.toast('已重新排列'); return; }
+          if (a === 'sprand') { clearTimers(); renderExam(st.tab); U.toast('已换一组口语题'); return; }
+
+          /* 口语：计时器 */
+          if (a === 'sp-start') {
+            var box = act.closest('[data-sp]');
+            var clock = box.querySelector('[data-clock]');
+            var prep = parseInt(box.getAttribute('data-prep'), 10) || 0;
+            var dur = parseInt(box.getAttribute('data-dur'), 10) || 60;
+            clearTimers();
+            var left = prep > 0 ? prep : dur;
+            var phase = prep > 0 ? 'prep' : 'answer';
+            act.disabled = true;
+            clock.textContent = (phase === 'prep' ? '⏳ 准备 ' : '🎙 作答 ') + left + 's';
+            clock.className = 'tag o';
+            var tk = setInterval(function () {
+              left--;
+              if (left <= 0) {
+                if (phase === 'prep') {
+                  phase = 'answer'; left = dur;
+                  clock.textContent = '🎙 作答 ' + left + 's';
+                  clock.className = 'tag g';
+                  U.toast('准备时间结束，开始作答！');
+                  return;
+                }
+                clearInterval(tk);
+                clock.textContent = '✅ 时间到';
+                clock.className = 'tag dark';
+                act.disabled = false;
+                U.toast('作答时间到');
+                return;
+              }
+              clock.textContent = (phase === 'prep' ? '⏳ 准备 ' : '🎙 作答 ') + left + 's';
+            }, 1000);
+            activeTimers.push(tk);
+            return;
+          }
+          if (a === 'sp-reset') {
+            clearTimers();
+            var box2 = act.closest('[data-sp]');
+            var clock2 = box2.querySelector('[data-clock]');
+            var prep2 = parseInt(box2.getAttribute('data-prep'), 10) || 0;
+            var dur2 = parseInt(box2.getAttribute('data-dur'), 10) || 60;
+            clock2.textContent = '准备 ' + prep2 + 's / 作答 ' + dur2 + 's';
+            clock2.className = 'tag n';
+            var sb = box2.querySelector('[data-act="sp-start"]');
+            if (sb) sb.disabled = false;
+            return;
+          }
+          if (a === 'sp-read') {
+            var rd = act.closest('.item').querySelector('[data-sp-reading]');
+            if (rd) { var on1 = rd.style.display === 'none'; rd.style.display = on1 ? 'block' : 'none'; act.textContent = on1 ? '📄 收起阅读材料' : '📄 展开阅读材料'; }
+            return;
+          }
+          if (a === 'sp-script') {
+            var sc = act.closest('.item').querySelector('[data-sp-script]');
+            if (sc) { var on2 = sc.style.display === 'none'; sc.style.display = on2 ? 'block' : 'none'; act.textContent = on2 ? '📄 收起听力原文' : '📄 展开听力原文'; }
+            return;
+          }
+          if (a === 'sp-sample') {
+            var sp = act.closest('.item').querySelector('[data-sp-sample]');
+            if (sp) { var on3 = sp.style.display === 'none'; sp.style.display = on3 ? 'block' : 'none'; act.textContent = on3 ? '📖 收起高分范例' : '📖 展开高分范例'; }
+            return;
+          }
+          if (a === 'sp-copy') {
+            var sm = act.closest('.item').querySelector('[data-sp-sample]');
+            var txt = sm ? (sm.querySelector('.small') ? sm.querySelector('.small').textContent : '') : '';
+            if (txt) U.copyText(txt);
+            return;
+          }
+
           if (a === 'toggle') {
             var card = act.closest('.wcard'), mean = card.querySelector('.mean');
             mean.classList.toggle('hide');
@@ -3966,10 +6148,11 @@ window.WB_DATA.quizExtra = {
           }
           if (a === 'learn') {
             var c2 = act.closest('.wcard'), word = c2.getAttribute('data-w') || '';
+            var prefix = st.tab === 'cet' ? 'cet' : (st.tab === 'ielts' || st.tab === 'toefl' ? st.tab : 'cet');
             var nowOn = !c2.classList.contains('learned');
             c2.classList.toggle('learned', nowOn);
             act.textContent = nowOn ? '✓ 已学' : '标记已学';
-            if (word) setLearned(word, nowOn);
+            if (word) setLearned(word, nowOn, prefix);
             return;
           }
         }
@@ -3984,8 +6167,8 @@ window.WB_DATA.quizExtra = {
 
       function renderBody() {
         if (st.tab === 'cet') renderCET();
-        else if (st.tab === 'ielts') renderExam(IELTS, true);
-        else if (st.tab === 'toefl') renderExam(TOEFL, false);
+        else if (st.tab === 'ielts') renderExam('ielts');
+        else if (st.tab === 'toefl') renderExam('toefl');
         else renderPhrase();
       }
 
