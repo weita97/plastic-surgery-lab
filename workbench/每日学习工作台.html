@@ -2089,28 +2089,26 @@ window.WB_DATA.quizExtra = {
     if (WB.live && WB.live.needsSync && WB.live.needsSync()) {
       setTimeout(function () { WB.live.sync(false); }, 1500);
     }
-    /* 云端同步：已登录则【每次打开都自动拉一次最新】，并挂上「改动后 4 秒自动上传」的钩子 */
+    /* 云端同步（最简版）：全手动，只挂一个「记下本机改过」的钩子，不做任何自动上传 */
     if (WB.cloud) {
-      WB.cloud.installAutoHook();
+      WB.cloud.purgeLegacy();
+      WB.cloud.installDirtyHook();
       var tip = document.getElementById('cloudTip');
       if (WB.cloud.isLogged()) {
         var cu = WB.cloud.user();
-        if (tip) tip.textContent = '☁️ 已连接 ' + ((cu && cu.login) || '');
-        /* 云端带来新数据 → 自动重挂当前模块，让界面立刻显示出来 */
+        if (tip) tip.textContent = '☁️ 已登录 ' + ((cu && cu.login) || '') + '（手动同步）';
+        /* 同步完成后若带来了新数据，重挂当前模块让界面立刻显示 */
         WB.cloud.onUpdate(function (p) {
           if (p.state !== 'ok') return;
-          var g = p.stats && p.stats.gained;
-          if (!g) return;
+          var st = p.stats || {};
+          if (!st.wrote) return;
           var cur = currentId();
           if (cur === 'cloud') return;              /* 云端同步页自己会刷新 */
           setTimeout(function () {
             if (currentId() !== cur) return;        /* 期间用户已切走 */
             mount(cur);
-            toast('☁️ 已同步云端 ' + g + ' 项更新');
           }, 120);
         });
-        /* 每次打开工作台都自动拉取一次最新（三方比对，删除会如实同步） */
-        WB.cloud.bootSync();
       } else if (tip) {
         tip.textContent = '数据保存在本机浏览器';
       }
@@ -3065,24 +3063,17 @@ window.WB_DATA.quizExtra = {
 
 ;
 /* ---- cloud.js ---- */
-/* ===== 云端同步：GitHub Gist 后端 =====
-   登录方式：GitHub 个人访问令牌（仅需 gist 权限）
-   数据落地：用户自己账号下的私有 Gist（单文件 wb-data.json）
-   安全：令牌只存本机 localStorage；数据用 AES-GCM 加密后上传，密钥由令牌派生
-
-   同步模型（三方比对）：
-     · 本机（local）—— 浏览器 localStorage 现状
-     · 云端（remote）—— Gist 里解出来的快照
-     · 基线（base）—— 上一次「本机与云端完全一致」时的快照，存在本机
-   逐键判断：
-     本机没动、云端动了      → 采用云端（删除就真的删掉）
-     云端没动、本机动了      → 采用本机
-     两边都没动              → 保持
-     两边都动过（冲突）      → 以「最后一次改动」的那份为准，整键覆盖
-   这样「电脑删账 → 手机拉取」「手机删账 → 电脑拉取」都能如实同步。
-
-   上传（push）永远是本机为准整份覆盖，增删改如实上传。
-   拉取时机（按用户要求）：每次打开工作台自动拉一次；改动后 4 秒自动上传。 */
+/* ===== 云端同步（最简版）：GitHub Gist 后端 =====
+   设计原则：**只手动，不自动**。没有任何定时器、没有自动上传、没有自动拉取。
+     · 🔄 同步   —— 谁改过谁说了算（自动判断方向，删除也能同步）
+     · ⬆ 上传   —— 强制本机为准，整份覆盖云端
+     · ⬇ 下载   —— 强制云端为准，整份覆盖本机
+   同步方向怎么判断：
+     · 本机自上次同步后没改过、云端改过 → 拉取云端覆盖本机
+     · 本机改过、云端没改过             → 上传本机覆盖云端
+     · 两边都改过                       → 以本机为准，并明确提示
+     · 两边都没改                       → 什么也不做
+   数据安全：令牌只存本机；数据 AES-GCM 加密后存进用户自己账号下的私有 Gist。 */
 (function () {
   'use strict';
   var U = WB.util;
@@ -3090,25 +3081,23 @@ window.WB_DATA.quizExtra = {
   var K_USER = 'cloud_user';       /* {login, name, avatar} */
   var K_GIST = 'cloud_gist';       /* gist id */
   var K_LAST = 'cloud_last';       /* 上次同步时间 */
-  var K_MODE = 'cloud_mode';       /* 'auto' | 'manual' */
-  var K_DEV = 'cloud_dev';         /* 本机设备 id */
-  var K_BASE = 'cloud_base';       /* 上次本机与云端一致时的快照（三方比对的基线） */
-  var K_BASEAT = 'cloud_base_at';  /* 基线建立时间 */
-  var K_KTS = 'cloud_kts';         /* 本机每个数据键最后一次改动时间（冲突判定用） */
+  var K_LC = 'cloud_local_changed'; /* 本机自上次同步后有过改动的标记 */
+  var K_RAT = 'cloud_remote_at';    /* 上次同步时云端的 updated_at */
+
+  /* 旧版遗留的同步配置，启动时一次性清掉，避免旧逻辑干扰 */
+  var LEGACY = ['cloud_base', 'cloud_base_at', 'cloud_kts', 'cloud_mode', 'cloud_dev', 'cloud_booted'];
 
   var FILE_NAME = 'wb-data.json';
   var GIST_DESC = '每日学习工作台 · 云端同步数据（加密）';
   var API = 'https://api.github.com';
   var busy = false, lastErr = '', listeners = [];
+  var muted = 0;   /* 同步自己写盘时不算「用户改动」 */
 
-  /* 同步过程自身的写盘不算「用户改动」 */
-  var muted = 0, dirty = false, dirtyAt = 0;
-
-  /* ---------- 设备 id ---------- */
-  function devId() {
-    var d = U.storeGet(K_DEV, '');
-    if (!d) { d = 'dev-' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36); U.storeSet(K_DEV, d); }
-    return d;
+  /* ---------- 一次性清理旧配置 ---------- */
+  function purgeLegacy() {
+    LEGACY.forEach(function (k) {
+      try { localStorage.removeItem('wb1_' + k); } catch (e) { }
+    });
   }
 
   /* ---------- 加密：令牌派生密钥（PBKDF2 → AES-GCM） ---------- */
@@ -3146,13 +3135,13 @@ window.WB_DATA.quizExtra = {
   }
 
   /* ---------- 基础工具 ---------- */
-  function isPlainObject(x) { return x != null && typeof x === 'object' && !Array.isArray(x); }
+  function isObj(x) { return x != null && typeof x === 'object' && !Array.isArray(x); }
   function jsonOf(v) { try { return JSON.stringify(v === undefined ? null : v); } catch (e) { return ''; } }
   function sameJSON(a, b) { return jsonOf(a) === jsonOf(b); }
 
-  /* 业务唯一键：按含义取，不用时间戳（多端会撞） */
+  /* 业务唯一键：按含义取，绝不用时间戳（多端会撞） */
   function keyOf(item) {
-    if (!isPlainObject(item)) return null;
+    if (!isObj(item)) return null;
     if (item.id) return 'i:' + item.id;
     if (item.pmid) return 'p:' + item.pmid;
     if (item.t) return 't:' + item.t;
@@ -3162,22 +3151,29 @@ window.WB_DATA.quizExtra = {
     if (item.ts) return 's:' + item.ts;
     return null;
   }
+  function tsOf(x) {
+    if (!isObj(x)) return 0;
+    if (typeof x.ts === 'number') return x.ts;
+    if (typeof x.ts === 'string') { var n = Date.parse(x.ts); return isNaN(n) ? 0 : n; }
+    return 0;
+  }
 
-  /* ---------- 收集本机数据 ---------- */
+  /* ---------- 本机数据快照 ---------- */
   function snapshot() {
     var out = {};
     Object.keys(localStorage).forEach(function (k) {
       if (k.indexOf('wb1_') !== 0) return;
       var short = k.slice(4);
-      if (short.indexOf('cloud_') === 0) return;   /* 不同步同步配置本身 */
+      if (short.indexOf('cloud_') === 0) return;   /* 同步配置本身不同步 */
       try { out[short] = JSON.parse(localStorage.getItem(k)); } catch (e) { }
     });
     return out;
   }
 
-  function applySnapshot(obj) {
+  /* hard=true 时，云端没有的键本机也删掉（用于整份覆盖） */
+  function applySnapshot(obj, hard) {
     var wrote = 0;
-    unmute(function () {
+    mute(function () {
       Object.keys(obj || {}).forEach(function (k) {
         if (k.indexOf('cloud_') === 0) return;
         try {
@@ -3185,199 +3181,50 @@ window.WB_DATA.quizExtra = {
           if (localStorage.getItem('wb1_' + k) !== next) { localStorage.setItem('wb1_' + k, next); wrote++; }
         } catch (e) { }
       });
-      /* 合并结果里已经没有的键 → 本机也要删掉，否则删除永远同步不过来 */
-      Object.keys(localStorage).forEach(function (full) {
-        if (full.indexOf('wb1_') !== 0) return;
-        var short = full.slice(4);
-        if (short.indexOf('cloud_') === 0) return;
-        if (obj && Object.prototype.hasOwnProperty.call(obj, short)) return;
-        try { localStorage.removeItem(full); wrote++; } catch (e) { }
-      });
+      if (hard) {
+        Object.keys(localStorage).forEach(function (full) {
+          if (full.indexOf('wb1_') !== 0) return;
+          var short = full.slice(4);
+          if (short.indexOf('cloud_') === 0) return;
+          if (obj && Object.prototype.hasOwnProperty.call(obj, short)) return;
+          try { localStorage.removeItem(full); wrote++; } catch (e) { }
+        });
+      }
     });
     return wrote;
   }
 
-  function unmute(fn) {
-    muted++;
-    try { return fn(); } finally { muted--; }
-  }
+  function mute(fn) { muted++; try { return fn(); } finally { muted--; } }
 
-  /* ---------- 基线：上一次「本机 == 云端」的快照 ---------- */
-  var baseline = null, baselineLoaded = false;
+  /* ---------- 改动检测 ---------- */
+  function changed(a, b) { return !sameJSON(a, b); }
 
-  function loadBaseline() {
-    if (baselineLoaded) return baseline;
-    baselineLoaded = true;
-    try {
-      var raw = U.storeGet(K_BASE, null);
-      baseline = isPlainObject(raw) ? raw : null;
-    } catch (e) { baseline = null; }
-    return baseline;
+  /* ---------- 标记本机改动（用户动了数据就记一笔） ---------- */
+  function markLocalDirty() {
+    if (muted > 0) return;
+    U.storeSet(K_LC, new Date().toISOString());
   }
+  function localChanged() { return !!U.storeGet(K_LC, ''); }
+  function clearLocalChanged() { U.storeDel(K_LC); }
 
-  function saveBaseline(snap) {
-    baseline = isPlainObject(snap) ? snap : null;
-    baselineLoaded = true;
-    try {
-      if (baseline) {
-        unmute(function () {
-          U.storeSet(K_BASE, baseline);
-          U.storeSet(K_BASEAT, new Date().toISOString());
-        });
-      } else {
-        unmute(function () { U.storeDel(K_BASE); U.storeDel(K_BASEAT); });
-      }
-    } catch (e) { }
-  }
-
-  function hasBaseline() { return !!loadBaseline(); }
-  function baselineAt() { return U.storeGet(K_BASEAT, ''); }
-
-  /* ---------- 键级改动时间：冲突时判断「哪一端最后改的」 ----------
-     每次用户改动某个数据键就记下时间；同一毫秒内多次改动也保证严格递增。 */
-  var lastStamp = 0;
-  function nextStamp() {
-    var t = Date.now();
-    if (t <= lastStamp) t = lastStamp + 1;
-    lastStamp = t;
-    return t;
-  }
-  function localKts() {
-    var m = U.storeGet(K_KTS, null);
-    return isPlainObject(m) ? m : {};
-  }
-  function touchKey(k) {
-    var m = localKts();
-    m[String(k)] = nextStamp();
-    unmute(function () { U.storeSet(K_KTS, m); });
-  }
-  /* 上传前补齐：本机有但没记过时间的键，按「刚改过」处理 */
-  function ensureKts(local) {
-    var m = localKts(), changed = false;
-    Object.keys(local || {}).forEach(function (k) {
-      if (typeof m[k] !== 'number') { m[k] = nextStamp(); changed = true; }
-    });
-    if (changed) unmute(function () { U.storeSet(K_KTS, m); });
-    return m;
-  }
-  /* 上传时把本机与云端的键级时间合并成一份：取每个键的较大值 */
-  function mergeKts(a, b) {
-    var out = {};
-    Object.keys(a || {}).forEach(function (k) { out[k] = a[k]; });
-    Object.keys(b || {}).forEach(function (k) {
-      var v = b[k];
-      if (!out[k] || (typeof v === 'number' && v > out[k])) out[k] = v;
-    });
-    return out;
-  }
-
-  /* ---------- 三方比对合并 ----------
-     base 为 null 时退化为「本机优先」（新设备第一次拉取走这条）
-     lts/rts：本机与云端「各键最后改动时间」，只在两端都改过时用来判断谁更新 */
-  function merge3(local, remote, base, lts, rts) {
-    var out = {}, keys = {};
-    Object.keys(local || {}).forEach(function (k) { keys[k] = 1; });
-    Object.keys(remote || {}).forEach(function (k) { keys[k] = 1; });
-    Object.keys(keys).forEach(function (k) {
-      var v = merge3Value(
-        local ? local[k] : undefined,
-        remote ? remote[k] : undefined,
-        base ? base[k] : undefined,
-        lts ? lts[k] : 0,
-        rts ? rts[k] : 0
-      );
-      /* 结果为 undefined 表示这一项被删掉了，不能写进结果里
-         （否则会变成 localStorage 里的 null，删除同步不过来） */
-      if (v !== undefined) out[k] = v;
-    });
-    return out;
-  }
-
-  /* 元素级唯一键：同一条记录在两端要能对上 */
-  function elemKey(item, i) {
-    var k = keyOf(item);
-    if (k) return k;
-    if (typeof item !== 'object' || item === null) return 'v:' + String(item);
-    return 'r:' + jsonOf(item) + '#' + i;
-  }
-  function indexArr(arr) {
-    var m = {};
-    (Array.isArray(arr) ? arr : []).forEach(function (it, i) { m[elemKey(it, i)] = it; });
-    return m;
-  }
-
-  /* 数组级三方比对：逐条判断，两端的「各自新增」都能保住，删除也能如实生效。
-     这是修「电脑删了账手机看不到 / 两端各改各的会互相覆盖」的关键。 */
-  function merge3Array(l, r, b) {
-    var out = [], ml = indexArr(l), mr = indexArr(r), mb = indexArr(b);
-    var order = [];
-    (Array.isArray(l) ? l : []).forEach(function (it, i) { var k = elemKey(it, i); if (order.indexOf(k) < 0) order.push(k); });
-    (Array.isArray(r) ? r : []).forEach(function (it, i) { var k = elemKey(it, i); if (order.indexOf(k) < 0) order.push(k); });
-    Object.keys(mb).forEach(function (k) { if (order.indexOf(k) < 0) order.push(k); });
-    order.forEach(function (k) {
-      var lv = ml[k], rv = mr[k], bv = mb[k];
-      /* 逐条记录也带自己的 ts，冲突时用来判断谁更新 */
-      var lt = lv && typeof lv.ts === 'number' ? lv.ts : 0;
-      var rt = rv && typeof rv.ts === 'number' ? rv.ts : 0;
-      var v = merge3Value(lv, rv, bv, lt, rt);
-      if (v !== undefined) out.push(v);
-    });
-    return out;
-  }
-
-  function isPlainObj(x) { return x != null && typeof x === 'object' && !Array.isArray(x); }
-
-  function merge3Value(l, r, b, lt, rt) {
-    var hasL = l !== undefined, hasR = r !== undefined, hasB = b !== undefined;
-    var lEqR = hasL && hasR && sameJSON(l, r);
-    var lEqB = hasL && hasB && sameJSON(l, b);
-    var rEqB = hasR && hasB && sameJSON(r, b);
-
-    /* 本机与云端一致：无需处理 */
-    if (lEqR) return l;
-    /* 本机没动过（== 基线）：云端说了算，删除就是删除 */
-    if (lEqB) return hasR ? r : undefined;
-    /* 云端没动过（== 基线）：本机说了算 */
-    if (rEqB) return hasL ? l : undefined;
-    /* 都没有基线（新设备/首次同步）：有改动时间就比时间，否则本机优先 */
-    if (!hasB) {
-      lt = lt || 0; rt = rt || 0;
-      if (lt && rt && lt !== rt) return rt > lt ? r : l;
-      if (rt && !lt) return r;
-      return hasL ? l : r;
-    }
-    /* 两边都改过：数组走逐条合并（各自的新增/删除都能保住），其它整键取较新的一端 */
-    if (hasL && hasR && Array.isArray(l) && Array.isArray(r)) {
-      return merge3Array(l, r, Array.isArray(b) ? b : []);
-    }
-    /* 一边删了整个键、另一边是数组：仍按「最后改动为准」 */
-    lt = lt || 0; rt = rt || 0;
-    if (lt && rt) return rt > lt ? r : l;
-    if (lt) return l;
-    if (rt) return r;
-    return hasL ? l : r;
-  }
-
-  /* 数组级三方合并：用于「两边都改过同一个数组」时尽量逐条判断。
-     但按用户选择「整块覆盖」，这里默认整块取较新的一份；
-     只有当本机或云端某一边完全等于基线时，才取另一边（已在 merge3Value 处理）。
-     保留该函数供 pull/sync 精细场景使用。 */
-  function mergeArray3(l, r, b) {
-    var out = [], idx = {};
-    function keyFor(item, i) {
-      var k = keyOf(item);
-      if (k) return 'k' + k;
-      if (typeof item !== 'object' || item === null) return 'v' + String(item);
-      return 'r' + jsonOf(item) + '#' + i;
-    }
-    function put(item, i) {
-      var k = keyFor(item, i);
-      if (idx[k] === undefined) { idx[k] = out.length; out.push(item); }
-    }
-    (Array.isArray(l) ? l : []).forEach(put);
-    (Array.isArray(r) ? r : []).forEach(put);
-    (Array.isArray(b) ? b : []).forEach(put);
-    return out;
+  /* 包装 storeSet/storeDel：任何业务数据被写就标记本机改动 */
+  var hooked = false;
+  function installDirtyHook() {
+    if (hooked) return;
+    hooked = true;
+    var origSet = U.storeSet, origDel = U.storeDel;
+    U.storeSet = function (k, v) {
+      var r = origSet(k, v);
+      if (String(k).indexOf('cloud_') !== 0) markLocalDirty();
+      return r;
+    };
+    U.storeDel = function (k) {
+      var r = origDel(k);
+      if (String(k).indexOf('cloud_') !== 0) markLocalDirty();
+      return r;
+    };
+    WB.util.storeSet = U.storeSet;
+    WB.util.storeDel = U.storeDel;
   }
 
   /* ---------- GitHub API ---------- */
@@ -3393,7 +3240,7 @@ window.WB_DATA.quizExtra = {
       body: opt.body ? JSON.stringify(opt.body) : undefined
     }).then(function (r) {
       if (r.status === 401) throw new Error('令牌无效或已过期，请重新填写');
-      if (r.status === 403) throw new Error('GitHub 拒绝访问（可能是令牌权限不足，需勾选 gist）');
+      if (r.status === 403) throw new Error('GitHub 拒绝访问（令牌权限不足，需要勾选 gist）');
       if (r.status === 404) return { notFound: true };
       if (!r.ok) {
         return r.text().then(function (t) {
@@ -3404,7 +3251,7 @@ window.WB_DATA.quizExtra = {
     });
   }
 
-  /* 验证令牌 → 返回用户信息 */
+  /* ---------- 登录 / 登出 ---------- */
   function login(token) {
     token = String(token || '').trim();
     if (!token) return Promise.reject(new Error('请填写 GitHub 令牌'));
@@ -3416,8 +3263,11 @@ window.WB_DATA.quizExtra = {
       return r.json();
     }).then(function (u) {
       var info = { login: u.login, name: u.name || u.login, avatar: u.avatar_url || '' };
+      purgeLegacy();
       U.storeSet(K_TOKEN, token);
       U.storeSet(K_USER, info);
+      U.storeDel(K_GIST);
+      notify({ state: 'login', user: info });
       return info;
     });
   }
@@ -3426,12 +3276,12 @@ window.WB_DATA.quizExtra = {
   function user() { var u = U.storeGet(K_USER, null); return u && u.login ? u : null; }
   function lastSync() { return U.storeGet(K_LAST, ''); }
   function logout() {
-    U.storeDel(K_TOKEN); U.storeDel(K_USER); U.storeDel(K_GIST);
-    U.storeDel(K_LAST);
+    [K_TOKEN, K_USER, K_GIST, K_LAST, K_LC, K_RAT].forEach(function (k) { U.storeDel(k); });
+    purgeLegacy();
     notify({ state: 'logout' });
   }
 
-  /* ---------- Gist 定位 ---------- */
+  /* ---------- Gist 定位：扫账号下所有带 wb-data.json 的 gist ---------- */
   function scan() {
     var all = [], page = 1, MAX = 10;
     function step() {
@@ -3448,12 +3298,20 @@ window.WB_DATA.quizExtra = {
     return step();
   }
 
-  function resolveGists() {
+  function resolveGist() {
+    var cached = U.storeGet(K_GIST, '');
+    if (cached) {
+      return api('/gists/' + cached).then(function (g) {
+        if (g && !g.notFound && g.files && g.files[FILE_NAME]) return g;
+        U.storeDel(K_GIST);
+        return resolveGist();
+      }, function () { return resolveGist(); });
+    }
     return scan().then(function (list) {
-      if (!list.length) return createGist().then(function (g) { return [g]; });
+      if (!list.length) return createGist();
       list.sort(function (a, b) { return String(b.updated_at || '').localeCompare(String(a.updated_at || '')); });
       U.storeSet(K_GIST, list[0].id);
-      return list;
+      return list[0];
     });
   }
 
@@ -3475,166 +3333,145 @@ window.WB_DATA.quizExtra = {
     try { return Promise.resolve(JSON.parse(f.content)); } catch (e) { return Promise.resolve(null); }
   }
 
-  /* 读出账号下所有 gist 并解密合并成一份云端快照 */
+  /* 读出云端快照；云端为空时返回 null */
   function readRemote(key) {
-    return resolveGists().then(function (gists) {
-      return gists.reduce(function (chain, g) {
-        return chain.then(function (acc) {
-          return readGist(g).then(function (pack) {
-            if (!pack || !pack.enc) return acc;
-            return decryptJson(key, pack).then(function (d) {
-              if (!d || !d.data) return acc;
-              var kts = isPlainObject(d.kts) ? d.kts : {};
-              if (!acc) return { data: d.data, kts: kts };
-              return { data: Object.assign({}, d.data, acc.data), kts: Object.assign({}, kts, acc.kts) };
-            }, function () { return acc; });
-          }, function () { return acc; });
+    return resolveGist().then(function (g) {
+      return readGist(g).then(function (pack) {
+        if (!pack || !pack.enc) return { data: null, gist: g };
+        return decryptJson(key, pack).then(function (d) {
+          return { data: d && d.data ? d.data : null, gist: g };
+        }, function () {
+          throw new Error('云端数据解密失败：请确认使用的是同一个 GitHub 账号、同一个令牌');
         });
-      }, Promise.resolve(null)).then(function (r) {
-        return { remote: r ? r.data : null, kts: r ? r.kts : {}, target: gists[0] };
       });
     });
   }
 
-  function writeRemote(key, target, data, kts) {
-    var pack = {
-      v: 4,
-      dev: devId(),
-      at: new Date().toISOString(),
-      count: Object.keys(data).length,
-      kts: isPlainObject(kts) ? kts : {},
-      data: data
-    };
+  function writeRemote(key, gist, data) {
+    var pack = { v: 1, at: new Date().toISOString(), count: Object.keys(data).length, data: data };
     return encryptJson(key, pack).then(function (enc) {
       var body = { files: {} };
       body.files[FILE_NAME] = { content: JSON.stringify(enc) };
-      return api('/gists/' + target.id, { method: 'PATCH', body: body });
+      return api('/gists/' + gist.id, { method: 'PATCH', body: body });
     });
   }
 
-  function statsOf(data) { return { keys: Object.keys(data || {}).length }; }
-
-  /* ---------- 上传：本机为准整份覆盖（自动同步走这条） ---------- */
-  function push() {
-    if (busy) return Promise.reject(new Error('正在同步中'));
+  /* ---------- 统一执行壳 ---------- */
+  function run(msg, task) {
+    if (busy) return Promise.reject(new Error('正在同步中，请稍候'));
     if (!isLogged()) return Promise.reject(new Error('尚未登录'));
-    busy = true; lastErr = ''; dirty = false;
-    notify({ state: 'running', msg: '正在上传…' });
-    var key = null, target = null;
-    var local = snapshot();
-    var base = loadBaseline();
-    var kts = ensureKts(local);
-    return deriveKey(U.storeGet(K_TOKEN, '')).then(function (k) {
-      key = k;
-      return resolveGists().then(function (gists) { target = gists[0]; });
-    }).then(function () {
-      return writeRemote(key, target, local, kts);
-    }).then(function () {
-      saveBaseline(local);
-      U.storeSet(K_LAST, new Date().toISOString());
-      var st = { keys: Object.keys(local).length, mode: 'push' };
-      notify({ state: 'ok', msg: '已上传', stats: st });
-      return st;
-    }).catch(function (e) {
-      lastErr = e.message || String(e);
-      notify({ state: 'err', msg: lastErr });
-      throw e;
-    }).then(function (v) { busy = false; return v; }, function (e) { busy = false; throw e; });
+    busy = true; lastErr = '';
+    notify({ state: 'running', msg: msg });
+    return deriveKey(U.storeGet(K_TOKEN, ''))
+      .then(task)
+      .then(function (st) {
+        U.storeSet(K_LAST, new Date().toISOString());
+        notify({ state: 'ok', msg: st.msg || '完成', stats: st });
+        return st;
+      })
+      .catch(function (e) {
+        lastErr = e && e.message ? e.message : String(e);
+        notify({ state: 'err', msg: lastErr });
+        throw e;
+      })
+      .then(function (v) { busy = false; return v; }, function (e) { busy = false; throw e; });
   }
 
-  /* ---------- 合并同步：每次打开 / 登录 / 手动「立即同步」----------
-     三方比对：本机、云端、基线。删除会如实同步。 */
+  /* 🔄 同步：自动判断方向——谁改过谁说了算 */
   function sync() {
-    if (busy) return Promise.reject(new Error('正在同步中'));
-    if (!isLogged()) return Promise.reject(new Error('尚未登录'));
-    busy = true; lastErr = ''; dirty = false;
-    notify({ state: 'running', msg: '正在同步…' });
-    var key = null, target = null;
-    var local = snapshot();
-    var base = loadBaseline();
-    return deriveKey(U.storeGet(K_TOKEN, '')).then(function (k) {
-      key = k;
-      return readRemote(key);
-    }).then(function (r) {
-      target = r.target;
-      var remote = r.remote;
-      if (!remote) {
-        /* 云端为空 → 直接把本机传上去，并把本机记为基线 */
-        return writeRemote(key, target, local, ensureKts(local)).then(function () {
-          saveBaseline(local);
-          U.storeSet(K_LAST, new Date().toISOString());
-          var st = { keys: Object.keys(local).length, fromCloud: 0, gained: 0, merged: 'uploaded' };
-          notify({ state: 'ok', msg: '已上传本机数据', stats: st });
-          return st;
+    return run('正在同步…', function (key) {
+      var local = snapshot();
+      var localDirty = localChanged();
+      var lastRemoteAt = U.storeGet(K_RAT, '');
+      return readRemote(key).then(function (r) {
+        var remote = r.data;
+        var gist = r.gist;
+        var remoteAt = gist ? String(gist.updated_at || '') : '';
+        var remoteDirty = !!(remoteAt && remoteAt !== lastRemoteAt);
+
+        /* 云端为空：本机整份传上去 */
+        if (!remote) {
+          return writeRemote(key, gist, local).then(function (g) {
+            finishSync(g, local);
+            return { mode: 'upload', keys: Object.keys(local).length, added: 0,
+              msg: '云端还是空的，已把本机 ' + Object.keys(local).length + ' 项传上去' };
+          });
+        }
+
+        var lKeys = Object.keys(local).length;
+        var rKeys = Object.keys(remote).length;
+
+        /* 两边内容完全一致：只更新标记 */
+        if (sameJSON(local, remote)) {
+          finishSync(gist, local);
+          return { mode: 'same', keys: lKeys, added: 0, msg: '本机与云端已一致（' + lKeys + ' 项）' };
+        }
+
+        /* 本机没改过 → 拉云端覆盖本机 */
+        if (!localDirty) {
+          var n = applySnapshot(remote, true);
+          finishSync(gist, remote);
+          return { mode: 'pull', keys: rKeys, wrote: n,
+            msg: '已从云端下载 ' + rKeys + ' 项（本机更新 ' + n + ' 处）' };
+        }
+
+        /* 云端没改过（或首次）→ 本机传上去 */
+        if (!remoteDirty) {
+          return writeRemote(key, gist, local).then(function (g) {
+            finishSync(g, local);
+            return { mode: 'push', keys: lKeys, added: 0,
+              msg: '已把本机 ' + lKeys + ' 项上传（云端更新）' };
+          });
+        }
+
+        /* 两边都改过 → 以本机为准，明确告知 */
+        return writeRemote(key, gist, local).then(function (g) {
+          finishSync(g, local);
+          return { mode: 'conflict', keys: lKeys, added: 0,
+            msg: '两边都改过，已按本机 ' + lKeys + ' 项覆盖云端（如需云端版本请点「⬇ 下载」）' };
         });
-      }
-      if (sameJSON(local, remote)) {
-        saveBaseline(local);
-        U.storeSet(K_LAST, new Date().toISOString());
-        var st0 = { keys: Object.keys(local).length, fromCloud: Object.keys(remote).length, gained: 0, merged: 'same' };
-        notify({ state: 'ok', msg: '云端与本机一致', stats: st0 });
-        return st0;
-      }
-      var merged = merge3(local, remote, base, ensureKts(local), r.kts);
-      var gained = 0;
-      Object.keys(merged).forEach(function (k) {
-        if (!sameJSON(local[k], merged[k])) gained++;
       });
-      var wrote = applySnapshot(merged);
-      /* 合并结果与云端完全一致 → 只需要下载，不用回传 */
-      if (sameJSON(merged, remote)) {
-        saveBaseline(merged);
-        U.storeSet(K_LAST, new Date().toISOString());
-        var st1 = { keys: Object.keys(merged).length, fromCloud: Object.keys(remote).length, gained: gained, merged: 'download', wrote: wrote };
-        notify({ state: 'ok', msg: '已从云端更新', stats: st1 });
-        return st1;
-      }
-      return writeRemote(key, target, merged, mergeKts(localKts(), r.kts)).then(function () {
-        saveBaseline(merged);
-        U.storeSet(K_LAST, new Date().toISOString());
-        var st2 = { keys: Object.keys(merged).length, fromCloud: Object.keys(remote).length, gained: gained, merged: 'merged', wrote: wrote };
-        notify({ state: 'ok', msg: '已合并同步', stats: st2 });
-        return st2;
-      });
-    }).catch(function (e) {
-      lastErr = e.message || String(e);
-      notify({ state: 'err', msg: lastErr });
-      throw e;
-    }).then(function (v) { busy = false; return v; }, function (e) { busy = false; throw e; });
+    });
   }
 
-  /* ---------- 只下载：云端 → 本机，不回传 ---------- */
+  /* 同步成功后统一收尾：清脏标记、记云端时间戳 */
+  function finishSync(gist, snap) {
+    clearLocalChanged();
+    if (gist && gist.updated_at) U.storeSet(K_RAT, String(gist.updated_at));
+    else U.storeSet(K_RAT, new Date().toISOString());
+  }
+
+  /* ⬆ 上传：本机为准，整份覆盖云端（删除也会同步过去） */
+  function push() {
+    return run('正在上传…', function (key) {
+      var local = snapshot();
+      return resolveGist().then(function (g) {
+        return writeRemote(key, g, local);
+      }).then(function (g) {
+        finishSync(g, local);
+        return { mode: 'push', keys: Object.keys(local).length,
+          msg: '已上传本机 ' + Object.keys(local).length + ' 项，云端被覆盖' };
+      });
+    });
+  }
+
+  /* ⬇ 下载：云端为准，整份覆盖本机 */
   function pull() {
-    if (busy) return Promise.reject(new Error('正在同步中'));
-    if (!isLogged()) return Promise.reject(new Error('尚未登录'));
-    busy = true; lastErr = ''; dirty = false;
-    notify({ state: 'running', msg: '正在从云端下载…' });
-    var local = snapshot();
-    var base = loadBaseline();
-    return deriveKey(U.storeGet(K_TOKEN, '')).then(readRemote).then(function (r) {
-      if (!r.remote) throw new Error('云端还没有数据，请先在另一台设备登录并同步一次');
-      var merged = merge3(local, r.remote, base, ensureKts(local), r.kts);
-      var gained = 0;
-      Object.keys(merged).forEach(function (k) {
-        if (!sameJSON(local[k], merged[k])) gained++;
+    return run('正在下载…', function (key) {
+      return readRemote(key).then(function (r) {
+        if (!r.data) throw new Error('云端还没有数据，请先在另一台设备点「⬆ 上传」');
+        var n = applySnapshot(r.data, true);
+        finishSync(r.gist, r.data);
+        return { mode: 'pull', keys: Object.keys(r.data).length, wrote: n,
+          msg: '已下载云端 ' + Object.keys(r.data).length + ' 项，本机被覆盖' };
       });
-      var wrote = applySnapshot(merged);
-      saveBaseline(merged);
-      U.storeSet(K_LAST, new Date().toISOString());
-      var st = { keys: Object.keys(merged).length, fromCloud: Object.keys(r.remote).length, gained: gained, wrote: wrote, mode: 'pull' };
-      notify({ state: 'ok', msg: '已从云端下载', stats: st });
-      return st;
-    }).catch(function (e) {
-      lastErr = e.message || String(e);
-      notify({ state: 'err', msg: lastErr });
-      throw e;
-    }).then(function (v) { busy = false; return v; }, function (e) { busy = false; throw e; });
+    });
   }
 
-  /* 云端概况：当前 gist 数量与最新更新时间 */
+  /* 云端概况 */
   function cloudInfo() {
     if (!isLogged()) return Promise.resolve(null);
-    return resolveGists().then(function (list) {
+    return scan().then(function (list) {
       return {
         count: list.length,
         id: list[0] ? list[0].id : '',
@@ -3647,74 +3484,15 @@ window.WB_DATA.quizExtra = {
   function onUpdate(fn) { listeners.push(fn); }
   function notify(p) { listeners.forEach(function (f) { try { f(p); } catch (e) { } }); }
 
-  /* ---------- 自动上传：改动后 4 秒 ---------- */
-  var autoTimer = null, hookInstalled = false;
-  function installAutoHook() {
-    if (hookInstalled) return;
-    hookInstalled = true;
-    var origSet = U.storeSet, origDel = U.storeDel;
-    U.storeSet = function (k, v) {
-      var r = origSet(k, v);
-      if (muted === 0 && String(k).indexOf('cloud_') !== 0) {
-        touchKey(String(k).replace(/^wb1_/, ''));
-        scheduleAuto();
-      }
-      return r;
-    };
-    U.storeDel = function (k) {
-      var r = origDel(k);
-      if (muted === 0 && String(k).indexOf('cloud_') !== 0) {
-        touchKey(String(k).replace(/^wb1_/, ''));
-        scheduleAuto();
-      }
-      return r;
-    };
-    WB.util.storeSet = U.storeSet;
-    WB.util.storeDel = U.storeDel;
-  }
-  function scheduleAuto() {
-    if (muted > 0) return;                       /* 同步自己的写盘，不算用户改动 */
-    dirty = true;
-    if (U.storeGet(K_MODE, 'auto') !== 'auto') return;
-    if (!isLogged()) return;
-    clearTimeout(autoTimer);
-    autoTimer = setTimeout(function () {
-      dirty = false;
-      /* 用 sync() 而不是 push()：sync 走三方比对，
-         既能如实上传本机的删除，又不会把另一台设备刚上传的改动抹掉。 */
-      sync().catch(function () { });
-    }, 4000);
-  }
-  function isDirty() { return dirty; }
-
-  /* ---------- 打开工作台：每次都自动拉一次最新 ---------- */
-  function bootSync() {
-    if (!isLogged()) return Promise.resolve(null);
-    /* 注意：这里绝不能先 push()。
-       本机的 dirty 只代表「打开前有过改动」，那批改动在改动发生时就已经自动上传过；
-       如果开机先整份覆盖，会把另一台设备刚上传的数据抹掉。
-       开机一律先 sync()（三方比对），本机独有的改动会被保留并合并上去。 */
-    return sync().catch(function () { return null; });
-  }
-
-  /* 登录成功后调用：登录即拉取一次 */
-  function autoSyncOnLogin() {
-    return sync().catch(function () { return null; });
-  }
-
   WB.cloud = {
     login: login, logout: logout, user: user, isLogged: isLogged,
     sync: sync, push: push, pull: pull, cloudInfo: cloudInfo,
     lastSync: lastSync, onUpdate: onUpdate,
     snapshot: snapshot, applySnapshot: applySnapshot,
-    merge3: merge3, merge3Value: merge3Value, mergeArray3: mergeArray3,
-    hasBaseline: hasBaseline, baselineAt: baselineAt, clearBaseline: function () { saveBaseline(null); },
-    autoSyncOnLogin: autoSyncOnLogin, bootSync: bootSync,
-    installAutoHook: installAutoHook, isDirty: isDirty,
-    getMode: function () { return U.storeGet(K_MODE, 'auto'); },
-    setMode: function (m) { U.storeSet(K_MODE, m); },
+    installDirtyHook: installDirtyHook, localChanged: localChanged,
     isBusy: function () { return busy; },
-    lastError: function () { return lastErr; }
+    lastError: function () { return lastErr; },
+    purgeLegacy: purgeLegacy
   };
 })();
 
@@ -5441,7 +5219,7 @@ window.WB_DATA.quizExtra = {
 
 ;
 /* ---- mod_cloud.js ---- */
-/* ===== 模块 11：云端同步（GitHub Gist 后端） ===== */
+/* ===== 模块 11：云端同步（最简版 · 全手动） ===== */
 (function () {
   'use strict';
   var U = WB.util;
@@ -5469,15 +5247,14 @@ window.WB_DATA.quizExtra = {
   WB.register({
     id: 'cloud', icon: '☁️', title: '云端同步', group: '系统',
     mount: function (host) {
-      var st = { tab: WB.cloud.isLogged() ? 'sync' : 'login', msg: '', err: '' };
+      var st = { msg: '', err: '' };
 
       function render() {
-        var u = WB.cloud.user();
         var logged = WB.cloud.isLogged();
         host.innerHTML =
           '<div class="card">' +
           '<div class="card-h"><h3>☁️ 云端同步</h3>' +
-          '<span class="muted small">' + (logged ? '已登录：' + U.esc(u ? u.login : '') : '未登录') + '</span></div>' +
+          '<span class="muted small">' + (logged ? '已登录：' + U.esc((WB.cloud.user() || {}).login || '') : '未登录') + '</span></div>' +
           (logged ? renderLogged() : renderLogin()) +
           '</div>' +
           renderHelp();
@@ -5485,23 +5262,23 @@ window.WB_DATA.quizExtra = {
 
       function renderLogin() {
         return '' +
-          '<div class="hint b">用你自己的 GitHub 账号做云端存储：数据加密后存进你账号下的一个<b>私有 Gist</b>，' +
-          '手机、电脑登录同一账号即可自动同步。全程免费，数据只在你自己的账号里。</div>' +
+          '<div class="hint b">用你自己的 GitHub 账号做云端存储：数据加密后存进你账号下的一个<b>私有 Gist</b>。' +
+          '电脑和手机粘贴<b>同一个令牌</b>就能互传数据。全程免费，数据只在你自己的账号里。</div>' +
           '<div class="field" style="margin-top:12px"><label>GitHub 个人访问令牌（Personal Access Token）</label>' +
           '<input type="password" data-token placeholder="ghp_xxxxxxxxxxxx 或 github_pat_xxx" autocomplete="off" spellcheck="false"></div>' +
           '<div class="row mt8">' +
-          '<button type="button" class="btn pri" data-act="login">🔑 登录并同步</button>' +
+          '<button type="button" class="btn pri" data-act="login">🔑 登录</button>' +
           '<a class="btn" href="' + TOKEN_URL + '" target="_blank" rel="noopener">🔗 去生成令牌</a>' +
           '</div>' +
           '<div class="hint g mt8">生成令牌时：<b>Note</b> 随便填（如 workbench），<b>Expiration</b> 可选 No expiration，' +
           '<b>Scopes</b> 只需勾选 <b>gist</b> 这一项。生成后复制以 <code>ghp_</code> 开头的那串，粘贴到上面即可。</div>' +
-          (st.err ? '<div class="hint" style="border-color:#F3C1C1">⚠ ' + U.esc(st.err) + '</div>' : '');
+          (st.err ? '<div class="hint mt8" style="border-color:#F3C1C1">⚠ ' + U.esc(st.err) + '</div>' : '') +
+          (st.msg ? '<div class="hint g mt8">✅ ' + U.esc(st.msg) + '</div>' : '');
       }
 
       function renderLogged() {
         var u = WB.cloud.user() || {};
         var c = countLocal();
-        var mode = WB.cloud.getMode();
         return '' +
           '<div class="row" style="gap:12px;align-items:center;margin-top:4px">' +
           (u.avatar ? '<img src="' + U.esc(u.avatar) + '" alt="" style="width:38px;height:38px;border-radius:50%">' : '') +
@@ -5512,36 +5289,36 @@ window.WB_DATA.quizExtra = {
           '<div class="grid g3 mt8">' +
           U.statCard('本机数据项', String(c.keys), '条记录') +
           U.statCard('上次同步', fmtTime(WB.cloud.lastSync()).replace(' ', '<br>'), '') +
-          U.statCard('自动上传', mode === 'auto' ? '已开启' : '已关闭', mode === 'auto' ? '改动 4 秒后上传' : '只能手动同步') +
+          U.statCard('同步方式', '手动', '点按钮才同步') +
           '</div>' +
           '<div class="hint b mt8" data-cloudinfo>🔍 正在检查云端存储…</div>' +
           '<div class="row mt8">' +
           '<button type="button" class="btn pri" data-act="sync"' + (WB.cloud.isBusy() ? ' disabled' : '') + '>' +
-          (WB.cloud.isBusy() ? '⏳ 同步中…' : '🔄 立即同步') + '</button>' +
-          '<button type="button" class="btn" data-act="pull">⬇ 只下载（从云端拉取）</button>' +
-          '<button type="button" class="btn" data-act="mode">' + (mode === 'auto' ? '⚙ 关闭自动上传' : '⚙ 开启自动上传') + '</button>' +
+          (WB.cloud.isBusy() ? '⏳ 同步中…' : '🔄 同步') + '</button>' +
+          '<button type="button" class="btn" data-act="push">⬆ 上传（本机覆盖云端）</button>' +
+          '<button type="button" class="btn" data-act="pull">⬇ 下载（云端覆盖本机）</button>' +
           '</div>' +
           (st.msg ? '<div class="hint g mt8">✅ ' + U.esc(st.msg) + '</div>' : '') +
           (st.err ? '<div class="hint mt8" style="border-color:#F3C1C1">⚠ ' + U.esc(st.err) + '</div>' : '') +
-          '<div class="hint g mt8">📥 <b>每次打开工作台都会自动从云端拉一次最新数据</b>：' +
-          '两端各自打开时自动对齐，不用手动点。删除也会如实同步——电脑上删掉的账，手机上打开就看不到了。</div>' +
-          (mode === 'auto' ? '<div class="hint g mt8">📤 <b>自动上传已开启</b>：任何改动（记账、删账、写复盘、收藏或取消收藏、标记已学、改日程）' +
-            '4 秒后整份数据上传到云端——<b>删掉的数据云端也会同步删除</b>，不会被旧数据补回来。</div>' : '') +
-          '<div class="hint b mt8">同步采用<b>三方比对</b>（本机 / 云端 / 上次同步时的快照）：' +
-          '你只在一端改过，另一端打开时会如实变成你的改动，包括删除；' +
-          '两端都改过同一块数据时，<b>以最后改动的那一端为准</b>。</div>';
+          '<div class="hint g mt8">🔄 <b>同步（日常就点这个）</b>：自动判断该往哪边走——' +
+          '如果你在这台设备上没动过数据，就把云端最新的拉下来；如果你刚改过，就把本机传上去。' +
+          '<b>删除也会如实同步</b>：电脑上删掉的账，手机上点一下同步就看不到了。</div>' +
+          '<div class="hint b mt8">⬆ <b>上传</b>：强制以本机为准，<b>整份覆盖云端</b>（云端独有的记录会被删掉）。' +
+          '确定本机才是最新的、或云端数据乱了时用。</div>' +
+          '<div class="hint b mt8">⬇ <b>下载</b>：强制以云端为准，<b>整份覆盖本机</b>。' +
+          '换新手机、或本机数据乱了想重置时用。</div>' +
+          '<div class="hint g mt8">🖐 <b>全程手动</b>：不会自动上传、也不会自动拉取。' +
+          '只有你点按钮时才会动数据，所以不会出现「莫名其妙被覆盖」的情况。</div>';
       }
 
       function renderHelp() {
         return '<div class="card" style="margin-top:12px">' +
           '<div class="card-h"><h3>📖 使用说明</h3></div>' +
-          '<div class="hint b"><b>1. 电脑上先登录</b>：生成令牌 → 粘贴 → 点「登录并同步」，本机现有数据会上传到云端。</div>' +
+          '<div class="hint b"><b>1. 电脑上先登录</b>：生成令牌 → 粘贴 → 点「🔑 登录」→ 点「⬆ 上传」把本机数据传到云端。</div>' +
           '<div class="hint b" style="margin-top:8px"><b>2. 手机上打开同一个网址</b>：' +
-          '<code>https://weita97.github.io/plastic-surgery-lab/workbench/</code> → 进「云端同步」→ 粘贴<b>同一个令牌</b> → 点登录，数据会自动拉下来。</div>' +
-          '<div class="hint g" style="margin-top:8px"><b>3. 之后各管各的</b>：' +
-          '<b>拉取全自动</b>——每次打开工作台都会从云端拉一次最新数据，两端自动对齐，删除也会如实同步；' +
-          '<b>上传全自动</b>——任何改动（记账、删账、写复盘、收藏、标记已学、改日程）4 秒后整份传到云端，' +
-          '删掉的记录云端也会同步消失。</div>' +
+          '<code>https://weita97.github.io/plastic-surgery-lab/workbench/</code> → 进「云端同步」→ 粘贴<b>同一个令牌</b> → 点「🔑 登录」→ 点「🔄 同步」，电脑的数据就过来了。</div>' +
+          '<div class="hint g" style="margin-top:8px"><b>3. 之后每次</b>：在哪台设备上改完数据，就在哪台点「🔄 同步」；换另一台设备时再点一次「🔄 同步」，两边就对齐了。' +
+          '<b>不会自动同步</b>，只在你点按钮时才动数据。</div>' +
           '<div class="hint g" style="margin-top:8px">🔒 <b>安全</b>：令牌只存在你自己浏览器的 localStorage，不会发给任何第三方；' +
           '上传的数据用令牌派生密钥做 AES-GCM 加密，即使 Gist 被看到也是密文。</div>' +
           '<div class="hint g" style="margin-top:8px">⚠ <b>注意</b>：换设备或清浏览器数据后需要重新粘贴令牌；' +
@@ -5551,20 +5328,14 @@ window.WB_DATA.quizExtra = {
 
       function setMsg(m, e) { st.msg = m || ''; st.err = e || ''; render(); }
 
-      function doSync(silent) {
-        if (!WB.cloud.isLogged()) return;
-        WB.cloud.sync().then(function (r) {
-          var word = r.merged === 'download' ? '已从云端更新，'
-            : r.merged === 'same' ? '云端与本机一致，'
-            : r.merged === 'uploaded' ? '已把本机数据上传，'
-            : '已合并同步，';
-          setMsg(word + '当前共 ' + r.keys + ' 项数据');
-          if (!silent) U.toast('☁️ 同步完成');
-          setTimeout(function () { if (document.body.contains(host)) render(); }, 1200);
-        }).catch(function (err) {
-          setMsg('', err.message || String(err));
-          if (!silent) U.toast('同步失败：' + (err.message || '').slice(0, 40));
-        });
+      function done(btn, label, r) {
+        setMsg(r.msg || '完成');
+        U.toast('☁️ ' + (r.msg || '完成'));
+        if (btn) { btn.disabled = false; btn.textContent = label; }
+      }
+      function fail(btn, label, err) {
+        setMsg('', err && err.message ? err.message : String(err));
+        if (btn) { btn.disabled = false; btn.textContent = label; }
       }
 
       host.addEventListener('click', function (e) {
@@ -5578,45 +5349,42 @@ window.WB_DATA.quizExtra = {
           if (!tk) { setMsg('', '请先粘贴令牌'); return; }
           a.disabled = true; a.textContent = '⏳ 验证中…';
           WB.cloud.login(tk).then(function (u) {
-            st.tab = 'sync';
-            return WB.cloud.autoSyncOnLogin().then(function (r) {
-              setMsg('登录成功，欢迎 ' + u.login + '！已拉取并合并 ' + ((r && r.keys) || 0) + ' 项数据');
-              U.toast('☁️ 登录成功，已拉取云端数据');
-            });
+            setMsg('登录成功，欢迎 ' + u.login + '！请点「⬆ 上传」或「🔄 同步」开始传数据');
+            U.toast('☁️ 登录成功');
           }).catch(function (err) {
-            setMsg('', err.message || String(err));
+            fail(a, '🔑 登录', err);
           });
           return;
         }
 
         if (act === 'logout') {
-          if (!window.confirm('退出后本机数据保留，但不再自动同步。确定退出？')) return;
+          if (!window.confirm('退出后本机数据保留，但需要重新登录才能同步。确定退出？')) return;
           WB.cloud.logout();
           setMsg('已退出登录');
           U.toast('已退出云端同步');
           return;
         }
 
-        if (act === 'sync') { doSync(false); return; }
-
-        if (act === 'mode') {
-          var m = WB.cloud.getMode() === 'auto' ? 'manual' : 'auto';
-          WB.cloud.setMode(m);
-          setMsg(m === 'auto' ? '已开启自动上传（改动 4 秒后整份上传，删掉的记录云端也会同步删除）' : '已关闭自动上传（改动不再自动上传，需手动点同步）');
+        if (act === 'sync') {
+          a.disabled = true; a.textContent = '⏳ 同步中…';
+          WB.cloud.sync().then(function (r) { done(a, '🔄 同步', r); })
+            .catch(function (err) { fail(a, '🔄 同步', err); });
           return;
         }
 
-          if (act === 'pull') {
-          if (!window.confirm('从云端下载最新数据（本机没改动过的项以云端为准，删除会如实生效；本机独有的新增会保留）。确定继续？')) return;
+        if (act === 'push') {
+          if (!window.confirm('上传会以本机为准整份覆盖云端，云端独有的记录会被删除。确定继续？')) return;
+          a.disabled = true; a.textContent = '⏳ 上传中…';
+          WB.cloud.push().then(function (r) { done(a, '⬆ 上传（本机覆盖云端）', r); })
+            .catch(function (err) { fail(a, '⬆ 上传（本机覆盖云端）', err); });
+          return;
+        }
+
+        if (act === 'pull') {
+          if (!window.confirm('下载会以云端为准整份覆盖本机，本机独有的记录会被删除。确定继续？')) return;
           a.disabled = true; a.textContent = '⏳ 下载中…';
-          WB.cloud.pull().then(function (r) {
-            setMsg('已从云端下载，本机现有 ' + r.keys + ' 项数据');
-            U.toast('☁️ 已从云端下载');
-            setTimeout(function () { if (document.body.contains(host)) render(); }, 800);
-          }).catch(function (err) {
-            setMsg('', err.message || String(err));
-            a.disabled = false; a.textContent = '⬇ 只下载（从云端拉取）';
-          });
+          WB.cloud.pull().then(function (r) { done(a, '⬇ 下载（云端覆盖本机）', r); })
+            .catch(function (err) { fail(a, '⬇ 下载（云端覆盖本机）', err); });
           return;
         }
       });
@@ -5630,7 +5398,6 @@ window.WB_DATA.quizExtra = {
 
       render();
 
-      /* 展示云端存储实况 */
       function refreshCloudInfo() {
         var box = host.querySelector('[data-cloudinfo]');
         if (!box) return;
@@ -5638,25 +5405,14 @@ window.WB_DATA.quizExtra = {
           if (!info) { box.textContent = '🔍 无法读取云端状态'; return; }
           box.innerHTML = '🔍 云端存储：<b>' + info.count + '</b> 个同步 Gist' +
             (info.updated ? ' · 最近更新 ' + fmtTime(info.updated) : '') +
-            (info.count > 1 ? ' <span class="muted">（历史遗留多个，已自动全部合并）</span>' : '');
+            (info.count > 1 ? ' <span class="muted">（历史遗留多个，取最近更新的那个）</span>' : '');
         }).catch(function () { box.textContent = '🔍 无法读取云端状态'; });
       }
       refreshCloudInfo();
 
-      /* 同步状态变化时刷新界面 */
       WB.cloud.onUpdate(function (p) {
         if (!document.body.contains(host)) return;
-        if (p.state === 'running') {
-          var btn = host.querySelector('[data-act="sync"]');
-          if (btn) { btn.disabled = true; btn.textContent = '⏳ 同步中…'; }
-        } else if (p.state === 'ok') {
-          st.msg = p.msg || '同步完成'; st.err = '';
-          render();
-          refreshCloudInfo();
-        } else if (p.state === 'err') {
-          st.err = p.msg || ''; st.msg = '';
-          render();
-        }
+        if (p.state === 'ok') { refreshCloudInfo(); }
       });
     }
   });
