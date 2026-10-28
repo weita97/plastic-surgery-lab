@@ -11533,6 +11533,18 @@ window.WB_DATA.quizExtra = {
     modules: [], mod: {}, ui: {}, spkStore: {}, spkKey: 0, curSpkBtn: null, ttsQueue: 0
   };
 
+  /* ---------------- 存储前缀（构建时注入，用于区分正式版 / 开发版） ----------------
+     正式版与开发版可能同处 weita97.github.io 这一个域名下，而 localStorage 按域名隔离、
+     不区分路径。若两者共用前缀，开发版一打开就会读到甚至改写正式版的数据。
+     所以构建脚本会把下面的 wb1_ 换成实际前缀（正式版 wb1_ / 开发版 wb1d_）。 */
+  var PREFIX = 'wb1_';
+  var IS_DEV = PREFIX !== 'wb1_';
+  WB.PREFIX = PREFIX;
+  WB.IS_DEV = IS_DEV;
+  /* 把短键补成完整存储键，供需要直接操作 localStorage 的模块使用 */
+  function fullKey(k) { return PREFIX + k; }
+  WB.fullKey = fullKey;
+
   /* ---------------- 基础工具 ---------------- */
   function pad2(n) { return n < 10 ? '0' + n : '' + n; }
   function fmtDate(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
@@ -11579,7 +11591,6 @@ window.WB_DATA.quizExtra = {
   function pickOne(arr, rnd) { return arr[Math.floor((rnd || Math.random)() * arr.length) % arr.length]; }
 
   /* ---------------- 存储 ---------------- */
-  var PREFIX = 'wb1_';
   function storeGet(k, dflt) {
     try {
       var v = localStorage.getItem(PREFIX + k);
@@ -11781,6 +11792,7 @@ window.WB_DATA.quizExtra = {
     pad2: pad2, fmtDate: fmtDate, todayStr: todayStr, parseDate: parseDate, esc: esc, el: el, $: $, $: $, on: on,
     daySeed: daySeed, rndFor: rndFor, shuffle: shuffle, pickN: pickN, pickOne: pickOne,
     storeGet: storeGet, storeSet: storeSet, storeDel: storeDel, toast: toast, copyText: copyText,
+    fullKey: fullKey, prefix: PREFIX,
     speak: speak, stopSpeak: stopSpeak, spkAttr: spkAttr, spkBtn: spkBtn,
     emptyBox: emptyBox, statCard: statCard, money: money, cnNum: cnNum, weekCN: weekCN, relDay: relDay
   };
@@ -12865,7 +12877,7 @@ window.WB_DATA.quizExtra = {
   /* ---------- 一次性清理旧配置 ---------- */
   function purgeLegacy() {
     LEGACY.forEach(function (k) {
-      try { localStorage.removeItem('wb1_' + k); } catch (e) { }
+      try { localStorage.removeItem(U.fullKey ? U.fullKey(k) : 'wb1_' + k); } catch (e) { }
     });
   }
 
@@ -12928,11 +12940,14 @@ window.WB_DATA.quizExtra = {
   }
 
   /* ---------- 本机数据快照 ---------- */
+  var PFX = (WB.PREFIX || 'wb1_');           /* 当前构建的存储前缀（正式 wb1_ / 开发 wb1d_） */
+  var PFX_LEN = PFX.length;
+
   function snapshot() {
     var out = {};
     Object.keys(localStorage).forEach(function (k) {
-      if (k.indexOf('wb1_') !== 0) return;
-      var short = k.slice(4);
+      if (k.indexOf(PFX) !== 0) return;
+      var short = k.slice(PFX_LEN);
       if (short.indexOf('cloud_') === 0) return;   /* 同步配置本身不同步 */
       try { out[short] = JSON.parse(localStorage.getItem(k)); } catch (e) { }
     });
@@ -12947,13 +12962,13 @@ window.WB_DATA.quizExtra = {
         if (k.indexOf('cloud_') === 0) return;
         try {
           var next = JSON.stringify(obj[k] === undefined ? null : obj[k]);
-          if (localStorage.getItem('wb1_' + k) !== next) { localStorage.setItem('wb1_' + k, next); wrote++; }
+          if (localStorage.getItem(PFX + k) !== next) { localStorage.setItem(PFX + k, next); wrote++; }
         } catch (e) { }
       });
       if (hard) {
         Object.keys(localStorage).forEach(function (full) {
-          if (full.indexOf('wb1_') !== 0) return;
-          var short = full.slice(4);
+          if (full.indexOf(PFX) !== 0) return;
+          var short = full.slice(PFX_LEN);
           if (short.indexOf('cloud_') === 0) return;
           if (obj && Object.prototype.hasOwnProperty.call(obj, short)) return;
           try { localStorage.removeItem(full); wrote++; } catch (e) { }
@@ -15080,8 +15095,9 @@ window.WB_DATA.quizExtra = {
     out.push({ k: '🎧 听力测验', v: lisH.length ? lisH[lisH.length - 1].score + ' 分' : '未做' });
 
     var qh = 0;
+    var qhPfx = U.fullKey ? U.fullKey('qh_') : 'wb1_qh_';
     Object.keys(localStorage).forEach(function (k) {
-      if (k.indexOf('wb1_qh_') !== 0) return;
+      if (k.indexOf(qhPfx) !== 0) return;
       try {
         var arr = JSON.parse(localStorage.getItem(k)) || [];
         qh += arr.filter(function (x) { return x.d === t; }).length;
