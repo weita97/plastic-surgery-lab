@@ -11,15 +11,19 @@
 /* ================= 每日学习工作台 · 样式 ================= */
 :root{
   --brand:#1565C0; --brand-2:#0D47A1; --brand-3:#42A5F5; --brand-soft:#E8F1FB;
+  --brand-rgb:21,101,192; --brand-2-rgb:13,71,161; --brand-3-rgb:66,165,245;
   --ink:#1A2230; --ink-2:#43506B; --ink-3:#7B8AA3;
-  --line:#DDE5F0; --line-2:#EDF2F9; --bg:#F2F6FC; --card:#FFFFFF;
+  --line:#DDE5F0; --line-2:#EDF2F9; --line-3:#BFD6F2; --line-4:#C7DCF5; --line-5:#CFE0F5;
+  --bg:#F2F6FC; --card:#FFFFFF; --card-rgb:255,255,255; --card-2:#FBFCFF;
+  --tint:#F8FBFF; --tint-2:#EFF4FB; --tint-3:#F1F4F9;
   --ok:#12855B; --ok-soft:#E6F6EF; --warn:#B26A00; --warn-soft:#FFF5E5;
-  --bad:#C62828; --bad-soft:#FDECEC;
+  --bad:#C62828; --bad-soft:#FDECEC; --toast-bg:#16324F;
   --r:14px; --r-sm:10px;
   --sh:0 1px 2px rgba(21,101,192,.06), 0 6px 18px rgba(21,101,192,.07);
   --sh-2:0 2px 6px rgba(21,101,192,.10), 0 14px 34px rgba(21,101,192,.12);
   --side:232px; --gap:12px;
   --fs:13.5px;
+  --wall-alpha:.84;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
@@ -40,7 +44,7 @@ a:hover{text-decoration:underline}
 /* ---------- 布局 ---------- */
 .app{display:flex;min-height:100vh}
 .sidebar{
-  width:var(--side); flex:0 0 var(--side); background:#fff; border-right:1px solid var(--line);
+  width:var(--side); flex:0 0 var(--side); background:var(--card); border-right:1px solid var(--line);
   position:sticky; top:0; height:100vh; overflow-y:auto; z-index:40;
   display:flex; flex-direction:column;
 }
@@ -49,13 +53,13 @@ a:hover{text-decoration:underline}
 .brand .sub{margin-top:3px;font-size:11.5px;color:var(--ink-3);line-height:1.5}
 /* 签名 / 座右铭：可编辑文字框 */
 .brand .sig{
-  display:block;width:100%;margin-top:5px;border:1px dashed var(--line);background:#FBFCFF;
+  display:block;width:100%;margin-top:5px;border:1px dashed var(--line);background:var(--card-2);
   border-radius:8px;padding:5px 7px;font-size:11.5px;color:var(--ink-2);line-height:1.55;
   resize:none;min-height:0;overflow:hidden;font-family:inherit;transition:.15s
 }
 .brand .sig::placeholder{color:var(--ink-3)}
-.brand .sig:hover{border-color:#BFD6F2;background:#fff}
-.brand .sig:focus{border-style:solid;border-color:var(--brand-3);background:#fff;box-shadow:0 0 0 3px rgba(66,165,245,.16)}
+.brand .sig:hover{border-color:var(--line-3);background:var(--card)}
+.brand .sig:focus{border-style:solid;border-color:var(--brand-3);background:var(--card);box-shadow:0 0 0 3px rgba(var(--brand-3-rgb),.16)}
 .brand .today{margin-top:8px;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--brand);background:var(--brand-soft);border-radius:8px;padding:5px 9px}
 .nav{padding:8px 8px 20px;flex:1}
 .nav-group{font-size:10.5px;letter-spacing:.8px;color:var(--ink-3);padding:10px 10px 5px;text-transform:uppercase}
@@ -68,7 +72,7 @@ a:hover{text-decoration:underline}
 .nav-item .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .nav-item .dot{width:6px;height:6px;border-radius:50%;background:var(--brand-3);opacity:0;flex:0 0 6px}
 .nav-item:hover{background:var(--brand-soft);color:var(--brand-2)}
-.nav-item.active{background:var(--brand);color:#fff;box-shadow:0 4px 12px rgba(21,101,192,.28)}
+.nav-item.active{background:var(--brand);color:#fff;box-shadow:0 4px 12px rgba(var(--brand-rgb),.28)}
 .nav-item.active .dot{opacity:1;background:#fff}
 .nav-foot{padding:10px 14px 14px;border-top:1px solid var(--line-2);font-size:11px;color:var(--ink-3);line-height:1.7}
 .nav-foot .row{display:flex;justify-content:space-between;gap:8px}
@@ -76,10 +80,10 @@ a:hover{text-decoration:underline}
 
 .main{flex:1;min-width:0;display:flex;flex-direction:column}
 .topbar{
-  position:sticky;top:0;z-index:30;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);
+  position:sticky;top:0;z-index:30;background:rgba(var(--card-rgb),.92);backdrop-filter:blur(10px);
   border-bottom:1px solid var(--line);padding:9px 18px;display:flex;align-items:center;gap:12px;
 }
-.hamburger{display:none;border:1px solid var(--line);background:#fff;border-radius:9px;width:36px;height:34px;font-size:16px;color:var(--brand);align-items:center;justify-content:center}
+.hamburger{display:none;border:1px solid var(--line);background:var(--card);border-radius:9px;width:36px;height:34px;font-size:16px;color:var(--brand);align-items:center;justify-content:center}
 .topbar .tt{font-size:15px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:7px;min-width:0}
 .topbar .tt span.tx{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .topbar .sp{flex:1}
@@ -114,11 +118,11 @@ a:hover{text-decoration:underline}
 .hr{height:1px;background:var(--line-2);margin:9px 0}
 
 .btn{
-  border:1px solid var(--line);background:#fff;color:var(--brand-2);border-radius:9px;
+  border:1px solid var(--line);background:var(--card);color:var(--brand-2);border-radius:9px;
   padding:5px 11px;font-size:12.5px;line-height:1.5;display:inline-flex;align-items:center;gap:5px;
   transition:.15s;white-space:nowrap;font-weight:500;
 }
-.btn:hover{background:var(--brand-soft);border-color:#BFD6F2}
+.btn:hover{background:var(--brand-soft);border-color:var(--line-3)}
 .btn:active{transform:translateY(1px)}
 .btn.pri{background:var(--brand);border-color:var(--brand);color:#fff}
 .btn.pri:hover{background:var(--brand-2);border-color:var(--brand-2)}
@@ -126,25 +130,25 @@ a:hover{text-decoration:underline}
 .btn.ghost:hover{background:var(--brand-soft)}
 .btn.sm{padding:2px 8px;font-size:11.5px;border-radius:7px}
 .btn.xs{padding:1px 7px;font-size:11px;border-radius:6px}
-.btn.danger{color:var(--bad);border-color:#F3C9C9}
+.btn.danger{color:var(--bad);border-color:var(--bad-soft)}
 .btn.danger:hover{background:var(--bad-soft)}
 .btn.on{background:var(--brand);border-color:var(--brand);color:#fff}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .btn.block{width:100%;justify-content:center}
 
-.tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:1.5px 8px;border-radius:999px;background:var(--brand-soft);color:var(--brand-2);border:1px solid #CFE0F5;line-height:1.6;white-space:nowrap}
-.tag.dark{background:#16324F;color:#E7F1FF;border-color:#16324F}
-.tag.g{background:var(--ok-soft);color:var(--ok);border-color:#C9EADB}
-.tag.o{background:var(--warn-soft);color:var(--warn);border-color:#F5DEB6}
-.tag.r{background:var(--bad-soft);color:var(--bad);border-color:#F5C9C9}
-.tag.n{background:#F1F4F9;color:var(--ink-2);border-color:var(--line)}
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:1.5px 8px;border-radius:999px;background:var(--brand-soft);color:var(--brand-2);border:1px solid var(--line-3);line-height:1.6;white-space:nowrap}
+.tag.dark{background:var(--toast-bg);color:#E7F1FF;border-color:var(--toast-bg)}
+.tag.g{background:var(--ok-soft);color:var(--ok);border-color:var(--ok-soft)}
+.tag.o{background:var(--warn-soft);color:var(--warn);border-color:var(--warn-soft)}
+.tag.r{background:var(--bad-soft);color:var(--bad);border-color:var(--bad-soft)}
+.tag.n{background:var(--tint-3);color:var(--ink-2);border-color:var(--line)}
 
 .pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--ink-3)}
 .chip{
-  border:1px solid var(--line);background:#fff;color:var(--ink-2);border-radius:999px;
+  border:1px solid var(--line);background:var(--card);color:var(--ink-2);border-radius:999px;
   padding:3px 11px;font-size:12px;transition:.15s;white-space:nowrap
 }
-.chip:hover{border-color:#BFD6F2;color:var(--brand)}
+.chip:hover{border-color:var(--line-3);color:var(--brand)}
 .chip.on{background:var(--brand);border-color:var(--brand);color:#fff}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
 
@@ -157,32 +161,32 @@ a:hover{text-decoration:underline}
 .tab:hover{color:var(--brand)}
 .tab.on{color:var(--brand);border-bottom-color:var(--brand);font-weight:650}
 
-.seg{display:inline-flex;background:#EFF4FB;border-radius:9px;padding:2px;gap:2px}
+.seg{display:inline-flex;background:var(--tint-2);border-radius:9px;padding:2px;gap:2px}
 .seg button{border:0;background:transparent;padding:3px 10px;border-radius:7px;font-size:12px;color:var(--ink-2)}
-.seg button.on{background:#fff;color:var(--brand);box-shadow:0 1px 3px rgba(21,101,192,.16);font-weight:600}
+.seg button.on{background:var(--card);color:var(--brand);box-shadow:0 1px 3px rgba(var(--brand-rgb),.16);font-weight:600}
 
 .field{display:flex;flex-direction:column;gap:4px}
 .field label{font-size:11.5px;color:var(--ink-3)}
 input[type=text],input[type=number],input[type=date],input[type=search],select,textarea{
-  border:1px solid var(--line);border-radius:9px;padding:6px 9px;background:#fff;outline:none;transition:.15s;width:100%;
+  border:1px solid var(--line);border-radius:9px;padding:6px 9px;background:var(--card);outline:none;transition:.15s;width:100%;
 }
-input:focus,select:focus,textarea:focus{border-color:var(--brand-3);box-shadow:0 0 0 3px rgba(66,165,245,.16)}
+input:focus,select:focus,textarea:focus{border-color:var(--brand-3);box-shadow:0 0 0 3px rgba(var(--brand-3-rgb),.16)}
 textarea{resize:vertical;min-height:64px;line-height:1.6}
 
-.progress{height:6px;border-radius:999px;background:#EAF0F8;overflow:hidden}
+.progress{height:6px;border-radius:999px;background:var(--tint-2);overflow:hidden}
 .progress>i{display:block;height:100%;background:linear-gradient(90deg,var(--brand-3),var(--brand));border-radius:999px;transition:width .35s}
 .bar-row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:12px}
 .bar-row .nm{width:52px;flex:0 0 52px;color:var(--ink-2)}
-.bar-row .track{flex:1;height:9px;background:#EEF3FA;border-radius:999px;overflow:hidden;min-width:30px}
-.bar-row .track>i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#64B5F6,#1565C0)}
+.bar-row .track{flex:1;height:9px;background:var(--tint-2);border-radius:999px;overflow:hidden;min-width:30px}
+.bar-row .track>i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--brand-3),var(--brand))}
 .bar-row .vv{width:56px;text-align:right;color:var(--ink-3);font-variant-numeric:tabular-nums;flex:0 0 56px}
 
 .empty{text-align:center;color:var(--ink-3);padding:22px 10px;font-size:12.5px}
 .empty .e-ico{font-size:26px;display:block;margin-bottom:6px;opacity:.7}
 
 .list{display:flex;flex-direction:column;gap:8px}
-.item{border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 12px;background:#fff;transition:.15s}
-.item:hover{border-color:#C7DCF5;box-shadow:0 3px 12px rgba(21,101,192,.07)}
+.item{border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 12px;background:var(--card);transition:.15s}
+.item:hover{border-color:var(--line-3);box-shadow:0 3px 12px rgba(var(--brand-rgb),.07)}
 .item .it-h{display:flex;gap:8px;align-items:flex-start}
 .item .it-h .sp{flex:1}
 .item h4{margin:0;font-size:13px;font-weight:600;line-height:1.5}
@@ -207,7 +211,7 @@ textarea{resize:vertical;min-height:64px;line-height:1.6}
 .dirgrid .dir{position:relative;display:flex;align-items:center;gap:6px}
 .dirgrid .dir .no{
   flex:0 0 18px;width:18px;height:18px;border-radius:50%;background:var(--brand-soft);color:var(--brand-2);
-  font-size:10.5px;font-weight:600;display:flex;align-items:center;justify-content:center;border:1px solid #CFE0F5
+  font-size:10.5px;font-weight:600;display:flex;align-items:center;justify-content:center;border:1px solid var(--line-3)
 }
 .dirgrid .dir.filled .no{background:var(--brand);color:#fff;border-color:var(--brand)}
 .dirgrid .dir input{font-size:12px;padding:5px 8px}
@@ -226,57 +230,57 @@ textarea{resize:vertical;min-height:64px;line-height:1.6}
 
 /* 单词卡 */
 .wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(212px,1fr));gap:8px}
-.wcard{border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 10px;background:#fff;transition:.15s}
-.wcard:hover{border-color:#C7DCF5;box-shadow:0 3px 12px rgba(21,101,192,.07)}
+.wcard{border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 10px;background:var(--card);transition:.15s}
+.wcard:hover{border-color:var(--line-3);box-shadow:0 3px 12px rgba(var(--brand-rgb),.07)}
 .wcard .w{display:flex;align-items:center;gap:6px}
 .wcard .w b{font-size:13.5px;color:var(--brand-2);letter-spacing:.2px;word-break:break-word}
 .wcard .ph{font-size:11px;color:var(--ink-3);font-family:"Segoe UI",Georgia,serif}
 .wcard .mean{font-size:12.5px;color:var(--ink-2);margin-top:4px;border-top:1px dashed var(--line-2);padding-top:4px}
 .wcard .mean.hide{display:none}
-.wcard.learned{background:linear-gradient(180deg,#F7FBF8,#fff);border-color:#CFE9DC}
+.wcard.learned{background:var(--ok-soft);border-color:var(--ok)}
 .wcard .wbtns{display:flex;gap:4px;margin-top:5px}
 .vfin{display:flex;justify-content:flex-end;margin-top:14px;padding-top:12px;border-top:1px dashed var(--line-2)}
-.vfin .btn{padding:9px 18px;font-size:13.5px;font-weight:600;box-shadow:0 4px 14px rgba(21,101,192,.18)}
+.vfin .btn{padding:9px 18px;font-size:13.5px;font-weight:600;box-shadow:0 4px 14px rgba(var(--brand-rgb),.18)}
 .vfin .btn[disabled]{box-shadow:none;opacity:.72;cursor:default}
 
 /* 文献 */
-.paper{border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 12px;background:#fff;margin-bottom:8px;transition:.15s}
-.paper:hover{border-color:#C7DCF5;box-shadow:0 3px 12px rgba(21,101,192,.07)}
+.paper{border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 12px;background:var(--card);margin-bottom:8px;transition:.15s}
+.paper:hover{border-color:var(--line-3);box-shadow:0 3px 12px rgba(var(--brand-rgb),.07)}
 .paper .pt{font-size:13px;font-weight:600;line-height:1.5;margin:0}
 .paper .pt a{color:var(--ink)}
 .paper .pt a:hover{color:var(--brand)}
 .paper.fresh{border-left:3px solid #41BA41}
 .paper .zh{font-size:12px;color:var(--brand-2);margin-top:3px;display:block}
 .paper .pm{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:11px;color:var(--ink-3);margin-top:5px}
-.paper .ab{font-size:12px;color:var(--ink-2);line-height:1.7;margin-top:6px;padding:8px 10px;background:#F7FAFE;border-radius:8px;border-left:3px solid var(--brand-3);display:none;max-height:420px;overflow:auto}
+.paper .ab{font-size:12px;color:var(--ink-2);line-height:1.7;margin-top:6px;padding:8px 10px;background:var(--tint);border-radius:8px;border-left:3px solid var(--brand-3);display:none;max-height:420px;overflow:auto}
 .paper .ab.show{display:block}
 .paper .ab .ab-en{color:var(--ink-2)}
-.paper .ab .zh-ab{margin-top:8px;padding-top:8px;border-top:1px dashed #DCE7F5;color:var(--brand-2);display:block;line-height:1.8}
-.jq{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;padding:0 6px;border-radius:5px;background:#EAF2FD;color:var(--brand-2);font-weight:600}
+.paper .ab .zh-ab{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);color:var(--brand-2);display:block;line-height:1.8}
+.jq{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;padding:0 6px;border-radius:5px;background:var(--brand-soft);color:var(--brand-2);font-weight:600}
 
 /* 测验 */
-.quiz{border:1px solid var(--line);border-radius:var(--r);background:#fff;padding:12px 14px;margin-bottom:10px}
+.quiz{border:1px solid var(--line);border-radius:var(--r);background:var(--card);padding:12px 14px;margin-bottom:10px}
 .quiz .qh{display:flex;gap:8px;align-items:flex-start;margin-bottom:8px}
 .quiz .qn2{flex:0 0 22px;height:22px;border-radius:7px;background:var(--brand-soft);color:var(--brand-2);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
 .quiz .qtext{flex:1;font-size:13px;font-weight:550;line-height:1.6}
 .opts{display:flex;flex-direction:column;gap:5px;margin-left:30px}
 .opt{
-  display:flex;gap:8px;align-items:flex-start;border:1px solid var(--line);background:#fff;border-radius:9px;
+  display:flex;gap:8px;align-items:flex-start;border:1px solid var(--line);background:var(--card);border-radius:9px;
   padding:6px 10px;text-align:left;font-size:12.5px;color:var(--ink-2);transition:.14s;line-height:1.6;width:100%
 }
-.opt:hover{border-color:#BFD6F2;background:#F8FBFF}
-.opt .k{flex:0 0 17px;height:17px;border-radius:50%;background:#EEF3FA;color:var(--ink-2);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px}
-.opt.sel{border-color:var(--brand);background:#F1F7FF}
+.opt:hover{border-color:var(--line-3);background:var(--tint)}
+.opt .k{flex:0 0 17px;height:17px;border-radius:50%;background:var(--tint-2);color:var(--ink-2);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.opt.sel{border-color:var(--brand);background:var(--tint)}
 .opt.sel .k{background:var(--brand);color:#fff}
-.opt.right{border-color:#8FD4B4;background:var(--ok-soft)}
+.opt.right{border-color:var(--ok);background:var(--ok-soft)}
 .opt.right .k{background:var(--ok);color:#fff}
-.opt.wrong{border-color:#F0B4B4;background:var(--bad-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
 .opt.wrong .k{background:var(--bad);color:#fff}
 .opt:disabled{cursor:default;opacity:1}
-.explain{margin:7px 0 0 30px;font-size:12px;line-height:1.7;color:var(--ink-2);background:#F7FAFE;border-left:3px solid var(--brand-3);border-radius:0 8px 8px 0;padding:7px 10px;display:none}
+.explain{margin:7px 0 0 30px;font-size:12px;line-height:1.7;color:var(--ink-2);background:var(--tint);border-left:3px solid var(--brand-3);border-radius:0 8px 8px 0;padding:7px 10px;display:none}
 .explain.show{display:block}
 .explain b{color:var(--brand-2)}
-.score{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#E8F1FB,#F7FBFF);border:1px solid #CFE0F5;border-radius:var(--r);padding:11px 14px;margin-bottom:10px}
+.score{display:flex;align-items:center;gap:12px;background:var(--brand-soft);border:1px solid var(--line-3);border-radius:var(--r);padding:11px 14px;margin-bottom:10px}
 .score .big{font-size:24px;font-weight:800;color:var(--brand);line-height:1;font-variant-numeric:tabular-nums}
 .score .big small{font-size:12px;font-weight:600;color:var(--ink-3)}
 
@@ -286,37 +290,37 @@ textarea{resize:vertical;min-height:64px;line-height:1.6}
 .cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
 .cal-dow{text-align:center;font-size:11px;color:var(--ink-3);padding:2px 0;font-weight:600}
 .cal-cell{
-  min-height:66px;border:1px solid var(--line-2);border-radius:9px;padding:4px 5px;background:#fff;
+  min-height:66px;border:1px solid var(--line-2);border-radius:9px;padding:4px 5px;background:var(--card);
   display:flex;flex-direction:column;gap:2px;cursor:pointer;transition:.14s;position:relative;overflow:hidden
 }
-.cal-cell:hover{border-color:var(--brand-3);background:#F8FBFF}
-.cal-cell.dim{background:#FAFCFE;color:#B9C6D8}
-.cal-cell.today{border-color:var(--brand);box-shadow:inset 0 0 0 1px var(--brand);background:#F1F7FF}
-.cal-cell.sel{border-color:var(--brand);box-shadow:0 0 0 3px rgba(21,101,192,.16)}
+.cal-cell:hover{border-color:var(--brand-3);background:var(--tint)}
+.cal-cell.dim{background:var(--card-2);color:var(--ink-3)}
+.cal-cell.today{border-color:var(--brand);box-shadow:inset 0 0 0 1px var(--brand);background:var(--tint)}
+.cal-cell.sel{border-color:var(--brand);box-shadow:0 0 0 3px rgba(var(--brand-rgb),.16)}
 .cal-cell .d{font-size:11.5px;font-weight:650;color:var(--ink-2)}
 .cal-cell.today .d{color:var(--brand)}
 .cal-cell .ev{font-size:10px;line-height:1.35;border-radius:4px;padding:1px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ev-lab{background:#E3F0FF;color:#0D47A1}
-.ev-trip{background:#E6F6EF;color:#0F6B48}
-.ev-remind{background:#FFF3E0;color:#9A5B00}
+.ev-lab{background:var(--brand-soft);color:var(--brand-2)}
+.ev-trip{background:var(--ok-soft);color:var(--ok)}
+.ev-remind{background:var(--warn-soft);color:var(--warn)}
 .cal-cell .more{font-size:9.5px;color:var(--ink-3)}
 .evlist{display:flex;flex-direction:column;gap:6px;margin-top:8px}
-.evrow{display:flex;gap:8px;align-items:flex-start;border:1px solid var(--line);border-radius:9px;padding:7px 9px;background:#fff}
+.evrow{display:flex;gap:8px;align-items:flex-start;border:1px solid var(--line);border-radius:9px;padding:7px 9px;background:var(--card)}
 .evrow .sp{flex:1;min-width:0}
 .evrow h5{margin:0;font-size:12.5px;font-weight:600}
 .evrow p{margin:2px 0 0;font-size:11.5px;color:var(--ink-2);white-space:pre-wrap;word-break:break-word}
 
 /* 账本 */
-.stat{border:1px solid var(--line);border-radius:var(--r-sm);padding:9px 11px;background:linear-gradient(180deg,#F8FBFF,#fff)}
+.stat{border:1px solid var(--line);border-radius:var(--r-sm);padding:9px 11px;background:var(--card)}
 .stat .lb{font-size:11px;color:var(--ink-3)}
 .stat .vl{font-size:18px;font-weight:800;color:var(--brand-2);line-height:1.3;font-variant-numeric:tabular-nums}
 .stat .vl small{font-size:11px;font-weight:600;color:var(--ink-3)}
 .stat.g .vl{color:var(--ok)}
 .stat.o .vl{color:var(--warn)}
 table.tb{width:100%;border-collapse:collapse;font-size:12px}
-table.tb th{text-align:left;font-weight:600;color:var(--ink-3);font-size:11px;padding:5px 7px;border-bottom:1px solid var(--line);white-space:nowrap;background:#FAFCFF}
+table.tb th{text-align:left;font-weight:600;color:var(--ink-3);font-size:11px;padding:5px 7px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--card-2)}
 table.tb td{padding:5px 7px;border-bottom:1px solid var(--line-2);vertical-align:middle}
-table.tb tr:hover td{background:#FAFCFF}
+table.tb tr:hover td{background:var(--tint)}
 table.tb td.num{text-align:right;font-variant-numeric:tabular-nums}
 .tb-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r-sm)}
 
@@ -324,36 +328,36 @@ table.tb td.num{text-align:right;font-variant-numeric:tabular-nums}
 .lgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:8px}
 .lcard{
   display:flex;gap:9px;align-items:center;border:1px solid var(--line);border-radius:var(--r-sm);padding:9px 10px;
-  background:#fff;transition:.15s;color:inherit;text-decoration:none;min-width:0
+  background:var(--card);transition:.15s;color:inherit;text-decoration:none;min-width:0
 }
-.lcard:hover{border-color:var(--brand-3);background:#F8FBFF;box-shadow:0 4px 14px rgba(21,101,192,.10);text-decoration:none;transform:translateY(-1px)}
+.lcard:hover{border-color:var(--brand-3);background:var(--tint);box-shadow:0 4px 14px rgba(var(--brand-rgb),.10);text-decoration:none;transform:translateY(-1px)}
 .lcard .li{width:32px;height:32px;flex:0 0 32px;border-radius:9px;background:var(--brand-soft);display:flex;align-items:center;justify-content:center;font-size:16px}
 .lcard .lt{min-width:0;flex:1}
 .lcard .lt b{display:block;font-size:12.5px;color:var(--ink);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lcard .lt span{display:block;font-size:10.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* 选题 */
-.idea{border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 12px;background:#fff;transition:.15s}
-.idea:hover{border-color:#C7DCF5;box-shadow:0 3px 12px rgba(21,101,192,.07)}
+.idea{border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 12px;background:var(--card);transition:.15s}
+.idea:hover{border-color:var(--line-3);box-shadow:0 3px 12px rgba(var(--brand-rgb),.07)}
 .idea h4{margin:0 0 4px;font-size:13px;font-weight:600;line-height:1.5}
 .idea .kv{font-size:11.5px;color:var(--ink-2);margin-top:3px;line-height:1.6}
 .idea .kv b{color:var(--ink-3);font-weight:500}
 .idea .isrc{margin-top:4px;display:flex;flex-direction:column;gap:3px}
 .idea .ilink{display:block;font-size:11px;line-height:1.5;color:var(--brand-2);text-decoration:none;background:#F6FAFF;
-  border:1px solid #E3EEFA;border-radius:7px;padding:4px 7px;transition:.15s}
-.idea .ilink:hover{background:var(--brand-soft);border-color:#C7DCF5;color:var(--brand)}
+  border:1px solid var(--line-2);border-radius:7px;padding:4px 7px;transition:.15s}
+.idea .ilink:hover{background:var(--brand-soft);border-color:var(--line-3);color:var(--brand)}
 .idea .ilink b{color:var(--brand-3);font-weight:600}
 .idea .ij{display:block;font-size:10px;color:var(--ink-3);margin-top:1px}
 
 /* 提示条 */
-.hint{font-size:11.5px;color:var(--warn);background:var(--warn-soft);border:1px solid #F5DEB6;border-radius:9px;padding:6px 10px;line-height:1.6}
-.hint.b{color:var(--brand-2);background:var(--brand-soft);border-color:#CFE0F5}
-.hint.g{color:var(--ok);background:var(--ok-soft);border-color:#C9EADB}
+.hint{font-size:11.5px;color:var(--warn);background:var(--warn-soft);border:1px solid var(--warn-soft);border-radius:9px;padding:6px 10px;line-height:1.6}
+.hint.b{color:var(--brand-2);background:var(--brand-soft);border-color:var(--line-3)}
+.hint.g{color:var(--ok);background:var(--ok-soft);border-color:var(--ok-soft)}
 
 /* toast */
 .toast{
   position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(14px);z-index:99;
-  background:#16324F;color:#fff;border-radius:10px;padding:8px 16px;font-size:12.5px;
+  background:var(--toast-bg);color:#fff;border-radius:10px;padding:8px 16px;font-size:12.5px;
   box-shadow:0 10px 28px rgba(0,0,0,.24);opacity:0;pointer-events:none;transition:.22s;max-width:88vw;text-align:center
 }
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -386,15 +390,146 @@ table.tb td.num{text-align:right;font-variant-numeric:tabular-nums}
   .wgrid{grid-template-columns:1fr}
 }
 @media print{
-  .sidebar,.topbar,.overlay{display:none}
+  .sidebar,.topbar,.overlay,.wall-layer{display:none}
   .content{padding:0}
-  body{background:#fff}
+  body{background:var(--card)}
   .page{display:block!important}
+}
+
+/* ================= 背景壁纸 ================= */
+.wall-layer{
+  position:fixed;inset:0;z-index:0;pointer-events:none;display:none;
+  background-position:center center;background-repeat:no-repeat;background-size:cover;
+  transition:opacity .25s ease;
+}
+body.wb-wall .wall-layer{display:block}
+/* 壁纸模式下把大面积的底色变半透明，让壁纸透出来 */
+body.wb-wall{background:var(--bg)}
+body.wb-wall .sidebar{background:rgba(var(--card-rgb),var(--wall-alpha));backdrop-filter:blur(14px) saturate(1.15)}
+body.wb-wall .topbar{background:rgba(var(--card-rgb),min(1,calc(var(--wall-alpha) + .08)));backdrop-filter:blur(14px) saturate(1.15)}
+body.wb-wall .card,
+body.wb-wall .item,
+body.wb-wall .paper,
+body.wb-wall .quiz,
+body.wb-wall .wcard,
+body.wb-wall .idea,
+body.wb-wall .lcard,
+body.wb-wall .evrow,
+body.wb-wall .stat,
+body.wb-wall .cal-cell,
+body.wb-wall .opt{
+  background:rgba(var(--card-rgb),min(1,calc(var(--wall-alpha) + .06)));
+  backdrop-filter:blur(10px) saturate(1.1);
+}
+body.wb-wall .main{position:relative;z-index:1}
+
+/* ================= 设置页 ================= */
+.set-grid{display:grid;grid-template-columns:220px minmax(0,1fr);gap:var(--gap);align-items:start}
+.set-menu{position:sticky;top:64px}
+.set-menu button{
+  display:flex;align-items:center;gap:9px;width:100%;border:0;background:transparent;text-align:left;
+  padding:9px 11px;border-radius:9px;color:var(--ink-2);font-size:12.5px;transition:.15s;line-height:1.4;
+}
+.set-menu button .si{font-size:15px;width:18px;text-align:center;flex:0 0 18px}
+.set-menu button .st{flex:1;min-width:0}
+.set-menu button .sd{font-size:10.5px;color:var(--ink-3);display:block}
+.set-menu button:hover{background:var(--brand-soft);color:var(--brand-2)}
+.set-menu button.on{background:var(--brand);color:#fff;box-shadow:0 4px 12px rgba(var(--brand-rgb),.26)}
+.set-menu button.on .sd{color:rgba(255,255,255,.78)}
+
+/* 主题预设色块 */
+.preset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(126px,1fr));gap:9px}
+.preset{
+  border:1px solid var(--line);border-radius:11px;padding:0;overflow:hidden;background:var(--card);
+  transition:.16s;text-align:left;position:relative;line-height:1.3;
+}
+.preset:hover{border-color:var(--brand-3);box-shadow:0 4px 14px rgba(var(--brand-rgb),.12);transform:translateY(-1px)}
+.preset .pv{height:46px;display:block;position:relative}
+.preset .pv::after{
+  content:"";position:absolute;left:9px;right:9px;bottom:-6px;height:12px;border-radius:5px;
+  background:rgba(255,255,255,.72);box-shadow:0 1px 3px rgba(0,0,0,.10)
+}
+.preset .pn{padding:9px 10px 8px;display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--ink-2);font-weight:600}
+.preset.on{border-color:var(--brand);box-shadow:0 0 0 2px rgba(var(--brand-rgb),.20)}
+.preset.on .pn{color:var(--brand)}
+.preset.on .pn::after{content:"✓";margin-left:auto;color:var(--brand);font-weight:800}
+.preset .pdot{width:9px;height:9px;border-radius:50%;flex:0 0 9px}
+
+/* 自定义取色 */
+.tone-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tone-chip{
+  width:34px;height:34px;border-radius:9px;border:2px solid transparent;cursor:pointer;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.06);transition:.14s;padding:0;
+}
+.tone-chip:hover{transform:translateY(-1px)}
+.tone-chip.on{border-color:var(--ink);box-shadow:0 0 0 2px var(--card) inset}
+input[type=color].tone-input{
+  width:44px;height:34px;padding:2px;border:1px solid var(--line);border-radius:9px;background:var(--card);cursor:pointer
+}
+.tone-preview{border:1px solid var(--line);border-radius:11px;overflow:hidden;margin-top:10px}
+.tone-preview .tp-bar{height:34px;background:var(--brand);display:flex;align-items:center;padding:0 12px;color:#fff;font-size:11.5px;font-weight:600;letter-spacing:.4px}
+.tone-preview .tp-body{background:var(--bg);padding:10px 12px;display:flex;gap:8px;flex-wrap:wrap}
+.tone-preview .tp-card{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:8px 10px;flex:1;min-width:120px;box-shadow:var(--sh)}
+.tone-preview .tp-card b{display:block;font-size:12px;color:var(--brand-2);margin-bottom:3px}
+.tone-preview .tp-card span{font-size:10.5px;color:var(--ink-3)}
+.tone-preview .tp-pill{display:inline-block;font-size:10px;padding:1px 7px;border-radius:999px;background:var(--brand-soft);color:var(--brand-2);border:1px solid var(--line-3)}
+.tone-preview .tp-btn{display:inline-block;font-size:10.5px;padding:2px 9px;border-radius:7px;background:var(--brand);color:#fff}
+
+/* 壁纸 */
+.wall-drop{
+  border:2px dashed var(--line-3);border-radius:12px;padding:22px 16px;text-align:center;
+  background:var(--card-2);transition:.16s;cursor:pointer;display:block;
+}
+.wall-drop:hover,.wall-drop.over{border-color:var(--brand);background:var(--brand-soft)}
+.wall-drop .wi{font-size:26px;display:block;margin-bottom:6px}
+.wall-drop b{font-size:12.5px;color:var(--brand-2);display:block}
+.wall-drop span{font-size:11px;color:var(--ink-3)}
+.wall-thumb{
+  width:100%;aspect-ratio:16/10;border-radius:10px;border:1px solid var(--line);
+  background-size:cover;background-position:center;background-color:var(--tint-2)
+}
+.wall-op-row{display:flex;align-items:center;gap:10px}
+.wall-op-row input[type=range]{flex:1;accent-color:var(--brand);height:4px}
+.wall-op-row .vv{font-size:11.5px;color:var(--ink-3);width:42px;text-align:right;font-variant-numeric:tabular-nums}
+
+/* 裁剪弹层 */
+.crop-mask{
+  position:fixed;inset:0;z-index:120;background:rgba(8,16,28,.62);display:flex;
+  align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(3px);
+}
+.crop-box{
+  background:var(--card);border-radius:var(--r);box-shadow:0 24px 70px rgba(0,0,0,.34);
+  width:min(760px,96vw);max-height:94vh;display:flex;flex-direction:column;overflow:hidden;
+}
+.crop-h{display:flex;align-items:center;gap:8px;padding:12px 15px;border-bottom:1px solid var(--line)}
+.crop-h h3{margin:0;font-size:13.5px;font-weight:650}
+.crop-h .sp{flex:1}
+.crop-stage{
+  position:relative;overflow:hidden;background:#0B1220;flex:1;min-height:180px;
+  display:flex;align-items:center;justify-content:center;padding:14px;
+}
+.crop-canvas{max-width:100%;max-height:52vh;display:block;cursor:grab;touch-action:none;border-radius:4px}
+.crop-canvas:active{cursor:grabbing}
+.crop-f{margin-top:10px}
+.crop-f label{font-size:11px;color:var(--ink-3);display:block;margin-bottom:4px}
+.crop-f input[type=range]{width:100%;accent-color:var(--brand)}
+.crop-b{display:flex;gap:8px;padding:12px 15px;border-top:1px solid var(--line);align-items:center;flex-wrap:wrap}
+.crop-tip{font-size:11px;color:var(--ink-3);line-height:1.6}
+
+@media (max-width:900px){
+  .set-grid{grid-template-columns:1fr}
+  .set-menu{position:static;display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+  .set-menu::-webkit-scrollbar{display:none}
+  .set-menu button{width:auto;flex:0 0 auto;padding:7px 12px}
+  .set-menu button .sd{display:none}
+  .preset-grid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr))}
+  .wall-thumb{aspect-ratio:16/11}
 }
 
 </style>
 </head>
 <body>
+<div class="wall-layer" id="wallLayer"></div>
 <div class="app">
   <aside class="sidebar" id="sidebar"></aside>
   <div class="overlay" id="overlay"></div>
@@ -11741,6 +11876,7 @@ window.WB_DATA.quizExtra = {
   function navHTML() {
     var groups = [], map = {};
     WB.modules.forEach(function (m) {
+      if (m.hidden) return;
       var g = m.group || '功能';
       if (!map[g]) { map[g] = []; groups.push(g); }
       map[g].push(m);
@@ -11826,7 +11962,7 @@ window.WB_DATA.quizExtra = {
   };
   WB.register = register;
   WB.go = go;
-  WB.mount = mount;
+  WB.navHTML = navHTML;  WB.mount = mount;
   WB.navHTML = navHTML;
   WB.currentId = currentId;
 
@@ -11875,7 +12011,9 @@ window.WB_DATA.quizExtra = {
     sb.insertAdjacentHTML('beforeend', '<div class="nav" id="navBox"></div>');
     sb.insertAdjacentHTML('beforeend',
       '<div class="nav-foot"><div class="row"><span id="cloudTip">数据保存在本机浏览器</span></div>' +
-      '<div class="row" style="margin-top:6px"><button class="btn sm" id="btnExport">⬇ 导出备份</button>' +
+      '<div class="row" style="margin-top:6px">' +
+      '<button class="btn sm" id="btnSettings">⚙️ 设置</button>' +
+      '<button class="btn sm" id="btnExport">⬇ 导出备份</button>' +
       '<button class="btn sm danger" id="btnClear">🗑 清空</button></div></div>');
     document.getElementById('navBox').innerHTML = navHTML();
     var d = new Date();
@@ -11906,6 +12044,7 @@ window.WB_DATA.quizExtra = {
     });
     document.getElementById('overlay').addEventListener('click', closeDrawer);
 
+    document.getElementById('btnSettings').addEventListener('click', function () { go('settings'); });
     document.getElementById('btnExport').addEventListener('click', exportData);
     document.getElementById('btnClear').addEventListener('click', function () {
       if (!window.confirm('确定清空全部本地数据吗？（学习记录、账本、复盘、收藏都会删除，且无法恢复）')) return;
@@ -11969,6 +12108,317 @@ window.WB_DATA.quizExtra = {
   WB.boot = boot;
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
+})();
+
+;
+/* ---- theme.js ---- */
+/* ===== 主题风格 · 背景壁纸 =====
+   这两项都是「设备级」设置：只存本机（ui_ 前缀），不参与云端同步，
+   换设备后各看各的，不会把手机上的壁纸覆盖到电脑上。 */
+(function () {
+  'use strict';
+  var U = WB.util;
+
+  var K_THEME = 'ui_theme';   /* { id, brand } */
+  var K_WALL = 'ui_wall';     /* { op }  0~1 */
+
+  /* ---------------- 颜色数学 ---------------- */
+  function clamp(n, a, b) { return n < a ? a : (n > b ? b : n); }
+  function hex2rgb(h) {
+    h = String(h || '').replace('#', '').trim();
+    if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+    if (h.length !== 6 || /[^0-9a-fA-F]/.test(h)) return [21, 101, 192];
+    return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+  }
+  function rgb2hex(c) {
+    return '#' + c.map(function (v) {
+      var s = Math.round(clamp(v, 0, 255)).toString(16);
+      return s.length < 2 ? '0' + s : s;
+    }).join('').toUpperCase();
+  }
+  function rgb2hsl(c) {
+    var r = c[0] / 255, g = c[1] / 255, b = c[2] / 255;
+    var mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+    var h = 0, s = 0, l = (mx + mn) / 2;
+    if (d) {
+      s = l > 0.5 ? d / (2 - mx - mn) : d / (mx + mn);
+      if (mx === r) h = (g - b) / d + (g < b ? 6 : 0);
+      else if (mx === g) h = (b - r) / d + 2;
+      else h = (r - g) / d + 4;
+      h /= 6;
+    }
+    return [h * 360, s * 100, l * 100];
+  }
+  function hsl2rgb(hsl) {
+    var h = ((hsl[0] % 360) + 360) % 360 / 360;
+    var s = clamp(hsl[1], 0, 100) / 100, l = clamp(hsl[2], 0, 100) / 100;
+    if (!s) { var v = l * 255; return [v, v, v]; }
+    function hue(p, q, t) {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1 / 6) return p + (q - p) * 6 * t;
+      if (t < 1 / 2) return q;
+      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+      return p;
+    }
+    var q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+    return [hue(p, q, h + 1 / 3) * 255, hue(p, q, h) * 255, hue(p, q, h - 1 / 3) * 255];
+  }
+  function mix(a, b, t) {
+    return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+  }
+  function rgbStr(hex) { return hex2rgb(hex).map(Math.round).join(','); }
+  function rgbaOf(hex, a) { return 'rgba(' + rgbStr(hex) + ',' + a + ')'; }
+  /* 往白/黑方向压：只改明度，保留色相与饱和度 */
+  function shiftL(hex, dl) {
+    var h = rgb2hsl(hex2rgb(hex));
+    h[2] = clamp(h[2] + dl, 0, 100);
+    return rgb2hex(hsl2rgb(h));
+  }
+  /* 生成淡色底：把饱和度压低、明度拉到指定值 */
+  function tintTo(hex, l, satScale) {
+    var h = rgb2hsl(hex2rgb(hex));
+    h[1] = clamp(h[1] * (satScale == null ? 0.6 : satScale), 0, 100);
+    h[2] = l;
+    return rgb2hex(hsl2rgb(h));
+  }
+
+  /* ---------------- 预设配色 ---------------- */
+  var PRESETS = [
+    { id: 'blue', name: '经典蓝白', brand: '#1565C0' },
+    { id: 'teal', name: '青碧', brand: '#00838F' },
+    { id: 'green', name: '松林绿', brand: '#2E7D32' },
+    { id: 'orange', name: '暖橙', brand: '#E65100' },
+    { id: 'rose', name: '胭脂', brand: '#AD1457' },
+    { id: 'violet', name: '紫罗兰', brand: '#6A1B9A' },
+    { id: 'indigo', name: '靛青', brand: '#283593' },
+    { id: 'slate', name: '石墨灰', brand: '#37474F' },
+    { id: 'dark', name: '暗夜', brand: '#64B5F6', dark: true }
+  ];
+
+  function findPreset(id) {
+    for (var i = 0; i < PRESETS.length; i++) if (PRESETS[i].id === id) return PRESETS[i];
+    return null;
+  }
+
+  function buildLight(brand) {
+    var b2 = shiftL(brand, -13);
+    var b3 = shiftL(brand, 14);
+    return {
+      '--brand': brand,
+      '--brand-2': b2,
+      '--brand-3': b3,
+      '--brand-soft': tintTo(brand, 94, 0.72),
+      '--brand-rgb': rgbStr(brand),
+      '--brand-2-rgb': rgbStr(b2),
+      '--brand-3-rgb': rgbStr(b3),
+      '--ink': rgb2hex(mix([26, 34, 48], hex2rgb(brand), 0.06)),
+      '--ink-2': rgb2hex(mix([67, 80, 107], hex2rgb(brand), 0.08)),
+      '--ink-3': rgb2hex(mix([123, 138, 163], hex2rgb(brand), 0.10)),
+      '--line': tintTo(brand, 88, 0.5),
+      '--line-2': tintTo(brand, 94, 0.5),
+      '--line-3': tintTo(brand, 78, 0.55),
+      '--line-4': tintTo(brand, 75, 0.55),
+      '--line-5': tintTo(brand, 80, 0.55),
+      '--bg': tintTo(brand, 95.5, 0.5),
+      '--card': '#FFFFFF',
+      '--card-rgb': '255,255,255',
+      '--card-2': tintTo(brand, 98.5, 0.5),
+      '--tint': tintTo(brand, 96.5, 0.62),
+      '--tint-2': tintTo(brand, 93, 0.66),
+      '--tint-3': tintTo(brand, 90, 0.52),
+      '--ok': '#12855B', '--ok-soft': '#E6F6EF',
+      '--warn': '#B26A00', '--warn-soft': '#FFF5E5',
+      '--bad': '#C62828', '--bad-soft': '#FDECEC',
+      '--toast-bg': '#16324F',
+      '--sh': '0 1px 2px ' + rgbaOf(brand, 0.06) + ', 0 6px 18px ' + rgbaOf(brand, 0.07),
+      '--sh-2': '0 2px 6px ' + rgbaOf(brand, 0.10) + ', 0 14px 34px ' + rgbaOf(brand, 0.12)
+    };
+  }
+
+  function buildDark(brand) {
+    var base = hex2rgb('#0B1017');
+    var b2 = shiftL(brand, 10);
+    var b3 = shiftL(brand, 22);
+    return {
+      '--brand': brand,
+      '--brand-2': b2,
+      '--brand-3': b3,
+      '--brand-soft': rgb2hex(mix(hex2rgb(brand), base, 0.80)),
+      '--brand-rgb': rgbStr(brand),
+      '--brand-2-rgb': rgbStr(b2),
+      '--brand-3-rgb': rgbStr(b3),
+      '--ink': '#E8EEF7',
+      '--ink-2': '#B4C1D3',
+      '--ink-3': '#7C8B9F',
+      '--line': rgb2hex(mix([45, 55, 70], hex2rgb(brand), 0.10)),
+      '--line-2': rgb2hex(mix([34, 42, 55], hex2rgb(brand), 0.08)),
+      '--line-3': rgb2hex(mix([62, 75, 95], hex2rgb(brand), 0.14)),
+      '--line-4': rgb2hex(mix([70, 84, 105], hex2rgb(brand), 0.14)),
+      '--line-5': rgb2hex(mix([56, 68, 86], hex2rgb(brand), 0.12)),
+      '--bg': '#0B1017',
+      '--card': '#151C26',
+      '--card-rgb': '21,28,38',
+      '--card-2': '#111823',
+      '--tint': rgb2hex(mix([27, 36, 49], hex2rgb(brand), 0.06)),
+      '--tint-2': rgb2hex(mix([32, 48, 63], hex2rgb(brand), 0.16)),
+      '--tint-3': rgb2hex(mix([34, 44, 58], hex2rgb(brand), 0.08)),
+      '--ok': '#3DD68C', '--ok-soft': '#10291F',
+      '--warn': '#F0B429', '--warn-soft': '#2A2213',
+      '--bad': '#FF6B6B', '--bad-soft': '#2C1719',
+      '--toast-bg': '#2A3547',
+      '--sh': '0 1px 2px rgba(0,0,0,.42), 0 6px 18px rgba(0,0,0,.38)',
+      '--sh-2': '0 2px 6px rgba(0,0,0,.48), 0 14px 34px rgba(0,0,0,.46)'
+    };
+  }
+
+  function varsOf(t) {
+    var p = findPreset(t && t.id) || PRESETS[0];
+    var brand = (t && t.brand) || p.brand;
+    return p.dark ? buildDark(brand) : buildLight(brand);
+  }
+
+  /* 给设置页画色块用 */
+  function swatchGradient(id, brand) {
+    var v = varsOf({ id: id, brand: brand });
+    return 'linear-gradient(135deg,' + v['--brand'] + ' 0%,' + v['--brand-3'] + ' 55%,' + v['--brand-soft'] + ' 100%)';
+  }
+
+  /* ---------------- 应用 ---------------- */
+  var root = document.documentElement;
+  var cur = { id: 'blue', brand: '#1565C0' };
+
+  function applyVars(v) {
+    Object.keys(v).forEach(function (k) { root.style.setProperty(k, v[k]); });
+  }
+
+  function applyTheme(t, silent) {
+    cur = { id: t.id, brand: t.brand || (findPreset(t.id) || PRESETS[0]).brand };
+    var v = varsOf(cur);
+    applyVars(v);
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta && !WB.IS_DEV) meta.setAttribute('content', v['--brand']);
+    if (!silent) U.storeSet(K_THEME, cur);
+    document.dispatchEvent(new CustomEvent('wb:theme', { detail: cur }));
+  }
+
+  function getTheme() { return { id: cur.id, brand: cur.brand }; }
+
+  /* ---------------- 壁纸 ---------------- */
+  var wall = { op: 0.35, url: '' };
+  var DB = 'wb_ui_db', STORE = 'kv';
+
+  function idb() {
+    return new Promise(function (res, rej) {
+      if (!window.indexedDB) { rej(new Error('no-idb')); return; }
+      var r = window.indexedDB.open(DB, 1);
+      r.onupgradeneeded = function () {
+        try { r.result.createObjectStore(STORE); } catch (e) { }
+      };
+      r.onsuccess = function () { res(r.result); };
+      r.onerror = function () { rej(r.error); };
+    });
+  }
+  function kvPut(k, v) {
+    return idb().then(function (d) {
+      return new Promise(function (res, rej) {
+        var t = d.transaction(STORE, 'readwrite');
+        t.objectStore(STORE).put(v, k);
+        t.oncomplete = function () { res(true); };
+        t.onerror = function () { rej(t.error); };
+      });
+    });
+  }
+  function kvGet(k) {
+    return idb().then(function (d) {
+      return new Promise(function (res) {
+        var t = d.transaction(STORE, 'readonly');
+        var q = t.objectStore(STORE).get(k);
+        q.onsuccess = function () { res(q.result || null); };
+        q.onerror = function () { res(null); };
+      });
+    });
+  }
+  function kvDel(k) {
+    return idb().then(function (d) {
+      return new Promise(function (res) {
+        var t = d.transaction(STORE, 'readwrite');
+        t.objectStore(STORE).delete(k);
+        t.oncomplete = function () { res(true); };
+        t.onerror = function () { res(false); };
+      });
+    });
+  }
+
+  function wallLayer() { return document.getElementById('wallLayer'); }
+
+  function applyWall() {
+    var l = wallLayer();
+    var on = !!wall.url;
+    document.body.classList.toggle('wb-wall', on);
+    if (l) l.style.backgroundImage = on ? 'url("' + wall.url + '")' : '';
+    if (on) {
+      /* 浓度同时控制：壁纸层本身的透明度 + 卡片/侧栏的半透明度
+         0%   → 壁纸看不见，卡片完全不透明
+         100% → 壁纸最清晰，卡片最透明（仍有底，保证文字可读） */
+      var op = clamp(wall.op, 0, 1);
+      var lo = cur.id === 'dark' ? 0.72 : 0.62;   /* 最透明时的卡片 alpha 下限 */
+      l.style.opacity = String(op);
+      root.style.setProperty('--wall-alpha', String(1 - op * (1 - lo)).slice(0, 5));
+    } else {
+      root.style.setProperty('--wall-alpha', '1');
+    }
+    document.dispatchEvent(new CustomEvent('wb:wall', { detail: { on: on, op: wall.op } }));
+  }
+
+  function setWall(url, op) {
+    if (typeof op === 'number') wall.op = clamp(op, 0, 1);
+    if (url !== undefined) wall.url = url || '';
+    applyWall();
+    U.storeSet(K_WALL, { op: wall.op });
+    return kvPut('wall', wall.url).catch(function () { return false; });
+  }
+  function setWallOp(op) {
+    wall.op = clamp(Number(op) || 0, 0, 1);
+    applyWall();
+    U.storeSet(K_WALL, { op: wall.op });
+  }
+  function clearWall() {
+    wall.url = '';
+    applyWall();
+    return kvDel('wall').catch(function () { return false; });
+  }
+  function getWall() { return { op: wall.op, url: wall.url }; }
+
+  /* ---------------- 初始化 ---------------- */
+  function init() {
+    var t = U.storeGet(K_THEME, null);
+    if (!t || typeof t !== 'object' || !t.id) t = { id: 'blue', brand: '#1565C0' };
+    applyTheme(t, true);
+
+    var w = U.storeGet(K_WALL, null);
+    if (w && typeof w === 'object' && typeof w.op === 'number') wall.op = clamp(w.op, 0, 1);
+
+    kvGet('wall').then(function (url) {
+      if (!url) { applyWall(); return; }
+      wall.url = url;
+      applyWall();
+    }).catch(function () { applyWall(); });
+  }
+
+  WB.theme = {
+    PRESETS: PRESETS,
+    varsOf: varsOf,
+    swatchGradient: swatchGradient,
+    getTheme: getTheme,
+    applyTheme: applyTheme,
+    getWall: getWall,
+    setWall: setWall,
+    setWallOp: setWallOp,
+    clearWall: clearWall
+  };
+
+  init();
 })();
 
 ;
@@ -16471,7 +16921,7 @@ window.WB_DATA.quizExtra = {
   }
 
   WB.register({
-    id: 'cloud', icon: '☁️', title: '云端同步', group: '系统',
+    id: 'cloud', icon: '☁️', title: '云端同步', group: '系统', hidden: true,
     mount: function (host) {
       var st = { msg: '', err: '' };
 
@@ -16644,6 +17094,606 @@ window.WB_DATA.quizExtra = {
   });
 })();
 
+;
+/* ---- mod_settings.js ---- */
+/* ===== 模块：设置（主题风格 · 背景壁纸 · 云端同步 · 数据） ===== */
+(function () {
+  'use strict';
+  var U = WB.util;
+  var T = WB.theme;
+
+  var TABS = [
+    { id: 'theme', icon: '🎨', title: '主题风格', desc: '换配色、调主色' },
+    { id: 'wall', icon: '🖼️', title: '背景壁纸', desc: '本地上传并裁剪' },
+    { id: 'cloud', icon: '☁️', title: '云端同步', desc: '多设备互通' },
+    { id: 'data', icon: '💾', title: '数据与备份', desc: '导出 / 清空' }
+  ];
+
+  /* ---------- 主题面板 ---------- */
+  function themePanel() {
+    var cur = T.getTheme();
+    var preset = T.PRESETS.map(function (p) {
+      var on = p.id === cur.id;
+      return '<button type="button" class="preset' + (on ? ' on' : '') + '" data-preset="' + p.id + '">' +
+        '<span class="pv" style="background:' + T.swatchGradient(p.id, p.brand) + '"></span>' +
+        '<span class="pn">' + U.esc(p.name) + '</span></button>';
+    }).join('');
+
+    var tones = ['#1565C0', '#00838F', '#2E7D32', '#558B2F', '#EF6C00', '#E65100', '#AD1457', '#6A1B9A', '#283593', '#455A64', '#37474F', '#8D6E63'];
+    var toneHTML = tones.map(function (c) {
+      var on = String(cur.brand).toUpperCase() === c.toUpperCase();
+      return '<button type="button" class="tone-chip' + (on ? ' on' : '') + '" data-tone="' + c +
+        '" style="background:' + c + '" title="' + c + '"></button>';
+    }).join('');
+
+    return '' +
+      '<div class="card"><div class="card-h"><h3>🎨 预设配色</h3>' +
+      '<span class="sp"></span><span class="muted small">点一下就换，立刻生效</span></div>' +
+      '<div class="preset-grid">' + preset + '</div>' +
+      '<div class="hint g mt12">💡 所有颜色（按钮、标签、卡片边框、浅色底、阴影）都由这一个主色自动推导，' +
+      '换主色等于换整套皮肤。选择会记在本机，不会跟着云端同步跑。</div>' +
+      '</div>' +
+
+      '<div class="card"><div class="card-h"><h3>🎚️ 自定义主色</h3>' +
+      '<span class="sp"></span><span class="muted small">当前 <b>' + U.esc(String(cur.brand).toUpperCase()) + '</b></span></div>' +
+      '<div class="tone-row">' + toneHTML +
+      '<input type="color" class="tone-input" id="toneCustom" value="' + U.esc(cur.brand) + '" title="自由取色">' +
+      '</div>' +
+      '<div class="tone-preview">' +
+      '<div class="tp-bar">🎓 每日学习工作台</div>' +
+      '<div class="tp-body">' +
+      '<div class="tp-card"><b>卡片标题</b><span>这里是正文说明文字</span>' +
+      '<div style="margin-top:6px;display:flex;gap:6px;align-items:center">' +
+      '<span class="tp-pill">标签</span><span class="tp-btn">按钮</span></div></div>' +
+      '<div class="tp-card"><b>示例数据</b><span>配色预览区，实时跟随主色变化</span>' +
+      '<div style="margin-top:6px"><span class="tp-pill">示例</span></div></div>' +
+      '</div></div>' +
+      '<div class="hint b mt12">🖌 取色器支持任意颜色。深色系会偏「暗夜」风，浅色系偏「清爽」风，' +
+      '文字对比度会自动保持可读。</div>' +
+      '</div>' +
+
+      '<div class="card"><div class="card-h"><h3>↩️ 恢复默认</h3></div>' +
+      '<div class="row"><button type="button" class="btn" data-act="resetTheme">恢复「经典蓝白」</button>' +
+      '<span class="muted small">只重置配色，不影响壁纸和数据</span></div></div>';
+  }
+
+  /* ---------- 壁纸面板 ---------- */
+  function wallPanel() {
+    var w = T.getWall();
+    var has = !!w.url;
+    return '' +
+      '<div class="card"><div class="card-h"><h3>🖼️ 背景壁纸</h3>' +
+      '<span class="sp"></span>' + (has ? '<span class="tag g">已启用</span>' : '<span class="tag n">未设置</span>') + '</div>' +
+      (has
+        ? '<div class="grid g2" style="align-items:start">' +
+        '<div class="wall-thumb" style="background-image:url(\'' + w.url + '\')"></div>' +
+        '<div>' +
+        '<div class="hint g">壁纸已应用到工作台背景。卡片会变成半透明，壁纸从卡片下面透出来。</div>' +
+        '<div class="row mt12">' +
+        '<label class="btn" for="wallFile">📁 重新上传</label>' +
+        '<button type="button" class="btn danger" data-act="clearWall">🗑 移除壁纸</button>' +
+        '</div></div></div>'
+        : '<label class="wall-drop" for="wallFile" data-drop>' +
+        '<span class="wi">🖼️</span><b>点击选择图片，或把图片拖进来</b>' +
+        '<span>支持 JPG / PNG / WebP，选完会自动进入裁剪</span></label>') +
+      '<input type="file" id="wallFile" accept="image/*" hidden>' +
+      '</div>' +
+
+      '<div class="card"><div class="card-h"><h3>🎚️ 壁纸浓度</h3>' +
+      '<span class="sp"></span><span class="muted small">拖动滑块即时预览</span></div>' +
+      '<div class="wall-op-row">' +
+      '<span class="muted small">淡</span>' +
+      '<input type="range" id="wallOp" min="0" max="100" step="1" value="' + Math.round((w.op || 0.35) * 100) + '"' + (has ? '' : ' disabled') + '>' +
+      '<span class="muted small">浓</span>' +
+      '<span class="vv" id="wallOpV">' + Math.round((w.op || 0.35) * 100) + '%</span></div>' +
+      '<div class="hint b mt12">数字越大，壁纸越清晰显眼，卡片也越透明；数字越小，壁纸越淡、卡片越实。' +
+      '0% 相当于关闭壁纸效果。建议 30% ~ 55%，太高会影响文字可读性。</div>' +
+      '</div>' +
+
+      '<div class="card"><div class="card-h"><h3>📐 关于裁剪</h3></div>' +
+      '<div class="hint g">上传后会按<b>当前窗口比例</b>自动生成裁剪框，你可以拖动图片、缩放，' +
+      '框内的部分就是最终壁纸。换个屏幕尺寸再裁一次即可适配。' +
+      '原图会等比铺满，不会拉伸变形。</div></div>';
+  }
+
+  /* ---------- 云端同步面板 ---------- */
+  var TOKEN_URL = 'https://github.com/settings/tokens/new?scopes=gist&description=%E6%AF%8F%E6%97%A5%E5%AD%A6%E4%B9%A0%E5%B7%A5%E4%BD%9C%E5%8F%B0';
+  function fmtTime(iso) {
+    if (!iso) return '从未同步';
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    var p = function (n) { return (n < 10 ? '0' : '') + n; };
+    return d.getFullYear() + '/' + p(d.getMonth() + 1) + '/' + p(d.getDate()) + ' ' +
+      p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+  function countLocal() {
+    if (!WB.cloud) return { keys: 0, items: 0 };
+    var s = WB.cloud.snapshot();
+    var n = 0;
+    Object.keys(s).forEach(function (k) {
+      var v = s[k];
+      n += Array.isArray(v) ? v.length : (v && typeof v === 'object' ? Object.keys(v).length : 1);
+    });
+    return { keys: Object.keys(s).length, items: n };
+  }
+
+  function cloudPanel(st) {
+    if (!WB.cloud) return '<div class="card"><div class="hint">云端同步模块未加载</div></div>';
+    var logged = WB.cloud.isLogged();
+    var u = WB.cloud.user() || {};
+    var c = countLocal();
+
+    var body;
+    if (!logged) {
+      body = '<div class="hint b">用你自己的 GitHub 账号做云端存储：数据加密后存进你账号下的一个<b>私有 Gist</b>。' +
+        '电脑和手机粘贴<b>同一个令牌</b>就能互传数据。全程免费，数据只在你自己的账号里。</div>' +
+        '<div class="field mt12"><label>GitHub 个人访问令牌（Personal Access Token）</label>' +
+        '<input type="password" data-token placeholder="ghp_xxxxxxxxxxxx 或 github_pat_xxx" autocomplete="off" spellcheck="false"></div>' +
+        '<div class="row mt8"><button type="button" class="btn pri" data-act="login">🔑 登录</button>' +
+        '<a class="btn" href="' + TOKEN_URL + '" target="_blank" rel="noopener">🔗 去生成令牌</a></div>' +
+        '<div class="hint g mt8">生成令牌时：<b>Note</b> 随便填（如 workbench），<b>Expiration</b> 可选 No expiration，' +
+        '<b>Scopes</b> 只需勾选 <b>gist</b> 这一项。生成后复制以 <code>ghp_</code> 开头的那串，粘贴到上面即可。</div>';
+    } else {
+      body = '<div class="row" style="gap:12px;align-items:center">' +
+        (u.avatar ? '<img src="' + U.esc(u.avatar) + '" alt="" style="width:38px;height:38px;border-radius:50%">' : '') +
+        '<div style="flex:1"><b>' + U.esc(u.name || u.login || '') + '</b>' +
+        '<div class="muted small">@' + U.esc(u.login || '') + ' · 数据存于私有 Gist</div></div>' +
+        '<button type="button" class="btn sm danger" data-act="logout">退出登录</button></div>' +
+        '<div class="grid g3 mt12">' +
+        U.statCard('本机数据项', String(c.keys), '条记录') +
+        U.statCard('上次同步', fmtTime(WB.cloud.lastSync()).replace(' ', '<br>'), '') +
+        U.statCard('同步方式', '手动', '点按钮才同步') +
+        '</div>' +
+        '<div class="hint b mt8" data-cloudinfo>🔍 正在检查云端存储…</div>' +
+        '<div class="row mt8">' +
+        '<button type="button" class="btn pri" data-act="sync"' + (WB.cloud.isBusy() ? ' disabled' : '') + '>' +
+        (WB.cloud.isBusy() ? '⏳ 同步中…' : '🔄 同步') + '</button>' +
+        '<button type="button" class="btn" data-act="push">⬆ 上传（本机覆盖云端）</button>' +
+        '<button type="button" class="btn" data-act="pull">⬇ 下载（云端覆盖本机）</button>' +
+        '</div>' +
+        '<div class="hint g mt8">🔄 <b>同步（日常就点这个）</b>：自动判断该往哪边走——没动过数据就拉云端，刚改过就传本机。' +
+        '<b>删除也会如实同步</b>。</div>' +
+        '<div class="hint b mt8">⬆ <b>上传</b>：以本机为准整份覆盖云端；⬇ <b>下载</b>：以云端为准整份覆盖本机。</div>' +
+        '<div class="hint g mt8">🖐 <b>全程手动</b>：不会自动上传、也不会自动拉取，只有点按钮时才动数据。</div>';
+    }
+
+    return '<div class="card"><div class="card-h"><h3>☁️ 云端同步</h3>' +
+      '<span class="sp"></span><span class="muted small">' +
+      (logged ? '已登录：' + U.esc(u.login || '') : '未登录') + '</span></div>' +
+      body +
+      (st.msg ? '<div class="hint g mt8">✅ ' + U.esc(st.msg) + '</div>' : '') +
+      (st.err ? '<div class="hint mt8">⚠ ' + U.esc(st.err) + '</div>' : '') +
+      '</div>' +
+
+      '<div class="card"><div class="card-h"><h3>📖 使用说明</h3></div>' +
+      '<div class="hint b"><b>1. 电脑上先登录</b>：生成令牌 → 粘贴 → 点「🔑 登录」→ 点「⬆ 上传」把本机数据传到云端。</div>' +
+      '<div class="hint b mt8"><b>2. 手机上打开同一个网址</b>：进「设置 → 云端同步」→ 粘贴<b>同一个令牌</b> → 登录 → 点「🔄 同步」。</div>' +
+      '<div class="hint g mt8"><b>3. 之后每次</b>：在哪台设备上改完数据，就在哪台点「🔄 同步」；换设备时再点一次即可对齐。</div>' +
+      '<div class="hint g mt8">🔒 <b>安全</b>：令牌只存在你自己浏览器的本地存储，不会发给任何第三方；' +
+      '上传的数据用令牌派生密钥做 AES-GCM 加密，即使 Gist 被看到也是密文。</div>' +
+      '<div class="hint g mt8">⚠ <b>注意</b>：换设备或清浏览器数据后需要重新粘贴令牌；令牌等同于账号密码，不要发给别人。</div>' +
+      '</div>';
+  }
+
+  /* ---------- 数据面板 ---------- */
+  function dataPanel() {
+    var c = countLocal();
+    return '<div class="card"><div class="card-h"><h3>💾 数据与备份</h3>' +
+      '<span class="sp"></span><span class="muted small">本机 ' + c.keys + ' 类 · ' + c.items + ' 条</span></div>' +
+      '<div class="hint b">所有学习记录、账本、复盘、收藏都保存在<b>本机浏览器</b>里，不会上传到任何服务器。' +
+      '换设备或清理浏览器数据前，请先导出备份。</div>' +
+      '<div class="row mt12">' +
+      '<button type="button" class="btn pri" data-act="export">⬇ 导出备份（JSON）</button>' +
+      '<label class="btn" for="importFile">⬆ 导入备份</label>' +
+      '<input type="file" id="importFile" accept=".json,application/json" hidden>' +
+      '</div>' +
+      '<div class="hint g mt8">导入会把备份里的记录合并到本机（同一天的学习记录以备份为准）。</div>' +
+      '</div>' +
+
+      '<div class="card"><div class="card-h"><h3>🧹 清空本机数据</h3></div>' +
+      '<div class="hint">⚠️ 危险操作：会删除全部学习记录、账本、复盘、收藏、科研进展设置，且无法恢复。' +
+      '建议先导出备份。主题与壁纸属于外观设置，不受影响。</div>' +
+      '<div class="row mt12"><button type="button" class="btn danger" data-act="clearAll">🗑 清空全部数据</button></div>' +
+      '</div>';
+  }
+
+  /* ================= 裁剪器 ================= */
+  function cropImage(file, onDone) {
+    var reader = new FileReader();
+    reader.onload = function () {
+      var img = new Image();
+      img.onload = function () { openCrop(img, onDone); };
+      img.onerror = function () { U.toast('图片读取失败，请换一张试试'); };
+      img.src = reader.result;
+    };
+    reader.onerror = function () { U.toast('图片读取失败，请换一张试试'); };
+    reader.readAsDataURL(file);
+  }
+
+  function openCrop(img, onDone) {
+    /* 目标比例 = 当前工作区可视比例 */
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var AR = vw / vh;
+    var maxW = Math.min(700, vw - 80);
+    var maxH = Math.min(window.innerHeight * 0.52, 420);
+    var cw = maxW, ch = Math.round(maxW / AR);
+    if (ch > maxH) { ch = maxH; cw = Math.round(maxH * AR); }
+    var scale = Math.min(cw / img.width, ch / img.height);   /* 初始铺满 */
+    var outW = Math.round(vw * (window.devicePixelRatio > 1 ? 1.6 : 1.2));
+    var outH = Math.round(outW / AR);
+    outW = Math.min(outW, 2560);
+    outH = Math.round(outW / AR);
+
+    var st = { scale: scale, x: 0, y: 0, min: 0 };
+    var minScale = Math.max(cw / img.width, ch / img.height);
+    st.min = minScale;
+    st.scale = minScale * 1.0;
+
+    var mask = document.createElement('div');
+    mask.className = 'crop-mask';
+    mask.innerHTML =
+      '<div class="crop-box">' +
+      '<div class="crop-h"><h3>✂️ 裁剪壁纸</h3><span class="muted small">按当前窗口比例 ' + AR.toFixed(2) + ':1</span>' +
+      '<span class="sp"></span><button type="button" class="btn sm" data-c="close">✕</button></div>' +
+      '<div class="crop-stage"><canvas class="crop-canvas" width="' + cw + '" height="' + ch + '"></canvas></div>' +
+      '<div class="crop-f" style="padding:0 15px"><label>缩放</label>' +
+      '<input type="range" data-c="zoom" min="100" max="320" value="100"></div>' +
+      '<div class="crop-b"><span class="crop-tip">拖动图片调整位置 · 滚轮或滑块缩放</span><span class="sp"></span>' +
+      '<button type="button" class="btn" data-c="close">取消</button>' +
+      '<button type="button" class="btn pri" data-c="ok">✓ 使用这张</button></div>' +
+      '</div>';
+    document.body.appendChild(mask);
+
+    var cv = mask.querySelector('.crop-canvas');
+    var ctx = cv.getContext('2d');
+    var zoom = mask.querySelector('[data-c="zoom"]');
+
+    function draw() {
+      ctx.clearRect(0, 0, cw, ch);
+      ctx.fillStyle = '#0B1220';
+      ctx.fillRect(0, 0, cw, ch);
+      var w = img.width * st.scale, h = img.height * st.scale;
+      var maxX = (w - cw) / 2, maxY = (h - ch) / 2;
+      st.x = Math.max(-maxX, Math.min(maxX, st.x));
+      st.y = Math.max(-maxY, Math.min(maxY, st.y));
+      ctx.drawImage(img, (cw - w) / 2 + st.x, (ch - h) / 2 + st.y, w, h);
+      ctx.strokeStyle = 'rgba(255,255,255,.55)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(.5, .5, cw - 1, ch - 1);
+    }
+    draw();
+
+    /* 拖动 */
+    var drag = null;
+    function pt(e) {
+      var t = e.touches ? e.touches[0] : e;
+      return { x: t.clientX, y: t.clientY };
+    }
+    function down(e) {
+      var p = pt(e); drag = { x: p.x, y: p.y, sx: st.x, sy: st.y };
+      e.preventDefault();
+    }
+    function move(e) {
+      if (!drag) return;
+      var p = pt(e);
+      st.x = drag.sx + (p.x - drag.x);
+      st.y = drag.sy + (p.y - drag.y);
+      draw();
+      e.preventDefault();
+    }
+    function up() { drag = null; }
+    cv.addEventListener('mousedown', down);
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', up);
+    cv.addEventListener('touchstart', down, { passive: false });
+    cv.addEventListener('touchmove', move, { passive: false });
+    cv.addEventListener('touchend', up);
+    cv.addEventListener('wheel', function (e) {
+      e.preventDefault();
+      setScale(st.scale * (e.deltaY > 0 ? 0.94 : 1.06));
+    }, { passive: false });
+
+    function setScale(s) {
+      var k = st.scale;
+      st.scale = Math.max(st.min, Math.min(st.min * 3.2, s));
+      if (k) { st.x *= st.scale / k; st.y *= st.scale / k; }
+      zoom.value = String(Math.round(st.scale / st.min * 100));
+      draw();
+    }
+    zoom.addEventListener('input', function () { setScale(st.min * (Number(zoom.value) / 100)); });
+
+    function close() {
+      window.removeEventListener('mousemove', move);
+      window.removeEventListener('mouseup', up);
+      if (mask.parentNode) mask.parentNode.removeChild(mask);
+    }
+    mask.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-c]');
+      if (b && b.getAttribute('data-c') === 'close') { close(); return; }
+      if (b && b.getAttribute('data-c') === 'ok') {
+        /* 导出：把画布内容按输出尺寸重绘 */
+        var out = document.createElement('canvas');
+        out.width = outW; out.height = outH;
+        var octx = out.getContext('2d');
+        var k = outW / cw;
+        var w = img.width * st.scale * k, h = img.height * st.scale * k;
+        octx.drawImage(img, (outW - w) / 2 + st.x * k, (outH - h) / 2 + st.y * k, w, h);
+        var url = '';
+        try { url = out.toDataURL('image/jpeg', 0.86); } catch (err) { url = ''; }
+        close();
+        if (!url) { U.toast('导出失败，请换一张图片'); return; }
+        onDone(url);
+      }
+    });
+    /* Esc 关闭 */
+    mask.tabIndex = -1;
+    mask.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+    mask.focus();
+  }
+
+  /* ================= 模块 ================= */
+  WB.register({
+    id: 'settings', icon: '⚙️', title: '设置', group: '系统',
+    mount: function (host) {
+      var st = { tab: 'theme', msg: '', err: '' };
+      var hash = String(location.hash || '').split('?')[1] || '';
+      if (/tab=(\w+)/.test(hash)) st.tab = RegExp.$1;
+
+      function menu() {
+        return TABS.map(function (t) {
+          return '<button type="button" class="' + (st.tab === t.id ? 'on' : '') + '" data-tab="' + t.id + '">' +
+            '<span class="si">' + t.icon + '</span>' +
+            '<span class="st">' + U.esc(t.title) + '<span class="sd">' + U.esc(t.desc) + '</span></span></button>';
+        }).join('');
+      }
+
+      function panel() {
+        if (st.tab === 'wall') return wallPanel();
+        if (st.tab === 'cloud') return cloudPanel(st);
+        if (st.tab === 'data') return dataPanel();
+        return themePanel();
+      }
+
+      function render() {
+        host.innerHTML =
+          '<div class="set-grid">' +
+          '<div class="set-menu card tight">' + menu() + '</div>' +
+          '<div data-panel>' + panel() + '</div>' +
+          '</div>';
+        if (st.tab === 'cloud') refreshCloudInfo();
+        bindWall();
+      }
+
+      /* ---- 主题 ---- */
+      function applyTheme(id, brand) {
+        var p = null;
+        for (var i = 0; i < T.PRESETS.length; i++) if (T.PRESETS[i].id === id) p = T.PRESETS[i];
+        T.applyTheme({ id: id, brand: brand || (p ? p.brand : '#1565C0') });
+        render();
+        U.toast('🎨 已切换配色');
+      }
+
+      /* ---- 壁纸 ---- */
+      function bindWall() {
+        var file = host.querySelector('#wallFile');
+        if (file) {
+          file.addEventListener('change', function () {
+            var f = file.files && file.files[0];
+            file.value = '';
+            if (!f) return;
+            if (!/^image\//.test(f.type)) { U.toast('请选择图片文件'); return; }
+            if (f.size > 16 * 1024 * 1024) { U.toast('图片超过 16MB，请先压缩'); return; }
+            cropImage(f, function (url) {
+              T.setWall(url, T.getWall().op || 0.35).then(function () {
+                render();
+                U.toast('🖼️ 壁纸已更新');
+              }).catch(function () {
+                U.toast('壁纸保存失败，可能是浏览器存储空间不足');
+              });
+            });
+          });
+        }
+        var drop = host.querySelector('[data-drop]');
+        if (drop) {
+          ['dragenter', 'dragover'].forEach(function (ev) {
+            drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add('over'); });
+          });
+          ['dragleave', 'drop'].forEach(function (ev) {
+            drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove('over'); });
+          });
+          drop.addEventListener('drop', function (e) {
+            var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+            if (!f) return;
+            if (!/^image\//.test(f.type)) { U.toast('请拖入图片文件'); return; }
+            cropImage(f, function (url) {
+              T.setWall(url, T.getWall().op || 0.35).then(function () {
+                render();
+                U.toast('🖼️ 壁纸已更新');
+              });
+            });
+          });
+        }
+        var op = host.querySelector('#wallOp');
+        if (op) {
+          var opv = host.querySelector('#wallOpV');
+          op.addEventListener('input', function () {
+            var v = Number(op.value) / 100;
+            T.setWallOp(v);
+            if (opv) opv.textContent = op.value + '%';
+          });
+        }
+      }
+
+      /* ---- 云端信息 ---- */
+      function refreshCloudInfo() {
+        var box = host.querySelector('[data-cloudinfo]');
+        if (!box || !WB.cloud) return;
+        WB.cloud.cloudInfo().then(function (info) {
+          if (!info) { box.textContent = '🔍 无法读取云端状态'; return; }
+          box.innerHTML = '🔍 云端存储：<b>' + info.count + '</b> 个同步 Gist' +
+            (info.updated ? ' · 最近更新 ' + fmtTime(info.updated) : '') +
+            (info.count > 1 ? ' <span class="muted">（历史遗留多个，取最近更新的那个）</span>' : '');
+        }).catch(function () { box.textContent = '🔍 无法读取云端状态'; });
+      }
+
+      /* ---- 导入备份 ---- */
+      function importFile(file) {
+        var r = new FileReader();
+        r.onload = function () {
+          var obj;
+          try { obj = JSON.parse(String(r.result || '')); } catch (e) { U.toast('文件不是有效的 JSON'); return; }
+          var data = obj && obj.data;
+          if (!data || typeof data !== 'object') { U.toast('备份格式不正确'); return; }
+          var n = 0;
+          Object.keys(data).forEach(function (k) {
+            try { U.storeSet(k, data[k]); n++; } catch (e) { }
+          });
+          U.toast('已导入 ' + n + ' 类数据，即将刷新');
+          setTimeout(function () { location.reload(); }, 800);
+        };
+        r.readAsText(file);
+      }
+
+      /* ---- 事件 ---- */
+      host.addEventListener('click', function (e) {
+        var tabBtn = e.target.closest('[data-tab]');
+        if (tabBtn) { st.tab = tabBtn.getAttribute('data-tab'); st.msg = ''; st.err = ''; render(); return; }
+
+        var pre = e.target.closest('[data-preset]');
+        if (pre) { applyTheme(pre.getAttribute('data-preset')); return; }
+
+        var tone = e.target.closest('[data-tone]');
+        if (tone) { applyTheme(T.getTheme().id, tone.getAttribute('data-tone')); return; }
+
+        var a = e.target.closest('[data-act]');
+        if (!a) return;
+        var act = a.getAttribute('data-act');
+
+        if (act === 'resetTheme') { applyTheme('blue', '#1565C0'); return; }
+        if (act === 'clearWall') {
+          if (!window.confirm('移除壁纸后背景会恢复成纯色，确定？')) return;
+          T.clearWall().then(function () { render(); U.toast('已移除壁纸'); });
+          return;
+        }
+        if (act === 'export') { doExport(); return; }
+        if (act === 'clearAll') {
+          if (!window.confirm('确定清空全部本地数据吗？学习记录、账本、复盘、收藏都会删除，且无法恢复。')) return;
+          var PREFIX = WB.PREFIX || '';
+          Object.keys(localStorage).forEach(function (k) {
+            if (k.indexOf(PREFIX) === 0) localStorage.removeItem(k);
+          });
+          U.toast('已清空，即将刷新');
+          setTimeout(function () { location.reload(); }, 700);
+          return;
+        }
+
+        /* 云端 */
+        if (!WB.cloud) return;
+        if (act === 'login') {
+          var input = host.querySelector('[data-token]');
+          var tk = input ? input.value.trim() : '';
+          if (!tk) { st.err = '请先粘贴令牌'; render(); return; }
+          a.disabled = true; a.textContent = '⏳ 验证中…';
+          WB.cloud.login(tk).then(function (u) {
+            st.msg = '登录成功，欢迎 ' + u.login + '！请点「⬆ 上传」或「🔄 同步」开始传数据';
+            st.err = ''; render();
+            U.toast('☁️ 登录成功');
+          }).catch(function (err) {
+            st.err = err && err.message ? err.message : String(err);
+            render();
+          });
+          return;
+        }
+        if (act === 'logout') {
+          if (!window.confirm('退出后本机数据保留，但需要重新登录才能同步。确定退出？')) return;
+          WB.cloud.logout(); st.msg = '已退出登录'; st.err = ''; render();
+          U.toast('已退出云端同步');
+          return;
+        }
+        if (act === 'sync') {
+          a.disabled = true; a.textContent = '⏳ 同步中…';
+          WB.cloud.sync().then(function (r) {
+            st.msg = r.msg || '完成'; st.err = ''; render(); U.toast('☁️ ' + (r.msg || '完成'));
+          }).catch(function (err) {
+            st.err = err && err.message ? err.message : String(err); render();
+          });
+          return;
+        }
+        if (act === 'push') {
+          if (!window.confirm('上传会以本机为准整份覆盖云端，云端独有的记录会被删除。确定继续？')) return;
+          a.disabled = true; a.textContent = '⏳ 上传中…';
+          WB.cloud.push().then(function (r) {
+            st.msg = r.msg || '完成'; st.err = ''; render(); U.toast('☁️ ' + (r.msg || '完成'));
+          }).catch(function (err) {
+            st.err = err && err.message ? err.message : String(err); render();
+          });
+          return;
+        }
+        if (act === 'pull') {
+          if (!window.confirm('下载会以云端为准整份覆盖本机，本机独有的记录会被删除。确定继续？')) return;
+          a.disabled = true; a.textContent = '⏳ 下载中…';
+          WB.cloud.pull().then(function (r) {
+            st.msg = r.msg || '完成'; st.err = ''; render(); U.toast('☁️ ' + (r.msg || '完成'));
+          }).catch(function (err) {
+            st.err = err && err.message ? err.message : String(err); render();
+          });
+          return;
+        }
+      });
+
+      host.addEventListener('change', function (e) {
+        if (e.target.id === 'toneCustom') {
+          applyTheme(T.getTheme().id, e.target.value);
+          return;
+        }
+        if (e.target.id === 'importFile') {
+          var f = e.target.files && e.target.files[0];
+          e.target.value = '';
+          if (f) importFile(f);
+        }
+      });
+
+      /* 取色器拖动时即时预览（input 事件，不需要等 change） */
+      host.addEventListener('input', function (e) {
+        if (e.target.id === 'toneCustom') applyTheme(T.getTheme().id, e.target.value);
+      });
+
+      host.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && e.target.matches('[data-token]')) {
+          var b = host.querySelector('[data-act="login"]');
+          if (b) b.click();
+        }
+      });
+
+      function doExport() {
+        var PREFIX = WB.PREFIX || '';
+        var out = {};
+        Object.keys(localStorage).forEach(function (k) {
+          if (k.indexOf(PREFIX) === 0) {
+            try { out[k.slice(PREFIX.length)] = JSON.parse(localStorage.getItem(k)); } catch (err) { }
+          }
+        });
+        var blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), data: out }, null, 2)], { type: 'application/json' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = '每日学习工作台_备份_' + U.todayStr() + '.json';
+        document.body.appendChild(a); a.click();
+        setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+        U.toast('备份已导出');
+      }
+
+      render();
+
+      if (WB.cloud) {
+        WB.cloud.onUpdate(function (p) {
+          if (!document.body.contains(host)) return;
+          if (p.state === 'ok' && st.tab === 'cloud') refreshCloudInfo();
+        });
+      }
+    }
+  });
+})();
+
 </script>
 <script>
 (function(){
@@ -16653,7 +17703,7 @@ window.WB_DATA.quizExtra = {
     return;
   }
   document.body.insertAdjacentHTML("afterbegin",
-    '<div style="background:#FFF3E0;color:#E65100;border-bottom:1px solid #FFCC80;padding:7px 14px;font-size:12.5px;text-align:center">🧪 开发版 · 构建于 2026-10-28 18:16 · 数据独立存储（' + WB.PREFIX + '），不影响正式版</div>');
+    '<div style="background:#FFF3E0;color:#E65100;border-bottom:1px solid #FFCC80;padding:7px 14px;font-size:12.5px;text-align:center">🧪 开发版 · 构建于 2026-10-29 01:12 · 数据独立存储（' + WB.PREFIX + '），不影响正式版</div>');
 })();
 </script>
 </body>
