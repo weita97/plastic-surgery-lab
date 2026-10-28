@@ -12658,10 +12658,15 @@ window.WB_DATA.quizExtra = {
 
     var chain = Promise.resolve();
 
+    /* 本轮的方向签名：跑完时若用户已改方向，结果一律丢弃，绝不让旧方向的结果污染界面 */
+    var mySig = sig;
+    function stale() { return (dirSig(getDirs()) + '#' + getMode()) !== mySig; }
+
     if (multi) {
       /* ---- 多方向：任意两个方向 AND 成对检索，取并集 ---- */
       pairs.forEach(function (pr) {
         chain = chain.then(function () {
+          if (stale()) return [];                 /* 方向已变：剩下的组合不必再查 */
           var term = '(' + queryMap[pr[0]] + ' AND ' + queryMap[pr[1]] + ')';
           return retry(function () {
             return esearch(JQ + ' AND ' + term + ' AND ' + win, PER_TOPIC);
@@ -12724,6 +12729,14 @@ window.WB_DATA.quizExtra = {
         }, Promise.resolve()).then(function () { return acc; });
       });
     }).then(function (list) {
+      /* 方向在本轮过程中被改过：丢弃整轮结果，交给 rerun() 按新方向重来 */
+      if (stale()) {
+        state.running = false;
+        state.phase = '';
+        notify();
+        rerun();
+        return -1;
+      }
       /* 池子以本次抓取结果为准：旧方向的条目一律丢弃，
          否则换方向后仍会看到上一次的文献（这是"换了方向没变化"的根因之一） */
       var old = U.storeGet(K_POOL, {});
@@ -12787,8 +12800,15 @@ window.WB_DATA.quizExtra = {
       state.err = '请先填写至少 1 个研究方向';
       state.running = false;
       state.again = false;
+      state.phase = '';
       notify();
       return { ok: false, dirs: clean };
+    }
+    if (state.running) {
+      /* 上一轮还在跑：标记，让它跑完立刻按新方向重来（不要并发两轮） */
+      state.again = true;
+      notify();                 /* 界面立刻变空白 */
+      return { ok: true, dirs: clean, queued: true };
     }
     notify();                 /* 先刷一次：界面立刻变成空列表 */
     sync(true);
@@ -12809,10 +12829,21 @@ window.WB_DATA.quizExtra = {
       return m.day !== U.todayStr() || m.sig !== dirSig(dirs) + '#and';
     },
     hasDirs: function () { return getDirs().length > 0; },
-    pool: function () { return getDirs().length ? U.storeGet(K_POOL, {}) : {}; },
+    pool: function () {
+      var dirs = getDirs();
+      if (!dirs.length) return {};
+      var m = U.storeGet(K_META, {});
+      if (m.sig !== dirSig(dirs) + '#' + getMode()) return {};
+      return U.storeGet(K_POOL, {});
+    },
     list: function () {
       /* 没填研究方向：实时库一律视为空（文献列表、选题灵感、专业词汇都必须是空白） */
-      if (!getDirs().length) return [];
+      var dirs = getDirs();
+      if (!dirs.length) return [];
+      /* 池子必须与当前方向一致：换了方向、还没抓完时，旧方向的文献一律不展示，
+         否则用户会看到"换了方向文献却没变化" */
+      var m = U.storeGet(K_META, {});
+      if (m.sig !== dirSig(dirs) + '#' + getMode()) return [];
       var pool = U.storeGet(K_POOL, {});
       var arr = Object.keys(pool).map(function (k) { return pool[k]; });
       arr.sort(function (a, b) {
@@ -15195,9 +15226,13 @@ window.WB_DATA.quizExtra = {
           refreshFavN();
           if (st.tab !== 'feed' && st.tab !== 'fav') return;
           clearTimeout(_t);
+          var tabAt = st.tab;
           _t = setTimeout(function () {
             if (!document.body.contains(host)) return;
-            if (st.tab === 'feed') renderFeed(); else renderFav();
+            /* 用户在这 400ms 内切到别的页签时，绝不能把当前页盖掉
+               （否则表现为：正在选下拉框，页面突然变成「已收藏」= 闪退） */
+            if (st.tab !== tabAt) return;
+            if (tabAt === 'feed') renderFeed(); else renderFav();
           }, 400);
         });
       }
@@ -16300,7 +16335,7 @@ window.WB_DATA.quizExtra = {
     return;
   }
   document.body.insertAdjacentHTML("afterbegin",
-    '<div style="background:#FFF3E0;color:#E65100;border-bottom:1px solid #FFCC80;padding:7px 14px;font-size:12.5px;text-align:center">🧪 开发版 · 数据独立存储（' + WB.PREFIX + '），不影响正式版</div>');
+    '<div style="background:#FFF3E0;color:#E65100;border-bottom:1px solid #FFCC80;padding:7px 14px;font-size:12.5px;text-align:center">🧪 开发版 · 构建于 2026-10-28 15:00 · 数据独立存储（' + WB.PREFIX + '），不影响正式版</div>');
 })();
 </script>
 </body>
