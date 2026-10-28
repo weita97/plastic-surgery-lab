@@ -47,6 +47,15 @@ a:hover{text-decoration:underline}
 .brand{padding:14px 16px 12px;border-bottom:1px solid var(--line-2)}
 .brand h1{margin:0;font-size:15.5px;letter-spacing:.3px;color:var(--brand-2);display:flex;align-items:center;gap:7px}
 .brand .sub{margin-top:3px;font-size:11.5px;color:var(--ink-3);line-height:1.5}
+/* 签名 / 座右铭：可编辑文字框 */
+.brand .sig{
+  display:block;width:100%;margin-top:5px;border:1px dashed var(--line);background:#FBFCFF;
+  border-radius:8px;padding:5px 7px;font-size:11.5px;color:var(--ink-2);line-height:1.55;
+  resize:none;min-height:0;overflow:hidden;font-family:inherit;transition:.15s
+}
+.brand .sig::placeholder{color:var(--ink-3)}
+.brand .sig:hover{border-color:#BFD6F2;background:#fff}
+.brand .sig:focus{border-style:solid;border-color:var(--brand-3);background:#fff;box-shadow:0 0 0 3px rgba(66,165,245,.16)}
 .brand .today{margin-top:8px;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--brand);background:var(--brand-soft);border-radius:8px;padding:5px 9px}
 .nav{padding:8px 8px 20px;flex:1}
 .nav-group{font-size:10.5px;letter-spacing:.8px;color:var(--ink-3);padding:10px 10px 5px;text-transform:uppercase}
@@ -192,6 +201,26 @@ textarea{resize:vertical;min-height:64px;line-height:1.6}
 .q1{background:linear-gradient(135deg,#7E57C2,#4527A0)}
 .q2{background:linear-gradient(135deg,#1E88E5,#0D47A1)}
 .q3{background:linear-gradient(135deg,#26A69A,#00695C)}
+
+/* 我的研究方向（可自定义 6 个） */
+.dirgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:7px;margin-bottom:7px}
+.dirgrid .dir{position:relative;display:flex;align-items:center;gap:6px}
+.dirgrid .dir .no{
+  flex:0 0 18px;width:18px;height:18px;border-radius:50%;background:var(--brand-soft);color:var(--brand-2);
+  font-size:10.5px;font-weight:600;display:flex;align-items:center;justify-content:center;border:1px solid #CFE0F5
+}
+.dirgrid .dir.filled .no{background:var(--brand);color:#fff;border-color:var(--brand)}
+.dirgrid .dir input{font-size:12px;padding:5px 8px}
+.dirgrid .dir input::placeholder{color:var(--ink-3)}
+.dirgrid .dir .clr{
+  position:absolute;right:5px;top:50%;transform:translateY(-50%);border:0;background:transparent;
+  color:var(--ink-3);font-size:13px;line-height:1;padding:2px 4px;cursor:pointer;display:none
+}
+.dirgrid .dir.filled .clr{display:block}
+.dirgrid .dir .clr:hover{color:var(--bad)}
+.dirgrid .dir input{padding-right:22px}
+.dirtip{font-size:11px;color:var(--ink-3);line-height:1.65}
+.dirtip b{color:var(--brand-2);font-weight:600}
 
 /* 单词卡 */
 .wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(212px,1fr));gap:8px}
@@ -339,6 +368,7 @@ table.tb td.num{text-align:right;font-variant-numeric:tabular-nums}
   .g2,.g3,.g4,.g5{grid-template-columns:1fr}
   .g3.half,.g4.half,.g5.half{grid-template-columns:repeat(2,minmax(0,1fr))}
   .wgrid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+  .dirgrid{grid-template-columns:1fr}
   .lgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .cal-cell{min-height:52px;padding:3px 3px;border-radius:7px}
   .cal-cell .ev{font-size:9px;padding:0 2px}
@@ -11828,11 +11858,21 @@ window.WB_DATA.quizExtra = {
     mount(id);
   });
 
+  /* ---------------- 签名 / 座右铭 ---------------- */
+  var K_SIG = 'brand_sig';
+  function sigLoad() { return String(storeGet(K_SIG, '') || ''); }
+  function sigFit(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.max(el.scrollHeight, 22) + 'px';
+  }
+
   /* ---------------- 启动 ---------------- */
   function boot() {
     var sb = document.getElementById('sidebar');
     sb.insertAdjacentHTML('afterbegin',
-      '<div class="brand"><h1>🎓 每日学习工作台</h1><div class="sub">整形外科 · 干细胞与创面修复再生<br>糖尿病创面模型</div>' +
+      '<div class="brand"><h1>🎓 每日学习工作台</h1>' +
+      '<textarea class="sig" id="brandSig" rows="1" maxlength="120" ' +
+      'placeholder="✍️ 点这里写下你的签名或座右铭"></textarea>' +
       '<div class="today">📅 <b id="brandDate"></b><span class="sp"></span><span id="brandWeek"></span></div></div>');
     sb.insertAdjacentHTML('beforeend', '<div class="nav" id="navBox"></div>');
     sb.insertAdjacentHTML('beforeend',
@@ -11843,6 +11883,24 @@ window.WB_DATA.quizExtra = {
     var d = new Date();
     document.getElementById('brandDate').textContent = (d.getMonth() + 1) + '月' + d.getDate() + '日';
     document.getElementById('brandWeek').textContent = '周' + weekCN(d);
+
+    /* 签名框：读取上次内容 + 自动增高 + 输入即存 */
+    var sigEl = document.getElementById('brandSig');
+    if (sigEl) {
+      sigEl.value = sigLoad();
+      sigFit(sigEl);
+      var sigT = null;
+      sigEl.addEventListener('input', function () {
+        sigFit(sigEl);
+        clearTimeout(sigT);
+        sigT = setTimeout(function () { storeSet(K_SIG, sigEl.value); }, 300);
+      });
+      sigEl.addEventListener('blur', function () { storeSet(K_SIG, sigEl.value); });
+      /* Ctrl/⌘ + Enter 收起焦点 */
+      sigEl.addEventListener('keydown', function (ev) {
+        if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)) { ev.preventDefault(); sigEl.blur(); }
+      });
+    }
 
     document.getElementById('hamburger').addEventListener('click', function () {
       document.getElementById('sidebar').classList.toggle('open');
@@ -12117,8 +12175,10 @@ window.WB_DATA.quizExtra = {
   var U = WB.util;
 
   var K_POOL = 'live_pool';      /* {pmid: paper} */
-  var K_META = 'live_meta';      /* {day, lastSync, total, added} */
+  var K_META = 'live_meta';      /* {day, lastSync, total, added, sig} */
   var K_QUEUE = 'live_queue';    /* 待翻译 pmid 列表 */
+  var K_DIRS = 'research_dirs';  /* ['方向1', ...] 用户自定义，最多 6 个 */
+  var DIR_MAX = 6;
   var YEARS = 3;
   var PER_TOPIC = 20;
   var TR_CONC = 6;
@@ -12152,15 +12212,161 @@ window.WB_DATA.quizExtra = {
     ['redox biology', 10.7], ['journal of advanced research', 11.4], ['exploration', 12.0]
   ];
 
-  /* ---------- 6 个研究方向的检索式 ---------- */
-  var TOPICS = [
-    ['创面修复', '(wound healing[tiab] OR wound repair[tiab] OR cutaneous wound[tiab] OR skin wound[tiab] OR wound dressing[tiab] OR wound regeneration[tiab] OR wound infection[tiab])'],
-    ['整形医学', '(plastic surgery[tiab] OR reconstructive surgery[tiab] OR skin flap[tiab] OR burn injury[tiab] OR scar formation[tiab] OR keloid[tiab] OR fat grafting[tiab] OR skin regeneration[tiab])'],
-    ['糖尿病难愈创面', '(diabetic wound[tiab] OR diabetic foot[tiab] OR diabetic ulcer[tiab] OR impaired wound healing[tiab] OR hyperglycemic wound[tiab])'],
-    ['细胞衰老', '(cellular senescence[tiab] OR senescent cell[tiab] OR senescence-associated secretory[tiab] OR senolytic[tiab] OR skin aging[tiab])'],
-    ['线粒体自噬', '(mitophagy[tiab] OR mitochondrial autophagy[tiab] OR PINK1[tiab] OR Parkin[tiab])'],
-    ['外泌体', '(exosome[tiab] OR extracellular vesicle[tiab] OR exosomal[tiab] OR small extracellular vesicles[tiab])']
+  /* ---------- 研究方向：用户自定义（1–6 个） ---------- */
+  /* 中文关键词 → 英文检索词（PubMed 只认英文，这里做一层常用术语映射）。
+     key 用中文片段，命中即展开为若干英文短语，多个不同概念之间用 AND 组合。 */
+  var DICT = [
+    ['创面', ['wound', 'wound healing', 'cutaneous wound', 'skin wound']],
+    ['伤口', ['wound', 'wound healing']],
+    ['愈合', ['wound healing', 'healing']],
+    ['溃疡', ['ulcer', 'ulceration']],
+    ['整形', ['plastic surgery', 'reconstructive surgery']],
+    ['重建', ['reconstruction', 'reconstructive surgery']],
+    ['瘢痕', ['scar', 'scar formation', 'hypertrophic scar']],
+    ['疤痕', ['scar', 'scar formation']],
+    ['瘢痕疙瘩', ['keloid']],
+    ['皮瓣', ['skin flap', 'flap surgery']],
+    ['烧伤', ['burn injury', 'burn wound']],
+    ['植皮', ['skin graft', 'skin transplantation']],
+    ['脂肪移植', ['fat grafting', 'adipose graft']],
+    ['皮肤', ['skin', 'cutaneous']],
+    ['表皮', ['epidermis', 'epidermal']],
+    ['真皮', ['dermis', 'dermal']],
+    ['角质', ['keratinocyte']],
+    ['成纤维', ['fibroblast']],
+    ['糖尿病', ['diabetes', 'diabetic']],
+    ['高糖', ['hyperglycemia', 'high glucose']],
+    ['糖足', ['diabetic foot', 'diabetic foot ulcer']],
+    ['足溃疡', ['diabetic foot ulcer', 'foot ulcer']],
+    ['衰老', ['senescence', 'cellular senescence', 'aging']],
+    ['老化', ['aging', 'senescence']],
+    ['抗衰', ['anti-aging', 'senolytic']],
+    ['线粒体', ['mitochondria', 'mitochondrial']],
+    ['自噬', ['autophagy', 'autophagic']],
+    ['线粒体自噬', ['mitophagy']],
+    ['外泌体', ['exosome', 'exosomal']],
+    ['囊泡', ['extracellular vesicle', 'vesicle']],
+    ['干细胞', ['stem cell', 'stem cells']],
+    ['间充质', ['mesenchymal stem cell', 'mesenchymal stromal cell']],
+    ['诱导多能', ['induced pluripotent stem cell', 'iPSC']],
+    ['再生', ['regeneration', 'regenerative']],
+    ['再生医学', ['regenerative medicine']],
+    ['组织工程', ['tissue engineering']],
+    ['炎症', ['inflammation', 'inflammatory']],
+    ['免疫', ['immunity', 'immune', 'immunology']],
+    ['巨噬细胞', ['macrophage', 'macrophages']],
+    ['中性粒', ['neutrophil']],
+    ['血管', ['angiogenesis', 'vascularization', 'blood vessel']],
+    ['纤维化', ['fibrosis', 'fibrotic']],
+    ['水凝胶', ['hydrogel', 'hydrogels']],
+    ['敷料', ['wound dressing', 'dressing']],
+    ['支架', ['scaffold', 'biomaterial scaffold']],
+    ['生物材料', ['biomaterial', 'biomaterials']],
+    ['纳米', ['nanoparticle', 'nanomedicine', 'nanomaterial']],
+    ['微针', ['microneedle', 'microneedles']],
+    ['3D打印', ['3D printing', 'bioprinting', 'three-dimensional printing']],
+    ['生物打印', ['bioprinting', '3D bioprinting']],
+    ['单细胞', ['single-cell', 'single cell RNA sequencing']],
+    ['转录组', ['transcriptome', 'RNA sequencing']],
+    ['测序', ['sequencing', 'high-throughput sequencing']],
+    ['类器官', ['organoid', 'organoids']],
+    ['肠道菌群', ['gut microbiota', 'intestinal microbiota', 'microbiome']],
+    ['菌群', ['microbiota', 'microbiome']],
+    ['代谢', ['metabolism', 'metabolic']],
+    ['肥胖', ['obesity', 'obese']],
+    ['胰岛素', ['insulin', 'insulin resistance']],
+    ['肿瘤', ['tumor', 'cancer', 'tumour']],
+    ['癌症', ['cancer', 'carcinoma']],
+    ['免疫治疗', ['immunotherapy', 'immune checkpoint']],
+    ['神经', ['neuron', 'neural', 'neurology']],
+    ['阿尔茨海默', ['Alzheimer', 'Alzheimer disease']],
+    ['帕金森', ['Parkinson', 'Parkinson disease']],
+    ['心血管', ['cardiovascular', 'cardiovascular disease']],
+    ['心梗', ['myocardial infarction', 'myocardial']],
+    ['骨', ['bone', 'bone regeneration']],
+    ['软骨', ['cartilage', 'chondrocyte']],
+    ['肝', ['liver', 'hepatic']],
+    ['肾', ['kidney', 'renal']],
+    ['肺', ['lung', 'pulmonary']],
+    ['基因编辑', ['gene editing', 'CRISPR']],
+    ['基因治疗', ['gene therapy']],
+    ['mRNA', ['mRNA', 'messenger RNA']],
+    ['抗体', ['antibody', 'antibodies']],
+    ['药物递送', ['drug delivery', 'drug delivery system']],
+    ['靶向', ['targeted', 'targeting']],
+    ['纳米酶', ['nanozyme']],
+    ['抗氧化', ['antioxidant', 'oxidative stress']],
+    ['氧化应激', ['oxidative stress']],
+    ['缺氧', ['hypoxia', 'hypoxic']],
+    ['微生物', ['microorganism', 'microbial']],
+    ['感染', ['infection', 'infectious']],
+    ['抗生素', ['antibiotic', 'antimicrobial']],
+    ['疼痛', ['pain', 'nociception']],
+    ['麻醉', ['anesthesia', 'anaesthesia']],
+    ['移植', ['transplantation', 'transplant']],
+    ['精准医学', ['precision medicine', 'personalized medicine']],
+    ['机器学习', ['machine learning', 'deep learning']],
+    ['人工智能', ['artificial intelligence', 'deep learning']],
+    ['队列', ['cohort study', 'cohort']],
+    ['生物标志物', ['biomarker', 'biomarkers']],
+    ['信号通路', ['signaling pathway', 'signal transduction']],
+    ['肠道', ['intestine', 'intestinal']],
+    ['菌', ['bacteria', 'microbial']],
+    ['蛋白质', ['protein', 'proteomics']],
+    ['蛋白组', ['proteomics', 'proteome']],
+    ['表观', ['epigenetics', 'epigenetic']],
+    ['甲基化', ['methylation', 'DNA methylation']],
+    ['组蛋白', ['histone', 'histone modification']],
+    ['类风湿', ['rheumatoid arthritis']],
+    ['骨关节炎', ['osteoarthritis']],
+    ['骨质疏松', ['osteoporosis']],
+    ['抑郁症', ['depression', 'depressive']],
+    ['卒中', ['stroke', 'ischemic stroke']],
+    ['高血压', ['hypertension']],
+    ['动脉粥样', ['atherosclerosis', 'atherosclerotic']]
   ];
+  /* 字典按 key 长度倒序，保证「线粒体自噬」优先于「自噬」 */
+  DICT.sort(function (a, b) { return b[0].length - a[0].length; });
+
+  /* 中文方向 → PubMed 检索式片段；英文/未知内容原样当自由词用 */
+  function queryOf(dir) {
+    var s = String(dir || '').trim();
+    if (!s) return '';
+    var hit = [], rest = s;
+    DICT.forEach(function (d) {
+      if (rest.indexOf(d[0]) >= 0) {
+        hit.push(d[1]);
+        rest = rest.split(d[0]).join(' ');
+      }
+    });
+    if (!hit.length) {
+      /* 纯英文（或字典未收录）：直接当自由词，多词用引号短语 */
+      var w = s.replace(/["\[\]]/g, ' ').replace(/\s+/g, ' ').trim();
+      if (!w) return '';
+      return /[\u4e00-\u9fa5]/.test(w)
+        ? '("' + w + '"[tiab])'            /* 未收录的中文：几乎搜不到，兜底 */
+        : (/\s/.test(w) ? '("' + w + '"[tiab])' : '(' + w + '[tiab])');
+    }
+    var groups = hit.map(function (terms) {
+      return '(' + terms.map(function (t) { return '"' + t + '"[tiab]'; }).join(' OR ') + ')';
+    });
+    return '(' + groups.join(' AND ') + ')';
+  }
+
+  function getDirs() {
+    var arr = U.storeGet(K_DIRS, []);
+    if (!Array.isArray(arr)) arr = [];
+    return arr.map(function (s) { return String(s == null ? '' : s).trim(); })
+      .filter(function (s) { return !!s; }).slice(0, DIR_MAX);
+  }
+  function setDirs(arr) {
+    var clean = (Array.isArray(arr) ? arr : []).map(function (s) {
+      return String(s == null ? '' : s).replace(/\s+/g, ' ').trim();
+    }).filter(function (s) { return !!s; }).slice(0, DIR_MAX);
+    U.storeSet(K_DIRS, clean);
+    return clean;
+  }
+  function dirSig(dirs) { return (dirs || getDirs()).join('|'); }
 
   var state = { running: false, phase: '', done: 0, total: 0, err: '', lastSync: 0, added: 0 };
   var subs = [];
@@ -12286,7 +12492,9 @@ window.WB_DATA.quizExtra = {
   }
 
   /* ---------- XML 解析 ---------- */
-  function parseXml(xml) {
+  /* topicMap: {pmid: 方向名}，直接采用用户填写的方向名打标；
+     loose=true 时放宽期刊白名单（用于小众方向兜底），tier 记为 '—' */
+  function parseXml(xml, topicMap, loose) {
     var MON = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12 };
     var doc = new DOMParser().parseFromString(xml, 'text/xml');
     var arts = [].slice.call(doc.querySelectorAll('PubmedArticle'));
@@ -12298,15 +12506,14 @@ window.WB_DATA.quizExtra = {
       var title = tx('ArticleTitle').replace(/\s+/g, ' ').trim();
       var journal = tx('Journal Title') || tx('MedlineTA');
       var ifv = lookupJ(journal);
-      if (ifv == null) return;                       /* 不在白名单，丢弃 */
+      if (ifv == null && !loose) return;              /* 不在白名单，丢弃 */
       var absParts = [].slice.call(a.querySelectorAll('AbstractText')).map(function (t) {
         var lab = t.getAttribute('Label');
         var s = t.textContent.replace(/\s+/g, ' ').trim();
         return lab ? (lab + ': ' + s) : s;
       });
       var abs = absParts.join('\n');
-      var topic = classify(title, abs);
-      if (!topic) return;                            /* 与研究方向无关，丢弃 */
+      var topic = (topicMap && topicMap[String(pmid)]) || '其他';
       /* PubMed 收录日期（entrez），用它判断"是不是当天新发表"最准 */
       var edat = '';
       [].slice.call(a.querySelectorAll('PubMedPubDate')).forEach(function (pd) {
@@ -12346,7 +12553,7 @@ window.WB_DATA.quizExtra = {
       out.push({
         pmid: String(pmid), title: title, journal: journal,
         year: y, date: dateStr, edat: edat, authors: authors, doi: doi, abstract: abs,
-        topic: topic, tier: '1区', if: ifv,
+        topic: topic, tier: ifv == null ? '—' : '1区', if: ifv == null ? null : ifv,
         titleZh: '', abstractZh: '', ts: Date.now()
       });
     });
@@ -12389,37 +12596,62 @@ window.WB_DATA.quizExtra = {
   /* ---------- 主同步流程 ---------- */
   function sync(force) {
     if (state.running) return Promise.resolve(false);
+    var dirs = getDirs();
+    if (!dirs.length) {
+      state.err = '请先填写至少 1 个研究方向';
+      state.phase = '';
+      notify();
+      return Promise.resolve(false);
+    }
+    var sig = dirSig(dirs);
     var meta = U.storeGet(K_META, {});
     var today = U.todayStr();
-    if (!force && meta.day === today) return Promise.resolve(false);
+    if (!force && meta.day === today && meta.sig === sig) return Promise.resolve(false);
 
     state.running = true; state.err = ''; state.phase = '连接 PubMed…'; state.done = 0;
-    state.total = TOPICS.length; state.added = 0;
+    state.total = dirs.length; state.added = 0;
     notify();
 
     var win = winTerm();
-    var jobs = [];
+    /* topicMap: pmid → 方向名（同一篇被多个方向命中时取先命中的） */
+    var topicMap = {};
+    var order = [];
+    var queryMap = {};
+    dirs.forEach(function (d) { queryMap[d] = queryOf(d); });
+
     /* 串行执行，避免触发 NCBI 频率限制 */
     var chain = Promise.resolve();
-    TOPICS.forEach(function (t) {
+    dirs.forEach(function (dir) {
       chain = chain.then(function () {
+        var q = queryMap[dir];
+        if (!q) return [];
         return retry(function () {
-          return esearch(JQ + ' AND ' + t[1] + ' AND ' + win, PER_TOPIC);
+          return esearch(JQ + ' AND ' + q + ' AND ' + win, PER_TOPIC);
         }).then(function (j) {
           return (j && j.esearchresult && j.esearchresult.idlist) || [];
         }).catch(function () { return []; });
       }).then(function (ids) {
+        /* 白名单内命中太少：该方向放宽期刊限制再抓一次，保证小众方向也有结果 */
+        if (ids.length >= 3 || !queryMap[dir]) return ids;
+        return retry(function () {
+          return esearch(queryMap[dir] + ' AND ' + win, PER_TOPIC);
+        }).then(function (j) {
+          return (j && j.esearchresult && j.esearchresult.idlist) || [];
+        }).catch(function () { return ids; });
+      }).then(function (ids) {
+        ids.forEach(function (id) {
+          var k = String(id);
+          if (!topicMap[k]) { topicMap[k] = dir; order.push(k); }
+        });
         state.done++;
-        state.phase = '检索 ' + state.done + '/' + TOPICS.length + ' 个方向…';
+        state.phase = '检索 ' + state.done + '/' + dirs.length + ' 个方向…';
         notify();
-        jobs = jobs.concat(ids);
         return wait(420);
       });
     });
 
     return chain.then(function () {
-      var seen = {}, ids = [];
-      jobs.forEach(function (id) { if (!seen[id]) { seen[id] = 1; ids.push(id); } });
+      var ids = order;
       state.phase = '读取文献详情…'; notify();
       if (!ids.length) throw new Error('empty');
 
@@ -12429,11 +12661,22 @@ window.WB_DATA.quizExtra = {
       return chunks.reduce(function (p, c) {
         return p.then(function () {
           return retry(function () { return efetch(c); }).then(function (xml) {
-            acc = acc.concat(parseXml(xml));
+            acc = acc.concat(parseXml(xml, topicMap, false));
             state.phase = '解析 ' + acc.length + ' 篇…'; notify();
           }).catch(function () { }).then(function () { return wait(420); });
         });
-      }, Promise.resolve()).then(function () { return acc; });
+      }, Promise.resolve()).then(function () {
+        /* 白名单过滤后一篇不剩 → 整体放宽，保证结果不为空 */
+        if (acc.length) return acc;
+        state.phase = '放宽期刊范围重试…'; notify();
+        return chunks.reduce(function (p, c) {
+          return p.then(function () {
+            return retry(function () { return efetch(c); }).then(function (xml) {
+              acc = acc.concat(parseXml(xml, topicMap, true));
+            }).catch(function () { }).then(function () { return wait(420); });
+          });
+        }, Promise.resolve()).then(function () { return acc; });
+      });
     }).then(function (list) {
       var pool = U.storeGet(K_POOL, {});
       var added = 0;
@@ -12445,6 +12688,7 @@ window.WB_DATA.quizExtra = {
           var o = pool[p.pmid];
           if (!o.abstract && p.abstract) o.abstract = p.abstract;
           if (!o.date && p.date) o.date = p.date;
+          o.topic = p.topic;                        /* 方向名以本次设置为准 */
         }
       });
       /* 控制缓存规模：最多 300 篇，按时间倒序保留 */
@@ -12457,8 +12701,11 @@ window.WB_DATA.quizExtra = {
       }
       U.storeSet(K_POOL, pool);
       /* 抓到足够多的条目才算同步成功，否则下次打开会重试 */
-      if (list.length >= 3) {
-        U.storeSet(K_META, { day: U.todayStr(), lastSync: Date.now(), total: Object.keys(pool).length, added: added });
+      if (list.length >= 1) {
+        U.storeSet(K_META, {
+          day: U.todayStr(), lastSync: Date.now(), total: Object.keys(pool).length,
+          added: added, sig: sig
+        });
       }
 
       state.added = added;
@@ -12470,10 +12717,27 @@ window.WB_DATA.quizExtra = {
       return added;
     }).catch(function (e) {
       state.running = false;
-      state.err = (e && e.message === 'empty') ? '近三年暂无符合条件的新文献' : '网络连接失败，稍后重试';
+      state.err = (e && e.message === 'empty')
+        ? '近三年这些方向暂无新文献，换个说法试试'
+        : '网络连接失败，稍后重试';
       notify();
       return -1;
     });
+  }
+
+  /* 修改研究方向：清空旧池子（旧方向下的文献不再展示），返回是否成功 */
+  function updateDirs(arr) {
+    var clean = setDirs(arr);
+    U.storeSet(K_POOL, {});
+    U.storeSet(K_META, {});
+    state.err = '';
+    if (!clean.length) {
+      state.err = '请先填写至少 1 个研究方向';
+      notify();
+      return { ok: false, dirs: clean };
+    }
+    sync(true);
+    return { ok: true, dirs: clean };
   }
 
   /* ---------- 对外 ---------- */
@@ -12483,7 +12747,12 @@ window.WB_DATA.quizExtra = {
     onUpdate: function (f) { subs.push(f); },
     state: function () { return state; },
     meta: function () { return U.storeGet(K_META, {}); },
-    needsSync: function () { return U.storeGet(K_META, {}).day !== U.todayStr(); },
+    needsSync: function () {
+      var dirs = getDirs();
+      if (!dirs.length) return false;
+      var m = U.storeGet(K_META, {});
+      return m.day !== U.todayStr() || m.sig !== dirSig(dirs);
+    },
     pool: function () { return U.storeGet(K_POOL, {}); },
     list: function () {
       var pool = U.storeGet(K_POOL, {});
@@ -12493,6 +12762,19 @@ window.WB_DATA.quizExtra = {
         return (b.ts || 0) - (a.ts || 0);
       });
       return arr;
+    },
+    dirs: getDirs,
+    setDirs: setDirs,
+    updateDirs: updateDirs,
+    dirMax: function () { return DIR_MAX; },
+    queryOf: queryOf,
+    keywordsOf: function (dir) {
+      var out = [];
+      var s = String(dir || '');
+      DICT.forEach(function (d) { if (s.indexOf(d[0]) >= 0) out = out.concat(d[1]); });
+      /* 英文方向自身也作为关键词 */
+      if (!out.length && s) out = [s.toLowerCase()];
+      return out;
     },
     pump: trPump,
     JOURNALS: JOURNALS
@@ -14059,9 +14341,20 @@ window.WB_DATA.quizExtra = {
 
   function allPapers() {
     var live = (WB.live && WB.live.list) ? WB.live.list() : [];
+    var dirs = (WB.live && WB.live.dirs) ? WB.live.dirs() : [];
+    var keep = null;
+    if (dirs.length) {
+      keep = {};
+      dirs.forEach(function (d) { keep[d] = 1; });
+    }
     var map = {}, arr = [];
-    RECENT.forEach(function (p) { map[String(p.pmid)] = p; arr.push(p); });
+    RECENT.forEach(function (p) {
+      /* 用户设置了自定义方向时，静态库只保留方向名对得上的条目 */
+      if (keep && !keep[p.topic]) return;
+      map[String(p.pmid)] = p; arr.push(p);
+    });
     live.forEach(function (p) {
+      if (keep && !keep[p.topic]) return;
       var k = String(p.pmid);
       if (map[k]) {
         /* 已有静态条目：用实时抓到的摘要/日期补全，保留人工译文 */
@@ -14162,6 +14455,53 @@ window.WB_DATA.quizExtra = {
       var favN = host.querySelector('[data-favn]');
       function refreshFavN() { favN.textContent = favList().length ? '(' + favList().length + ')' : ''; }
 
+      /* ---- 我的研究方向（可自定义 1–6 个） ---- */
+      var DIR_HINT = ['糖尿病创面', '创面修复', '干细胞', '外泌体', '细胞衰老', '线粒体自噬'];
+      function liveDirs() { return (WB.live && WB.live.dirs) ? WB.live.dirs() : []; }
+      function dirMax() { return (WB.live && WB.live.dirMax) ? WB.live.dirMax() : 6; }
+
+      function dirCard() {
+        var dirs = liveDirs();
+        var n = dirMax();
+        var inputs = '';
+        for (var i = 0; i < n; i++) {
+          var v = dirs[i] || '';
+          inputs += '<div class="dir' + (v ? ' filled' : '') + '">' +
+            '<span class="no">' + (i + 1) + '</span>' +
+            '<input type="text" data-dir="' + i + '" maxlength="40" value="' + U.esc(v) + '" ' +
+            'placeholder="方向 ' + (i + 1) + '，如：' + DIR_HINT[i % DIR_HINT.length] + '">' +
+            '<button type="button" class="clr" data-clrdir="' + i + '" title="清空">✕</button></div>';
+        }
+        return '<div class="card tight">' +
+          '<div class="card-h"><h3>🧭 我的研究方向</h3>' +
+          '<span class="tag ' + (dirs.length ? 'g' : 'o') + '">已填 ' + dirs.length + ' / ' + n + '</span>' +
+          '<span class="sp"></span>' +
+          '<button type="button" class="btn sm pri" data-act="updatedirs">⚡ 一键更新研究方向</button></div>' +
+          '<div class="dirgrid">' + inputs + '</div>' +
+          '<div class="dirtip">中英文都可以填（中文会自动转成 PubMed 检索词）。填几个搜几个，' +
+          '<b>留空的方向不参与检索</b>；一个都不填则无法更新。点「⚡ 一键更新研究方向」会清空旧结果并按新方向重新检索。</div>' +
+          '</div>';
+      }
+
+      /* 读取界面上 6 个输入框的当前值 */
+      function readDirInputs() {
+        var out = [];
+        body.querySelectorAll('[data-dir]').forEach(function (el) { out.push(el.value); });
+        return out;
+      }
+
+      /* 写入研究方向；reset=true 时清空旧文献池并立即重新抓取 */
+      function applyDirs(arr, reset) {
+        var clean = (arr || []).map(function (s) { return String(s == null ? '' : s).trim(); })
+          .filter(function (s) { return !!s; }).slice(0, dirMax());
+        if (WB.live && WB.live.setDirs) { WB.live.setDirs(clean); }
+        if (reset && WB.live && WB.live.updateDirs) {
+          WB.live.updateDirs(clean);
+        }
+        st.q = ''; st.extra = 0; st.wordCat = '';
+        return clean;
+      }
+
       /* ---- 预刊速递 ---- */
       function syncBar() {
         var s = WB.live ? WB.live.state() : null;
@@ -14172,8 +14512,11 @@ window.WB_DATA.quizExtra = {
         var newToday = WB.live ? WB.live.list().filter(function (p) {
           return (p.edat || p.date || '') === today;
         }).length : 0;
+        var noDir = !liveDirs().length;
         var html = '<div class="row mb8">';
-        if (s && s.running) {
+        if (noDir) {
+          html += '<span class="tag o">⚠ 尚未设置研究方向</span>';
+        } else if (s && s.running) {
           html += '<span class="tag o">⏳ ' + U.esc(s.phase || '同步中…') + '</span>';
         } else if (s && s.err) {
           html += '<span class="tag r">⚠ ' + U.esc(s.err) + '</span>';
@@ -14185,13 +14528,22 @@ window.WB_DATA.quizExtra = {
           (meta.lastSync ? ' · 上次同步 ' + new Date(meta.lastSync).toLocaleString('zh-CN', { hour12: false }) : '') +
           (pending ? ' · ' + pending + ' 篇待翻译' : '') + '</span>' +
           '<span class="sp"></span>' +
-          '<button type="button" class="btn sm" data-act="resync">' + (s && s.running ? '同步中…' : '🔄 抓取最新') + '</button>' +
+          '<button type="button" class="btn sm" data-act="resync"' + (noDir ? ' disabled' : '') + '>' +
+          (s && s.running ? '同步中…' : '🔄 抓取最新') + '</button>' +
           '<button type="button" class="btn sm pri" data-act="more">➡️ 换一批</button></div>';
         return html;
       }
 
       function renderFeed() {
+        body.innerHTML = dirCard() + '<div data-feedbody></div>';
+        renderFeedBody();
+      }
+
+      function renderFeedBody() {
+        var el = body.querySelector('[data-feedbody]');
+        if (!el) { return; }
         var ALL = allPapers();
+        var dirs = liveDirs();
         var pool = st.q ? ALL.filter(function (p) { return p.topic === st.q; }) : ALL;
         /* 按发布日期倒序：第一批永远是最新发表的 10 篇，「换一批」依次向更早的文献翻 */
         pool = pool.slice().sort(function (a, b) {
@@ -14207,7 +14559,7 @@ window.WB_DATA.quizExtra = {
         }
         var meta = WB.live ? WB.live.meta() : {};
         var added = meta && meta.day === U.todayStr() ? (meta.added || 0) : 0;
-        body.innerHTML =
+        el.innerHTML =
           syncBar() +
           '<div class="row mb8">' +
           '<span class="tag dark">' + list.length + ' 篇</span>' +
@@ -14219,8 +14571,12 @@ window.WB_DATA.quizExtra = {
           topicList(ALL).map(function (t) {
             return '<button type="button" class="chip' + (st.q === t ? ' on' : '') + '" data-q="' + U.esc(t) + '">' + U.esc(t) + '</button>';
           }).join('') + '</div>' +
-          '<div class="hint b mb8">💡 每天首次打开自动联网向 PubMed 抓取近三年最新文献（6 个方向 × 20 篇，仅保留一区 IF≥10 期刊），新发表的文章会立即出现在最前面；中文标题与完整中文摘要直接显示，🔊 可朗读。</div>' +
-          '<div data-feed>' + list.map(function (p) { return paperCard(p, st.open); }).join('') + '</div>';
+          (dirs.length
+            ? '<div class="hint b mb8">💡 每天首次打开自动联网，按你填写的 ' + dirs.length + ' 个方向向 PubMed 抓取近三年最新文献（每方向 20 篇，优先一区 IF≥10 期刊），新发表的文章会立即出现在最前面；中文标题与完整中文摘要直接显示，🔊 可朗读。</div>'
+            : '<div class="hint mb8">⚠ 还没有设置研究方向。请在上方填写 1–6 个方向（中英文均可），然后点「⚡ 一键更新研究方向」。</div>') +
+          '<div data-feed>' + (list.length
+            ? list.map(function (p) { return paperCard(p, st.open); }).join('')
+            : U.emptyBox('🔍', dirs.length ? '这个方向暂时没有抓到文献，试试「🔄 抓取最新」或换个说法' : '请先设置研究方向')) + '</div>';
       }
 
       /* ---- PubMed 检索 ---- */
@@ -14249,11 +14605,58 @@ window.WB_DATA.quizExtra = {
           }).join('') + '</div></div>';
       }
 
-      /* ---- 专业词汇 ---- */
+      /* ---- 专业词汇（跟随用户填写的研究方向） ---- */
+      function dirWords(dir) {
+        var kws = (WB.live && WB.live.keywordsOf) ? WB.live.keywordsOf(dir) : [];
+        var kwl = kws.map(function (k) { return String(k).toLowerCase(); }).filter(Boolean);
+        var toks = String(dir || '').split(/[\s,，、;；\/+]+/).filter(function (s) { return s.length >= 2; });
+        var d = String(dir || '');
+        return MED.filter(function (w) {
+          var en = String(w.en || '').toLowerCase();
+          var zh = String(w.zh || '');
+          var cat = String(w.cat || '');
+          if (cat === d) return true;
+          /* 分类名互相包含（如「创面修复」与「创面」）也算命中 */
+          if (cat && d && (cat.indexOf(d) >= 0 || d.indexOf(cat) >= 0)) return true;
+          for (var i = 0; i < kwl.length; i++) {
+            if (kwl[i] && en.indexOf(kwl[i]) >= 0) return true;
+          }
+          for (var j = 0; j < toks.length; j++) {
+            if (zh.indexOf(toks[j]) >= 0 || cat.indexOf(toks[j]) >= 0) return true;
+          }
+          return false;
+        });
+      }
+
       function renderWords() {
         var learned = U.storeGet(K_LEARNED, {});
         var rnd = U.rndFor(WB.seedOf(9));
-        var pool = st.wordCat ? MED.filter(function (w) { return w.cat === st.wordCat; }) : MED;
+        var dirs = liveDirs();
+        var cats = [], poolAll = MED, matched = 0;
+
+        if (dirs.length) {
+          /* 每个方向单独匹配，按方向合并去重 */
+          var uniq = {}, list0 = [];
+          dirs.forEach(function (d) {
+            var ws = dirWords(d);
+            cats.push({ name: d, n: ws.length });
+            ws.forEach(function (w) {
+              if (!uniq[w.en]) { uniq[w.en] = 1; list0.push(w); }
+            });
+          });
+          matched = list0.length;
+          if (list0.length) poolAll = list0;
+        } else {
+          cats = MCATS.map(function (c) { return { name: c, n: MED.filter(function (w) { return w.cat === c; }).length }; });
+        }
+
+        var pool = poolAll;
+        if (st.wordCat) {
+          if (dirs.length) pool = dirWords(st.wordCat);
+          else pool = MED.filter(function (w) { return w.cat === st.wordCat; });
+        }
+        if (!pool.length) pool = MED;
+
         var list = U.pickN(pool, Math.min(10, pool.length), rnd);
         var todayKey = U.todayStr();
         var hist = U.storeGet(K_HIST, {});
@@ -14263,15 +14666,20 @@ window.WB_DATA.quizExtra = {
         U.storeSet(K_HIST, hist);
 
         var doneN = Object.keys(learned).length;
+        var chips = '<button type="button" class="chip' + (st.wordCat ? '' : ' on') + '" data-wc="">全部' +
+          (dirs.length ? '（' + matched + '）' : '') + '</button>' +
+          cats.map(function (c) {
+            return '<button type="button" class="chip' + (st.wordCat === c.name ? ' on' : '') + '" data-wc="' + U.esc(c.name) + '">' +
+              U.esc(c.name) + (dirs.length ? '<span class="tiny" style="opacity:.7;margin-left:4px">' + c.n + '</span>' : '') + '</button>';
+          }).join('');
+
         body.innerHTML =
           '<div class="row mb8"><span class="tag dark">今日 ' + list.length + ' 词</span>' +
-          '<span class="muted small">词库 ' + MED.length + ' 条 · 已掌握 ' + doneN + ' 条</span>' +
+          '<span class="muted small">词库 ' + MED.length + ' 条 · 已掌握 ' + doneN + ' 条' +
+          (dirs.length ? ' · 命中你方向的 ' + matched + ' 条' : '') + '</span>' +
           '<span class="sp"></span>' +
           '<button type="button" class="btn sm" data-act="whist">📜 历史词汇</button></div>' +
-          '<div class="chips mb8"><button type="button" class="chip' + (st.wordCat ? '' : ' on') + '" data-wc="">全部</button>' +
-          MCATS.map(function (c) {
-            return '<button type="button" class="chip' + (st.wordCat === c ? ' on' : '') + '" data-wc="' + U.esc(c) + '">' + U.esc(c) + '</button>';
-          }).join('') + '</div>' +
+          '<div class="chips mb8">' + chips + '</div>' +
           '<div class="wgrid" data-wgrid>' + list.map(function (w) {
             var k = w.en, ok = !!learned[k];
             return '<div class="wcard' + (ok ? ' learned' : '') + '" data-en="' + U.esc(k) + '">' +
@@ -14283,7 +14691,10 @@ window.WB_DATA.quizExtra = {
               '<button type="button" class="btn xs" data-act="mark">' + (ok ? '✓ 已掌握' : '标记已学') + '</button></div></div>';
           }).join('') + '</div>' +
           '<div class="hr"></div>' +
-          '<div class="hint b">📖 96 条核心术语覆盖 6 个方向：' + MCATS.join(' / ') + '。每天自动轮换 10 个，标记后计入掌握进度。</div>';
+          (dirs.length
+            ? '<div class="hint b">📖 词库共 ' + MED.length + ' 条，已按你填写的研究方向（' + U.esc(dirs.join(' / ')) + '）筛出 ' + matched +
+              ' 条相关术语。改方向后这里会跟着变；每天自动轮换 10 个，标记后计入掌握进度。</div>'
+            : '<div class="hint">📖 尚未设置研究方向，先显示全部 ' + MED.length + ' 条术语。到「📰 预刊速递」填写研究方向后，这里会自动只保留相关术语。</div>');
       }
 
       /* ---- 已收藏 ---- */
@@ -14308,6 +14719,14 @@ window.WB_DATA.quizExtra = {
         if (q) { st.q = q.getAttribute('data-q'); st.extra = 0; renderFeed(); return; }
         var wc = e.target.closest('[data-wc]');
         if (wc) { st.wordCat = wc.getAttribute('data-wc'); renderWords(); return; }
+        var cd = e.target.closest('[data-clrdir]');
+        if (cd) {
+          var ci = parseInt(cd.getAttribute('data-clrdir'), 10);
+          var el = body.querySelector('[data-dir="' + ci + '"]');
+          if (el) { el.value = ''; }
+          applyDirs(readDirInputs(), false);
+          return;
+        }
         var kw = e.target.closest('[data-kw]');
         if (kw) {
           var v = kw.getAttribute('data-kw');
@@ -14318,6 +14737,15 @@ window.WB_DATA.quizExtra = {
         if (!act) return;
         var a = act.getAttribute('data-act');
 
+        if (a === 'updatedirs') {
+          var dirsIn = readDirInputs();
+          var n0 = dirsIn.filter(function (s) { return String(s || '').trim(); }).length;
+          if (!n0) { U.toast('请至少填写 1 个研究方向'); return; }
+          applyDirs(dirsIn, true);
+          U.toast('已按 ' + n0 + ' 个方向更新，正在抓取最新文献…');
+          if (st.tab === 'words') renderWords(); else renderFeed();
+          return;
+        }
         if (a === 'more') { st.extra++; renderFeed(); U.toast('已换一批新文献'); return; }
         if (a === 'resync') {
           if (!WB.live) { U.toast('实时模块未加载'); return; }
