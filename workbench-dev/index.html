@@ -12012,8 +12012,6 @@ window.WB_DATA.quizExtra = {
     sb.insertAdjacentHTML('beforeend',
       '<div class="nav-foot"><div class="row"><span id="cloudTip">数据保存在本机浏览器</span></div>' +
       '<div class="row" style="margin-top:6px">' +
-      '<button class="btn sm" id="btnSettings">⚙️ 设置</button>' +
-      '<button class="btn sm" id="btnExport">⬇ 导出备份</button>' +
       '<button class="btn sm danger" id="btnClear">🗑 清空</button></div></div>');
     document.getElementById('navBox').innerHTML = navHTML();
     var d = new Date();
@@ -12044,8 +12042,6 @@ window.WB_DATA.quizExtra = {
     });
     document.getElementById('overlay').addEventListener('click', closeDrawer);
 
-    document.getElementById('btnSettings').addEventListener('click', function () { go('settings'); });
-    document.getElementById('btnExport').addEventListener('click', exportData);
     document.getElementById('btnClear').addEventListener('click', function () {
       if (!window.confirm('确定清空全部本地数据吗？（学习记录、账本、复盘、收藏都会删除，且无法恢复）')) return;
       Object.keys(localStorage).forEach(function (k) { if (k.indexOf(PREFIX) === 0) localStorage.removeItem(k); });
@@ -12087,22 +12083,6 @@ window.WB_DATA.quizExtra = {
       }
     }
     window.addEventListener('beforeunload', stopSpeak);
-  }
-
-  function exportData() {
-    var out = {};
-    Object.keys(localStorage).forEach(function (k) {
-      if (k.indexOf(PREFIX) === 0) {
-        try { out[k.slice(PREFIX.length)] = JSON.parse(localStorage.getItem(k)); } catch (e) { }
-      }
-    });
-    var blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), data: out }, null, 2)], { type: 'application/json' });
-    var a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = '每日学习工作台_备份_' + todayStr() + '.json';
-    document.body.appendChild(a); a.click();
-    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
-    toast('备份已导出');
   }
 
   WB.boot = boot;
@@ -17703,7 +17683,7 @@ window.WB_DATA.quizExtra = {
     return;
   }
   document.body.insertAdjacentHTML("afterbegin",
-    '<div style="background:#FFF3E0;color:#E65100;border-bottom:1px solid #FFCC80;padding:7px 14px;font-size:12.5px;text-align:center">🧪 开发版 · 构建于 2026-10-29 01:12 · 数据独立存储（' + WB.PREFIX + '），不影响正式版</div>');
+    '<div style="background:#FFF3E0;color:#E65100;border-bottom:1px solid #FFCC80;padding:7px 14px;font-size:12.5px;text-align:center">🧪 开发版 · 构建于 2026-10-29 01:30 · 数据独立存储（' + WB.PREFIX + '），不影响正式版</div>');
 })();
 </script>
 </body>
