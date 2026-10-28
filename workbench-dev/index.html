@@ -12992,10 +12992,10 @@ window.WB_DATA.quizExtra = {
       dys: '氧化应激过载', tgt: '细胞存活与迁移能力',
       re: /\b(oxidative stress|\bROS\b|Nrf2|antioxidant)\b/i,
       ang: '高糖与缺氧叠加会造成"假性缺氧 + 氧化过载"，抗氧化递送仍有空间' },
-    { zh: '瘢痕挛缩', kind: 'proc', core: '瘢痕', cell: '肌成纤维细胞',
-      dys: '瘢痕挛缩过度', tgt: '肌成纤维细胞收缩与胶原过度沉积',
+    { zh: '纤维化重塑', kind: 'proc', core: '纤维化', cell: '肌成纤维细胞',
+      dys: '纤维化重塑失衡', tgt: '肌成纤维细胞收缩与基质过度沉积',
       re: /\b(scar\w*|fibrosis|keloid|hypertrophic)\b/i,
-      ang: '瘢痕本质是修复"刹不住车"，找到终止信号比抑制某一因子更有价值' },
+      ang: '纤维化本质是修复"刹不住车"，找到终止信号比抑制某一因子更有价值' },
     { zh: '瘙痒与疼痛', kind: 'proc', core: '瘙痒', cell: '感觉神经元',
       dys: '瘙痒疼痛敏化', tgt: '感觉神经敏化与瘙痒行为',
       re: /\b(pruritus|\bitch\b|nocicept\w*|hyperalgesia)\b/i,
@@ -13049,7 +13049,7 @@ window.WB_DATA.quizExtra = {
   /* 领域识别规则：把「方向名 + 文献标题高频词」归到一个领域语境。
      顺序很重要——越具体的越靠前；最后一条才是中性兜底。 */
   var DOMAIN_RULES = [
-    [/wound|heal|ulcer|scar|keloid|skin|dermal|epiderm|repair|regenerat/, { model: '皮肤创面', env: '炎症-增殖转换失衡', bad: '愈合不良', cell: '成纤维细胞',
+    [/wound|heal|ulcer|scar|keloid|dermal|epiderm/, { model: '皮肤创面', env: '炎症-增殖转换失衡', bad: '愈合不良', cell: '成纤维细胞',
       form: '体外细胞模型 + 动物全层创面模型 + 组织学与免疫组化' }],
     [/tumou?r|cancer|oncolog|carcinoma|neoplas|metasta|glioma|leukemi/, { model: '肿瘤微环境', env: '免疫抑制与代谢重编程', bad: '进展与耐药', cell: '肿瘤相关巨噬细胞',
       form: '细胞系模型 + 动物移植瘤 + 单细胞与空间组学' }],
@@ -16653,7 +16653,7 @@ window.WB_DATA.quizExtra = {
     return;
   }
   document.body.insertAdjacentHTML("afterbegin",
-    '<div style="background:#FFF3E0;color:#E65100;border-bottom:1px solid #FFCC80;padding:7px 14px;font-size:12.5px;text-align:center">🧪 开发版 · 构建于 2026-10-28 18:10 · 数据独立存储（' + WB.PREFIX + '），不影响正式版</div>');
+    '<div style="background:#FFF3E0;color:#E65100;border-bottom:1px solid #FFCC80;padding:7px 14px;font-size:12.5px;text-align:center">🧪 开发版 · 构建于 2026-10-28 18:16 · 数据独立存储（' + WB.PREFIX + '），不影响正式版</div>');
 })();
 </script>
 </body>
