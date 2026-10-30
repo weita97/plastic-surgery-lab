@@ -15302,7 +15302,7 @@ window.WB_DATA.quizExtra = {
 
 ;
 /* ---- mod_research.js ---- */
-﻿/* ===== 模块 3：科研进展 ===== */
+/* ===== 模块 3：科研进展 ===== */
 (function () {
   'use strict';
   var U = WB.util, D = window.WB_DATA || {};
@@ -15923,7 +15923,71 @@ window.WB_DATA.quizExtra = {
           }).join('') + '</div>' +
           '<div class="hr"></div>' +
           '<div class="hint b">📖 词库共 ' + MED.length + ' 条，已按你填写的研究方向（' + U.esc(dirs.join(' / ')) + '）筛出 ' + matched +
-          ' 条相关术语。改方向后这里会跟着变；每天自动轮换 10 个，标记后计入掌握进度。</div>';
+          ' 条相关术语。改方向后这里会跟着变；每天自动轮换 10 个，标记后计入掌握进度。</div>' +
+          '<div data-wordquiz class="mt8"></div>';
+
+        /* 今日测验：题目全部来自上面这 10 个词（拼写 / 释义 / 音标 / 听写） */
+        var wqBox = body.querySelector('[data-wordquiz]');
+        if (wqBox && list.length) {
+          WB.quizCard(wqBox, 'words', wordPool(list, poolAll), { offset: 6, count: 5 });
+        }
+      }
+
+      /* ---- 用今日单词造题 ---- */
+      function wordPool(today, all) {
+        var qs = [];
+        /* 干扰项优先取同方向的词；不够 3 个时退回整个词库，保证每题都有 4 个选项 */
+        function distract(w, n, pick) {
+          var src = all.filter(function (x) { return x !== w && pick(x) && pick(x) !== pick(w); });
+          if (src.length < n) {
+            src = MED.filter(function (x) { return x !== w && pick(x) && pick(x) !== pick(w); });
+          }
+          return U.shuffle(src, U.rndFor(WB.seedOf(21) + hashStr(w.en))).slice(0, n);
+        }
+        today.forEach(function (w) {
+          var rnd = U.rndFor(WB.seedOf(21) + hashStr(w.en) + 137);
+          /* 1. 英译中 */
+          var f1 = distract(w, 3, function (x) { return x.zh; }).map(function (x) { return x.zh; });
+          if (f1.length === 3) {
+            var o1 = U.shuffle([w.zh].concat(f1), rnd);
+            qs.push({
+              q: '「' + w.en + '」在医学语境下的中文意思是？',
+              o: o1, a: o1.indexOf(w.zh),
+              e: w.en + ' ' + (w.ph || '') + ' → ' + w.zh + '（' + w.cat + '）'
+            });
+          }
+          /* 2. 中译英 */
+          var f2 = distract(w, 3, function (x) { return x.en; }).map(function (x) { return x.en; });
+          if (f2.length === 3) {
+            var o2 = U.shuffle([w.en].concat(f2), rnd);
+            qs.push({
+              q: '「' + w.zh + '」对应的英文术语是？',
+              o: o2, a: o2.indexOf(w.en),
+              e: w.zh + ' → ' + w.en + ' ' + (w.ph || '') + '，属于「' + w.cat + '」方向。'
+            });
+          }
+          /* 3. 音标 */
+          var f3 = distract(w, 3, function (x) { return x.ph; }).map(function (x) { return x.ph; });
+          if (f3.length === 3) {
+            var o3 = U.shuffle([w.ph].concat(f3), rnd);
+            qs.push({
+              q: '下面哪个音标对应单词「' + w.en + '」？',
+              o: o3, a: o3.indexOf(w.ph),
+              e: w.en + ' 读作 ' + w.ph + '，意思是「' + w.zh + '」。'
+            });
+          }
+          /* 4. 释义→选词 */
+          var f4 = distract(w, 3, function (x) { return x.en; }).map(function (x) { return x.en; });
+          if (f4.length === 3) {
+            var o4 = U.shuffle([w.en].concat(f4), rnd);
+            qs.push({
+              q: '在「' + w.cat + '」方向的文献里，表达「' + w.zh + '」时应当使用哪个术语？',
+              o: o4, a: o4.indexOf(w.en),
+              e: w.zh + ' 的标准英文表达是 ' + w.en + '，在 PubMed 里可直接作为检索词。'
+            });
+          }
+        });
+        return qs;
       }
 
       /* ---- 已收藏 ---- */
@@ -16185,36 +16249,57 @@ window.WB_DATA.quizExtra = {
       quizBox.className = 'mt8';
       host.appendChild(quizBox);
       var quizSig = '';
+      /* ---- 方向专属科研题：把方向名 + 该方向的英文关键词 + 真实文献标题拼成题干 ----
+         刻意不考「这篇文章发在哪个期刊」这类与研究方向无关的题。 */
+      function dirEn(dir) {
+        var kws = (WB.live && WB.live.keywordsOf) ? WB.live.keywordsOf(dir) : [];
+        return kws.length ? kws.join(' / ') : String(dir || '');
+      }
+      function dirQuizzes(d, papers) {
+        var en = dirEn(d);
+        var mine = papers.filter(function (p) { return (p.hits || []).indexOf(d) >= 0; });
+        var sample = mine.length ? mine[0] : papers[0];
+        var title = sample && sample.title ? String(sample.title) : '';
+        var qs = [];
+        qs.push({
+          q: '「' + d + '」这个方向，在 PubMed 里对应的英文检索词是？',
+          o: [en, 'plastic surgery / rhinoplasty / flap', 'case report / editorial / letter', 'impact factor / quartile / h-index'],
+          a: 0,
+          e: '「' + d + '」映射出的英文检索词为 ' + en + '，用它们组检索式才能命中同方向的文献。'
+        });
+        qs.push({
+          q: '判断一篇文献是否真正属于「' + d + '」方向，最可靠的依据是？',
+          o: ['标题与摘要是否同时出现该方向的核心术语', '期刊的影响因子是否足够高', '作者人数是否足够多', '参考文献数量是否足够多'],
+          a: 0,
+          e: '方向归属看内容而非期刊指标。本工具按「同时命中方向数」判定，命中越多说明越贴合你填的方向。'
+        });
+        if (title) {
+          qs.push({
+            q: '你追踪的方向「' + d + '」下，最近检索到一篇《' + title.slice(0, 40) + (title.length > 40 ? '…' : '') + '》，它最可能属于哪类研究？',
+            o: ['围绕「' + d + '」的原始研究或综述', '与「' + d + '」完全无关的管理学论文', '期刊的勘误声明', '会议日程通知'],
+            a: 0,
+            e: '这条文献正是按「' + d + '」的检索词从 PubMed 命中的，属于该方向的研究进展，可在「预刊速递」里展开看摘要。'
+          });
+        }
+        return qs;
+      }
       function researchPool() {
         var dirs = liveDirs();
         if (!dirs.length) return [];
         var QE0 = (window.WB_DATA && window.WB_DATA.quizExtra) || {};
         var base = (QE0.research || []).slice();
-        /* 用方向名与文献池里的标题造「方向专属题」，让测验跟着检索内容走 */
-        var papers = allPapers().slice(0, 40);
+        var papers = allPapers().slice(0, 60);
         var extra = [];
-        dirs.forEach(function (d) {
-          extra.push({
-            q: '「' + d + '」方向上，PubMed 检索时最规范的做法是？',
-            o: ['用英文主题词 + [tiab] 字段限定检索', '直接输入中文原词检索', '只按影响因子排序浏览', '只检索综述类文献'],
-            a: 0,
-            e: 'PubMed 收录的是英文文献，中文方向需转成英文主题词（如「糖尿病创面」→ diabetic wound），再用 [tiab] 限定标题摘要字段。'
-          });
-        });
-        papers.slice(0, 12).forEach(function (p) {
-          if (!p.title) return;
-          var others = papers.filter(function (x) { return x !== p && x.journal && x.journal !== p.journal; })
-            .slice(0, 3).map(function (x) { return x.journal; });
-          if (others.length < 3) return;
-          var rnd = U.rndFor(hashStr(p.pmid));
-          var opts = U.shuffle([p.journal].concat(others), rnd);
-          var idx = opts.indexOf(p.journal);
-          if (idx < 0) return;
-          extra.push({
-            q: '这篇最新文献《' + String(p.title).slice(0, 46) + (String(p.title).length > 46 ? '…' : '') + '》发表在哪个期刊？',
-            o: opts, a: idx,
-            e: '来源：PubMed PMID ' + p.pmid + '，中科院 ' + (p.tier || '—') + ' 区，IF ' + (p.if == null ? '—' : p.if) + '。'
-          });
+        dirs.forEach(function (d) { extra = extra.concat(dirQuizzes(d, papers)); });
+        /* 一条通用方法题（只出一次，避免每个方向重复） */
+        extra.push({
+          q: '围绕你填写的 ' + dirs.length + ' 个研究方向（' + dirs.join(' / ') + '），PubMed 检索最规范的做法是？',
+          o: ['把中文方向转成英文主题词，再用 [tiab] 限定标题/摘要字段',
+            '直接输入中文原词检索',
+            '只按影响因子排序浏览，不限定检索字段',
+            '只检索综述类文献，排除原始研究'],
+          a: 0,
+          e: 'PubMed 收录英文文献，中文方向需先转成英文检索词，再配合 [tiab]、[dp] 等字段限定，召回才准确。'
         });
         return base.concat(extra);
       }
@@ -17930,7 +18015,7 @@ window.WB_DATA.quizExtra = {
     return;
   }
   document.body.insertAdjacentHTML("afterbegin",
-    '<div style="background:#FFF3E0;color:#E65100;border-bottom:1px solid #FFCC80;padding:7px 14px;font-size:12.5px;text-align:center">🧪 开发版 · 构建于 2026-10-31 03:56 · 数据独立存储（' + WB.PREFIX + '），不影响正式版</div>');
+    '<div style="background:#FFF3E0;color:#E65100;border-bottom:1px solid #FFCC80;padding:7px 14px;font-size:12.5px;text-align:center">🧪 开发版 · 构建于 2026-10-31 04:12 · 数据独立存储（' + WB.PREFIX + '），不影响正式版</div>');
 })();
 </script>
 </body>
