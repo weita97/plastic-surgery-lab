@@ -15929,7 +15929,9 @@ window.WB_DATA.quizExtra = {
         /* 今日测验：题目全部来自上面这 10 个词（拼写 / 释义 / 音标 / 听写） */
         var wqBox = body.querySelector('[data-wordquiz]');
         if (wqBox && list.length) {
-          WB.quizCard(wqBox, 'words', wordPool(list, poolAll), { offset: 6, count: 5 });
+          var wqCard = WB.quizCard(wqBox, 'words', wordPool(list, poolAll), { offset: 6, count: 5 });
+          /* 词汇测验独占页签：把卡片标题改成「词汇测验」，避免与速递页的今日测验混淆 */
+          if (wqCard && wqCard.querySelector('h3')) wqCard.querySelector('h3').textContent = '📝 词汇测验';
         }
       }
 
@@ -16232,6 +16234,7 @@ window.WB_DATA.quizExtra = {
         else if (st.tab === 'search') renderSearch();
         else if (st.tab === 'words') renderWords();
         else renderFav();
+        renderQuiz();
       }
 
       /* 研究方向变化：专业词汇页要立刻跟着重算 */
@@ -16310,6 +16313,11 @@ window.WB_DATA.quizExtra = {
         return h >>> 0;
       }
       function renderQuiz() {
+        /* mount 早期 render() 会先于 quizBox 创建被调用，这里必须守卫 */
+        if (!quizBox) return;
+        /* 今日测验只属于「📰 预刊速递」页：其它页签（专业词汇有自己的词汇测验）一律清空，
+           避免出现两份「📝 今日测验」 */
+        if (st.tab !== 'feed') { quizBox.innerHTML = ''; quizSig = ''; return; }
         var dirs = liveDirs();
         var sig = dirs.join('|') + '#' + allPapers().length;
         if (sig === quizSig) return;
@@ -18015,7 +18023,7 @@ window.WB_DATA.quizExtra = {
     return;
   }
   document.body.insertAdjacentHTML("afterbegin",
-    '<div style="background:#FFF3E0;color:#E65100;border-bottom:1px solid #FFCC80;padding:7px 14px;font-size:12.5px;text-align:center">🧪 开发版 · 构建于 2026-10-31 04:12 · 数据独立存储（' + WB.PREFIX + '），不影响正式版</div>');
+    '<div style="background:#FFF3E0;color:#E65100;border-bottom:1px solid #FFCC80;padding:7px 14px;font-size:12.5px;text-align:center">🧪 开发版 · 构建于 2026-10-31 04:28 · 数据独立存储（' + WB.PREFIX + '），不影响正式版</div>');
 })();
 </script>
 </body>
