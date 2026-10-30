@@ -263,6 +263,15 @@ textarea{resize:vertical;min-height:64px;line-height:1.6}
 .paper .pm.hits{margin-top:5px;gap:5px}
 .paper .pm.hits .tag{font-size:10.5px;padding:1px 7px}
 .paper .pm.hits + .pm{margin-top:4px}
+/* 文献类型标签（综述/论著/RCT/Meta 分析…）：排在方向标签最前面，形状略方以示区分 */
+.paper .tag.kind{border-radius:6px;font-weight:600;letter-spacing:.2px}
+.paper .tag.kind.kv{background:#EDE7FB;color:#6A46C8;border-color:#DCD2F6}
+.paper .tag.kind.kr{background:#E6F3EA;color:#2C7A46;border-color:#CFE7D8}
+.paper .tag.kind.km{background:#FFF1DE;color:#B26A00;border-color:#F6E0C2}
+.paper .tag.kind.ko{background:#E8F1FB;color:#1D5FA8;border-color:#D3E4F7}
+.paper .tag.kind.kg{background:#E4F4F6;color:#11707C;border-color:#CDE9ED}
+.paper .tag.kind.kc{background:var(--tint-3);color:var(--ink-2);border-color:var(--line)}
+.paper .tag.kind.kbad{background:var(--bad-soft);color:var(--bad);border-color:var(--bad-soft)}
 .paper .pm{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:11px;color:var(--ink-3);margin-top:5px}
 .paper .ab{font-size:12px;color:var(--ink-2);line-height:1.7;margin-top:6px;padding:8px 10px;background:var(--tint);border-radius:8px;border-left:3px solid var(--brand-3);display:none;max-height:420px;overflow:auto}
 .paper .ab.show{display:block}
@@ -12989,6 +12998,37 @@ window.WB_DATA.quizExtra = {
     }, 2).catch(function () { return ''; });
   }
 
+  /* ---------- 文献类型判定 ---------- */
+  /* PubMed 的 PublicationTypeList 会把「Journal Article」和具体体裁一起列出来，
+     例如 ['Journal Article','Review'] / ['Journal Article','Randomized Controlled Trial']。
+     这里按优先级归一成一个 key，UI 再映射成中文标签与配色。 */
+  var PT_RULES = [
+    ['retracted', /^Retracted Publication$|^Retraction of Publication$/i],
+    ['erratum', /^Published Erratum$/i],
+    ['meta', /^Meta-Analysis$/i],
+    ['sysreview', /^Systematic Review$/i],
+    ['review', /^Review$|^Review,|^Scoping Review$|^Narrative Review$/i],
+    ['guideline', /Guideline$|^Consensus Development Conference/i],
+    ['rct', /^Randomized Controlled Trial$|^Equivalence Trial$|^Pragmatic Clinical Trial$|^Adaptive Clinical Trial$/i],
+    ['trial', /^Clinical Trial/i],
+    ['observ', /^Observational Study$|^Multicenter Study$|^Comparative Study$|^Evaluation Study$|^Validation Study$|^Twin Study$/i],
+    ['case', /^Case Reports$/i],
+    ['comment', /^Editorial$|^Comment$|^Letter$|^News$|^Published Erratum$|^Biography$/i],
+    ['preprint', /^Preprint$/i]
+  ];
+  function classifyType(pts) {
+    var list = (pts || []).map(function (s) { return String(s || '').trim(); }).filter(Boolean);
+    for (var i = 0; i < PT_RULES.length; i++) {
+      var re = PT_RULES[i][1];
+      for (var j = 0; j < list.length; j++) {
+        if (re.test(list[j])) return PT_RULES[i][0];
+      }
+    }
+    /* 没有任何体裁标注：PubMed 默认按论著处理 */
+    if (list.some(function (s) { return /^Journal Article$/i.test(s); })) return 'research';
+    return '';
+  }
+
   /* ---------- XML 解析 ---------- */
   /* topicMap: {pmid: 方向名}，直接采用用户填写的方向名打标；
      loose=true 时放宽期刊白名单（用于小众方向兜底），tier 记为 '—' */
@@ -13048,10 +13088,14 @@ window.WB_DATA.quizExtra = {
       [].slice.call(a.querySelectorAll('ArticleId')).forEach(function (x) {
         if (x.getAttribute('IdType') === 'doi') doi = x.textContent.trim();
       });
+      /* 文献类型：Review / 论著 / Meta 分析 / RCT / 个案报道 … */
+      var pts = [].slice.call(a.querySelectorAll('PublicationTypeList PublicationType'))
+        .map(function (n) { return n.textContent.trim(); });
       out.push({
         pmid: String(pmid), title: title, journal: journal,
         year: y, date: dateStr, edat: edat, authors: authors, doi: doi, abstract: abs,
         topic: topic, tier: ifv == null ? '—' : '1区', if: ifv == null ? null : ifv,
+        ptypes: pts, kind: classifyType(pts),
         titleZh: '', abstractZh: '', ts: Date.now()
       });
     });
@@ -13412,6 +13456,7 @@ window.WB_DATA.quizExtra = {
       };
     },
     queryOf: queryOf,
+    classifyType: classifyType,
     keywordsOf: function (dir) {
       var out = [];
       var s = String(dir || '');
@@ -15257,7 +15302,7 @@ window.WB_DATA.quizExtra = {
 
 ;
 /* ---- mod_research.js ---- */
-/* ===== 模块 3：科研进展 ===== */
+﻿/* ===== 模块 3：科研进展 ===== */
 (function () {
   'use strict';
   var U = WB.util, D = window.WB_DATA || {};
@@ -15331,6 +15376,44 @@ window.WB_DATA.quizExtra = {
     return 'n';
   }
 
+  /* 文献类型标签：key → [中文名, 配色类, 悬浮说明] */
+  var KIND_MAP = {
+    review: ['综述 Review', 'kv', '系统梳理某一领域已有研究的综述文章'],
+    sysreview: ['系统综述 SR', 'kv', '按 PRISMA 流程系统检索并评价的综述'],
+    meta: ['Meta 分析', 'km', '对多项研究数据做合并统计的分析'],
+    research: ['论著 Research', 'kr', '报告原创实验/临床数据的原始研究论文'],
+    rct: ['RCT 随机对照', 'kr', '随机对照试验，证据等级最高的一类临床研究'],
+    trial: ['临床试验', 'kr', '注册的临床试验研究'],
+    observ: ['观察性研究', 'ko', '队列/病例对照/横断面等观察性研究'],
+    case: ['个案报道', 'kc', '单例或少数病例的报道'],
+    guideline: ['指南/共识', 'kg', '临床指南或专家共识'],
+    comment: ['评论/通讯', 'kc', '社论、评论、读者来信等非研究性文字'],
+    preprint: ['预印本', 'kc', '尚未正式发表的预印本'],
+    erratum: ['勘误', 'kc', '对已发表文章的更正'],
+    retracted: ['已撤稿', 'kbad', '该文献已被期刊撤稿，引用前务必核实']
+  };
+
+  /* 取文献类型：优先用 PubMed 的 PublicationTypeList 判定结果；
+     老缓存没有 kind 字段时，退化成按标题关键词粗判（Review/Meta-Analysis 等） */
+  function kindOf(p) {
+    var k = p && p.kind;
+    if (k && KIND_MAP[k]) return k;
+    var t = String((p && p.title) || '');
+    if (/^(erratum|correction|retraction)/i.test(t)) return 'erratum';
+    if (/\bmeta-?analysis\b/i.test(t)) return 'meta';
+    if (/\bsystematic review\b/i.test(t)) return 'sysreview';
+    if (/\b(a |an )?(narrative |scoping |systematic )?review\b\s*[:\-–]/i.test(t) ||
+      /\bthis review\b|\bwe review\b|\bwe summarize\b|\bhere,? we\b/i.test(String((p && p.abstract) || ''))) return 'review';
+    return 'research';
+  }
+
+  function kindTag(p) {
+    var k = kindOf(p);
+    var m = KIND_MAP[k];
+    if (!m) return '';
+    return '<span class="tag kind ' + m[1] + '" title="' + U.esc(m[2]) + '">📄 ' + m[0] + '</span>';
+  }
+
   function paperCard(p, openMap) {
     var pmid = String(p.pmid);
     var url = 'https://pubmed.ncbi.nlm.nih.gov/' + pmid + '/';
@@ -15350,7 +15433,7 @@ window.WB_DATA.quizExtra = {
     return '<div class="paper' + (isNew ? ' fresh' : '') + '" data-pmid="' + pmid + '">' +
       '<p class="pt"><a href="' + url + '" target="_blank" rel="noopener">' + U.esc(p.title) + '</a></p>' +
       (p.titleZh ? '<div class="zh">🇨🇳 ' + U.esc(p.titleZh) + '</div>' : '<div class="zh muted">🇨🇳 中文标题生成中…</div>') +
-      '<div class="pm hits">' + hitTags + hitSum + '</div>' +
+      '<div class="pm hits">' + kindTag(p) + hitTags + hitSum + '</div>' +
       '<div class="pm">' +
       (isNew ? '<span class="tag g">NEW</span>' : '') +
       '<span class="jq">' + U.esc(p.journal) + '</span>' +
@@ -15377,7 +15460,7 @@ window.WB_DATA.quizExtra = {
   WB.register({
     id: 'research', icon: '🔬', title: '科研进展', group: '科研',
     mount: function (host) {
-      var st = { tab: 'feed', extra: 0, cat: '', q: '', wordCat: '', open: {} };
+      var st = { tab: 'feed', extra: 0, cat: '', q: '', kind: '', wordCat: '', open: {} };
 
       host.innerHTML =
         '<div class="card">' +
@@ -15442,7 +15525,7 @@ window.WB_DATA.quizExtra = {
         if (reset && WB.live && WB.live.updateDirs) {
           WB.live.updateDirs(clean);
         }
-        st.q = ''; st.extra = 0; st.wordCat = '';
+        st.q = ''; st.kind = ''; st.extra = 0; st.wordCat = '';
         return clean;
       }
 
@@ -15491,6 +15574,8 @@ window.WB_DATA.quizExtra = {
           var hs = (p.hits && p.hits.length) ? p.hits : [p.topic];
           return hs.indexOf(st.q) >= 0;
         }) : ALL;
+        /* 文献类型筛选：综述 / 论著 / Meta / RCT … 单独一档，可与方向筛选叠加 */
+        if (st.kind) pool = pool.filter(function (p) { return kindOf(p) === st.kind; });
         /* 按发布日期倒序：第 1 页永远是最新发表的 10 篇，翻页依次向更早的文献走 */
         pool = pool.slice().sort(function (a, b) {
           if (a._d !== b._d) return b._d.localeCompare(a._d);
@@ -15528,6 +15613,20 @@ window.WB_DATA.quizExtra = {
           topicList(ALL).map(function (t) {
             return '<button type="button" class="chip' + (st.q === t ? ' on' : '') + '" data-q="' + U.esc(t) + '">' + U.esc(t) + '</button>';
           }).join('') + '</div>' +
+          (function () {
+            /* 文献类型筛选：按库里实际出现的类型动态生成，没出现过的类型不占位 */
+            var cnt = {};
+            ALL.forEach(function (p) { var k = kindOf(p); if (k) cnt[k] = (cnt[k] || 0) + 1; });
+            var order = ['research', 'review', 'sysreview', 'meta', 'rct', 'trial', 'observ', 'case', 'guideline', 'comment', 'preprint', 'erratum', 'retracted'];
+            var keys = order.filter(function (k) { return cnt[k]; });
+            if (!keys.length) return '';
+            return '<div class="chips mb8"><span class="muted small" style="margin-right:2px">文献类型</span>' +
+              '<button type="button" class="chip' + (st.kind ? '' : ' on') + '" data-kind="">全部</button>' +
+              keys.map(function (k) {
+                return '<button type="button" class="chip' + (st.kind === k ? ' on' : '') + '" data-kind="' + k + '">' +
+                  KIND_MAP[k][0].replace(/^📄 /, '') + ' ' + cnt[k] + '</button>';
+              }).join('') + '</div>';
+          })() +
           (dirs.length
             ? '<div class="hint b mb8">💡 按你填写的 ' + dirs.length + ' 个研究方向向 PubMed 检索近三年最新文献' +
               (dirs.length >= 3
@@ -15847,6 +15946,8 @@ window.WB_DATA.quizExtra = {
         }
         var q = e.target.closest('[data-q]');
         if (q) { st.q = q.getAttribute('data-q'); st.extra = 0; renderFeed(); return; }
+        var kd = e.target.closest('[data-kind]');
+        if (kd) { st.kind = kd.getAttribute('data-kind'); st.extra = 0; renderFeed(); return; }
         var wc = e.target.closest('[data-wc]');
         if (wc) { st.wordCat = wc.getAttribute('data-wc'); renderWords(); return; }
         var cd = e.target.closest('[data-clrdir]');
@@ -16072,7 +16173,7 @@ window.WB_DATA.quizExtra = {
       /* 研究方向变化：专业词汇页要立刻跟着重算 */
       window.addEventListener('wb:dirs', function () {
         if (!document.body.contains(host)) return;
-        st.q = ''; st.extra = 0; st.wordCat = '';
+        st.q = ''; st.kind = ''; st.extra = 0; st.wordCat = '';
         if (st.tab === 'words') renderWords();
         else if (st.tab === 'feed') renderFeed();
         renderQuiz();
@@ -17829,7 +17930,7 @@ window.WB_DATA.quizExtra = {
     return;
   }
   document.body.insertAdjacentHTML("afterbegin",
-    '<div style="background:#FFF3E0;color:#E65100;border-bottom:1px solid #FFCC80;padding:7px 14px;font-size:12.5px;text-align:center">🧪 开发版 · 构建于 2026-10-31 03:37 · 数据独立存储（' + WB.PREFIX + '），不影响正式版</div>');
+    '<div style="background:#FFF3E0;color:#E65100;border-bottom:1px solid #FFCC80;padding:7px 14px;font-size:12.5px;text-align:center">🧪 开发版 · 构建于 2026-10-31 03:56 · 数据独立存储（' + WB.PREFIX + '），不影响正式版</div>');
 })();
 </script>
 </body>
