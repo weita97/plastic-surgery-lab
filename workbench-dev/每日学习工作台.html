@@ -221,6 +221,28 @@ textarea{resize:vertical;min-height:64px;line-height:1.6}
   color:var(--ink-3);font-size:13px;line-height:1;padding:2px 4px;cursor:pointer;display:none
 }
 .dirgrid .dir.filled .clr{display:block}
+
+/* PubMed 检索式构建器（检索 tab） */
+.qbrow{display:flex;align-items:center;gap:6px;margin-bottom:7px;flex-wrap:nowrap}
+.qbrow .qbsel{
+  flex:0 0 108px;width:108px;font-size:12px;padding:6px 8px;border-radius:8px;
+  border:1px solid var(--line-3);background:var(--surface);color:var(--ink)
+}
+.qbrow .qbsel.qbop{flex:0 0 84px;width:84px;font-size:11.5px;color:var(--ink-2)}
+.qbrow .qbin{
+  flex:1 1 auto;min-width:0;font-size:12.5px;padding:6px 9px;border-radius:8px;
+  border:1px solid var(--line-3);background:var(--surface);color:var(--ink)
+}
+.qbrow .qbin:focus{outline:none;border-color:var(--brand)}
+.qbrow > .btn{flex:0 0 auto}
+.qbout{margin-top:9px;padding:9px 11px;border-radius:9px;background:var(--brand-soft);border:1px solid var(--line-3)}
+.qbout .kv{font-size:11.5px;color:var(--ink-2);display:block;margin-bottom:4px}
+.qbcode{
+  display:block;font-family:ui-monospace,Consolas,'Courier New',monospace;font-size:12px;
+  line-height:1.6;color:var(--brand-2);word-break:break-all;background:transparent;padding:0;border:0
+}
+.qbtip{font-size:11.5px;color:var(--ink-3);line-height:1.75;margin-top:8px}
+.qbtip code{font-size:11px;background:var(--brand-soft);border-radius:4px;padding:1px 4px;color:var(--brand-2)}
 .dirgrid .dir .clr:hover{color:var(--bad)}
 .dirgrid .dir input{padding-right:22px}
 .dirtip{font-size:11px;color:var(--ink-3);line-height:1.65}
@@ -18023,7 +18045,7 @@ window.WB_DATA.quizExtra = {
     return;
   }
   document.body.insertAdjacentHTML("afterbegin",
-    '<div style="background:#FFF3E0;color:#E65100;border-bottom:1px solid #FFCC80;padding:7px 14px;font-size:12.5px;text-align:center">🧪 开发版 · 构建于 2026-10-31 04:28 · 数据独立存储（' + WB.PREFIX + '），不影响正式版</div>');
+    '<div style="background:#FFF3E0;color:#E65100;border-bottom:1px solid #FFCC80;padding:7px 14px;font-size:12.5px;text-align:center">🧪 开发版 · 构建于 2026-11-02 21:50 · 数据独立存储（' + WB.PREFIX + '），不影响正式版</div>');
 })();
 </script>
 </body>
