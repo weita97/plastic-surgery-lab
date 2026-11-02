@@ -12647,41 +12647,51 @@ window.WB_DATA.quizExtra = {
   var K_QUEUE = 'live_queue';    /* 待翻译 pmid 列表 */
   var K_DIRS = 'research_dirs';  /* ['方向1', ...] 用户自定义，最多 6 个 */
   var DIR_MAX = 6;
+  var K_YEARS = 'research_years';  /* 检索年份窗口：1/2/3 */
   var YEARS = 3;
   var PER_TOPIC = 1000;     /* 每个组合取回上限：PubMed 命中多少要多少 */
   var POOL_MAX = 600;       /* 单次同步最多入库篇数（再多的按年份均匀取样） */
-  var TR_TOP = 600;         /* 自动翻译篇数上限，其余打开时再翻 */
+  var TR_TOP = 400;         /* 本轮自动翻译的保底上限，翻到哪页补哪页 */
+  var TR_FIRST = 30;        /* 同步完先把最先 3 页（每页 10 篇）翻译掉 */
   var EF_CHUNK = 120;       /* efetch 每批条数 */
   var TR_CONC = 6;
 
   /* ---------- 期刊白名单（中科院 1 区且 IF >= 10） ---------- */
   var JOURNALS = [
-    ['nature', 50.5], ['science', 44.7], ['cell', 45.5],
-    ['nature medicine', 58.7], ['nature cell biology', 17.3], ['nature immunology', 27.7],
-    ['nature materials', 37.2], ['nature nanotechnology', 38.1], ['nature biotechnology', 33.1],
-    ['nature metabolism', 18.9], ['nature communications', 14.7], ['nature aging', 17.0],
-    ['nature biomedical engineering', 26.8], ['nature chemical biology', 12.9],
-    ['nature reviews molecular cell biology', 81.3], ['nature reviews immunology', 67.7],
-    ['nature reviews disease primers', 76.9], ['nature reviews drug discovery', 122.7],
-    ['nature reviews endocrinology', 31.0],
-    ['science translational medicine', 15.8], ['science advances', 11.7], ['science immunology', 17.6],
-    ['cell metabolism', 27.7], ['cell stem cell', 19.8], ['cell reports medicine', 11.7],
-    ['cell death and differentiation', 13.7],
-    ['lancet diabetes and endocrinology', 44.5],
-    ['advanced materials', 27.4], ['advanced science', 14.3], ['advanced healthcare materials', 10.0],
-    ['advanced functional materials', 18.5], ['advanced drug delivery reviews', 15.2],
-    ['acs nano', 15.8], ['small', 13.0], ['materials horizons', 12.2],
-    ['biomaterials', 12.8], ['bioactive materials', 18.0], ['materials today', 24.2],
-    ['materials today bio', 10.2], ['journal of controlled release', 10.5],
-    ['chemical engineering journal', 13.3], ['carbohydrate polymers', 10.7],
-    ['autophagy', 14.6], ['military medical research', 22.1], ['medcomm', 10.7],
-    ['signal transduction and targeted therapy', 40.8], ['theranostics', 12.4],
-    ['journal of nanobiotechnology', 10.6], ['nano today', 13.2],
-    ['ageing research reviews', 12.5], ['trends in molecular medicine', 12.8],
-    ['molecular therapy', 10.5], ['protein and cell', 13.6], ['international journal of surgery', 12.5],
-    ['diabetes care', 14.8], ['metabolism clinical and experimental', 10.8],
-    ['redox biology', 10.7], ['journal of advanced research', 11.4], ['exploration', 12.0]
+    /* [期刊全名, 影响因子, 是否中科院一区(1=是,0=否)] */
+    ['nature', 50.5, 1], ['science', 44.7, 1], ['cell', 45.5, 1],
+    ['new england journal of medicine', 96.2, 1], ['lancet', 98.4, 1],
+    ['jama', 63.1, 1], ['bmj', 93.6, 1],
+    ['nature medicine', 58.7, 1], ['nature cell biology', 17.3, 1], ['nature immunology', 27.7, 1],
+    ['nature materials', 37.2, 1], ['nature nanotechnology', 38.1, 1], ['nature biotechnology', 33.1, 1],
+    ['nature metabolism', 18.9, 1], ['nature communications', 14.7, 1], ['nature aging', 17.0, 1],
+    ['nature biomedical engineering', 26.8, 1], ['nature chemical biology', 12.9, 1],
+    ['nature reviews molecular cell biology', 81.3, 1], ['nature reviews immunology', 67.7, 1],
+    ['nature reviews disease primers', 76.9, 1], ['nature reviews drug discovery', 122.7, 1],
+    ['nature reviews endocrinology', 31.0, 1],
+    ['science translational medicine', 15.8, 1], ['science advances', 11.7, 1],
+    ['science immunology', 17.6, 1],
+    ['cell metabolism', 27.7, 1], ['cell stem cell', 19.8, 1], ['cell reports medicine', 11.7, 1],
+    ['lancet diabetes and endocrinology', 44.5, 1],
+    ['advanced materials', 27.4, 1], ['advanced science', 14.3, 1],
+    ['advanced functional materials', 18.5, 1], ['advanced drug delivery reviews', 15.2, 1],
+    ['acs nano', 15.8, 1], ['biomaterials', 12.8, 1], ['bioactive materials', 18.0, 1],
+    ['materials today', 24.2, 1], ['journal of controlled release', 10.5, 1],
+    ['chemical engineering journal', 13.3, 1], ['carbohydrate polymers', 10.7, 1],
+    ['autophagy', 14.6, 1], ['military medical research', 22.1, 1],
+    ['signal transduction and targeted therapy', 40.8, 1], ['theranostics', 12.4, 1],
+    ['journal of nanobiotechnology', 10.6, 1], ['nano today', 13.2, 1],
+    ['ageing research reviews', 12.5, 1], ['trends in molecular medicine', 12.8, 1],
+    ['protein and cell', 13.6, 1], ['international journal of surgery', 12.5, 1],
+    ['diabetes care', 14.8, 1], ['metabolism clinical and experimental', 10.8, 1],
+    ['redox biology', 10.7, 1], ['journal of advanced research', 11.4, 1],
+    /* 以下期刊影响因子也过 10，但最新中科院分区为二区，不进检索范围 */
+    ['advanced healthcare materials', 10.0, 0], ['small', 13.0, 0],
+    ['materials horizons', 12.2, 0], ['materials today bio', 10.2, 0],
+    ['cell death and differentiation', 13.7, 0], ['medcomm', 10.7, 0],
+    ['molecular therapy', 10.5, 0], ['exploration', 12.0, 0]
   ];
+  var J_OK = JOURNALS.filter(function (j) { return j[2] === 1 && j[1] > 10; });
 
   /* ---------- 研究方向：用户自定义（1–6 个） ---------- */
   /* 中文关键词 → 英文检索词（PubMed 只认英文，这里做一层常用术语映射）。
@@ -12871,7 +12881,7 @@ window.WB_DATA.quizExtra = {
     }
     return clean;
   }
-  function dirSig(dirs) { return (dirs || getDirs()).join('|'); }
+  function dirSig(dirs) { return (dirs || getDirs()).join('|') + '@y' + yearsN(); }
 
   /* ---------- 方向组合逻辑：固定 AND ----------
      · 只填 1 个方向：直接用该方向检索
@@ -12905,15 +12915,28 @@ window.WB_DATA.quizExtra = {
     return null;
   }
 
+  function yearsN() {
+    var v = parseInt(U.storeGet(K_YEARS, 3), 10);
+    if (!(v >= 1 && v <= 3)) v = 3;
+    return v;
+  }
+
+  function setYears(n) {
+    n = parseInt(n, 10);
+    if (!(n >= 1 && n <= 3)) n = 3;
+    U.storeSet(K_YEARS, n);
+    return n;
+  }
+
   function winTerm() {
     /* 近三年 = 含今年在内向前数 3 个自然年，用发表年 [DP] 卡，
        不用 [EDAT]（入库日）——入库日会把 2024 年发表的文章算成近期。 */
     var y = new Date().getFullYear();
-    var s = (y - (YEARS - 1)) + '/01/01';
+    var s = (y - (yearsN() - 1)) + '/01/01';
     return '("' + s + '"[DP] : "3000"[DP])';
   }
 
-  var JQ = '(' + JOURNALS.map(function (j) { return '"' + j[0] + '"[TA]'; }).join(' OR ') + ')';
+  var JQ = '(' + J_OK.map(function (j) { return '"' + j[0] + '"[TA]'; }).join(' OR ') + ')';
 
   function tagOf(title, abs) {
     var t = (title + ' ' + abs).toLowerCase();
@@ -13145,23 +13168,34 @@ window.WB_DATA.quizExtra = {
   /* ---------- 翻译队列 ---------- */
   var trRunning = false;
   var trIdle = 0;             /* 连续几批没有进展就停，避免接口挂了以后死循环 */
-  var trBudget = TR_TOP;      /* 本次会话最多自动翻这么多篇 */
+  var trBudget = TR_TOP;      /* 本次会话自动翻的保底上限 */
+  var trWant = {};            /* pmid -> 1：用户（或前 3 页）要求翻译的 */
+  var trStarted = false;
+
+  /* 只把「用户要看的」放进队列：同步完先放前 3 页，翻到后面某页再补哪页 */
+  function wantTrans(ids) {
+    var added = 0;
+    (ids || []).forEach(function (k) {
+      if (k && !trWant[k]) { trWant[k] = 1; added++; }
+    });
+    if (added) trPump();
+    return added;
+  }
+
   function trPump() {
     if (trRunning) return;
-    if (trBudget <= 0) { return; }
     trRunning = true;
     (function step() {
       var pool = U.storeGet(K_POOL, {});
-      var todo = Object.keys(pool).filter(function (k) { return !pool[k].titleZh; });
-      /* 优先翻译最新的文献，旧的自然排在后面 */
+      var todo = Object.keys(pool).filter(function (k) {
+        return !pool[k].titleZh && trWant[k];
+      });
+      /* 队列里优先翻最新的 */
       todo.sort(function (a, b) {
-        if (pool[a].date !== pool[b].date) return (pool[b].date || '').localeCompare(pool[a].date || '');
-        return (pool[b].ts || 0) - (pool[a].ts || 0);
+        return (pool[b].date || '').localeCompare(pool[a].date || '');
       });
       if (!todo.length) { trRunning = false; notify(); return; }
-      var batch = todo.slice(0, Math.min(TR_CONC, trBudget));
-      if (!batch.length) { trRunning = false; notify(); return; }
-      trBudget -= batch.length;
+      var batch = todo.slice(0, TR_CONC);
       var doneBefore = Object.keys(pool).filter(function (k) { return !!pool[k].titleZh; }).length;
       Promise.all(batch.map(function (k) {
         var p = pool[k];
@@ -13179,7 +13213,7 @@ window.WB_DATA.quizExtra = {
         var doneAfter = Object.keys(cur).filter(function (k) { return !!cur[k].titleZh; }).length;
         if (doneAfter <= doneBefore) trIdle++; else trIdle = 0;
         if (trIdle >= 2) { trRunning = false; notify(); return; }
-        setTimeout(step, 150);
+        setTimeout(step, 120);
       }).catch(function () { trRunning = false; });
     })();
   }
@@ -13402,7 +13436,8 @@ window.WB_DATA.quizExtra = {
       state.phase = added ? ('新增 ' + added + ' 篇，正在翻译…') : '已是最新';
       state.running = false;
       notify();
-      trPump();
+      trWant = {};
+      wantTrans(list.slice(0, TR_FIRST).map(function (p) { return p.pmid; }));
       rerun();
       return added;
     }).catch(function (e) {
@@ -13528,7 +13563,10 @@ window.WB_DATA.quizExtra = {
       return out;
     },
     pump: trPump,
-    JOURNALS: JOURNALS
+    wantTrans: wantTrans,
+    years: yearsN,
+    setYears: setYears,
+    journals: J_OK
   };
 })();
 
@@ -15372,7 +15410,7 @@ window.WB_DATA.quizExtra = {
   var MED = D.medWords || [], MCATS = D.medCats || [];
   var K_FAV = 'fav_papers', K_LEARNED = 'med_learned', K_HIST = 'med_hist';
 
-  /* 只保留近三年（含当年） */
+  /* 内置静态库只保留近三年（含当年）；实时库的年份窗口由 live.years() 控制 */
   var THIS_YEAR = new Date().getFullYear();
   var RECENT = PAPERS.filter(function (p) { return +p.year >= THIS_YEAR - 2; });
   if (RECENT.length < 20) RECENT = PAPERS;
@@ -15592,6 +15630,17 @@ window.WB_DATA.quizExtra = {
       }
 
       /* ---- 预刊速递 ---- */
+      /* 检索年份窗口：近 1 / 2 / 3 年，切换后立刻按新年份重检 */
+      function yearSeg() {
+        var cur = WB.live.years ? WB.live.years() : 3;
+        var html = '<span class="seg" data-years-seg>';
+        [1, 2, 3].forEach(function (n) {
+          html += '<button type="button" data-years="' + n + '"' +
+            (cur === n ? ' class="on"' : '') + '>近 ' + n + ' 年</button>';
+        });
+        return html + '</span>';
+      }
+
       function syncBar() {
         var s = WB.live ? WB.live.state() : null;
         var meta = WB.live ? WB.live.meta() : {};
@@ -15617,6 +15666,7 @@ window.WB_DATA.quizExtra = {
           (meta.lastSync ? ' · 上次同步 ' + new Date(meta.lastSync).toLocaleString('zh-CN', { hour12: false }) : '') +
           (pending ? ' · ' + pending + ' 篇待翻译' : '') + '</span>' +
           '<span class="sp"></span>' +
+          (noDir ? '' : yearSeg()) +
           '<button type="button" class="btn sm" data-act="resync"' + (noDir ? ' disabled' : '') + '>' +
           (s && s.running ? '同步中…' : '🔄 抓取最新') + '</button></div>';
         return html;
@@ -15654,6 +15704,10 @@ window.WB_DATA.quizExtra = {
         st.extra = page;
         var start = page * STEP;
         var list = pool.slice(start, start + STEP);
+        /* 只翻译用户真正看到的这一页；前面 3 页同步完已经排进队列了 */
+        if (WB.live && WB.live.wantTrans && list.length) {
+          WB.live.wantTrans(list.map(function (p) { return p.pmid; }));
+        }
         var pager = total > STEP
           ? '<div class="row mb8"><button type="button" class="btn sm" data-act="prev"' + (page <= 0 ? ' disabled' : '') + '>← 上一页</button>' +
             '<button type="button" class="btn sm" data-act="next"' + (page >= pages - 1 ? ' disabled' : '') + '>下一页 →</button>' +
@@ -15669,7 +15723,9 @@ window.WB_DATA.quizExtra = {
           '<div class="row mb8">' +
           '<span class="tag dark">' + list.length + ' 篇</span>' +
           (added ? '<span class="tag g">今日新增 ' + added + ' 篇</span>' : '') +
-          '<span class="muted small">按发表时间从新到旧 · 近三年（' + (new Date().getFullYear() - 2) + ' 年起）CNS 及子刊 / 一区 IF≥10 顶刊 · 库内 ' + ALL.length + ' 篇' +
+          '<span class="muted small">按发表时间从新到旧 · 近 ' + (WB.live.years ? WB.live.years() : 3) + ' 年（' +
+            (new Date().getFullYear() - (WB.live.years ? WB.live.years() : 3) + 1) + ' 年起）' +
+            '中科院一区 IF>10 顶刊 · 库内 ' + ALL.length + ' 篇' +
           (meta.hitTotal ? ' · PubMed 命中 ' + meta.hitTotal + ' 篇' : '') + '</span>' +
           '</div>' +
           '<div class="chips mb8"><button type="button" class="chip' + (st.q ? '' : ' on') + '" data-q="">全部方向</button>' +
@@ -15691,7 +15747,8 @@ window.WB_DATA.quizExtra = {
               }).join('') + '</div>';
           })() +
           (dirs.length
-            ? '<div class="hint b mb8">💡 按你填写的 ' + dirs.length + ' 个研究方向向 PubMed 检索近三年最新文献' +
+            ? '<div class="hint b mb8">💡 按你填写的 ' + dirs.length + ' 个研究方向向 PubMed 检索近 ' +
+              (WB.live.years ? WB.live.years() : 3) + ' 年（中科院一区、IF>10）最新文献' +
               (dirs.length >= 3
                 ? '，<b>' + dirs.length + ' 个方向做三三 AND 组合检索，只保留同时命中 ≥3 个方向的文献</b>。'
                 : (dirs.length === 2
@@ -16074,6 +16131,18 @@ window.WB_DATA.quizExtra = {
           render(); return;
         }
         var q = e.target.closest('[data-q]');
+        var yr = e.target.closest('[data-years]');
+        if (yr) {
+          var yn = parseInt(yr.getAttribute('data-years'), 10);
+          if (WB.live && WB.live.setYears && WB.live.years() !== yn) {
+            WB.live.setYears(yn);
+            st.extra = 0; st.q = ''; st.kind = '';
+            U.toast('已切到近 ' + yn + ' 年，重新检索…');
+            WB.live.sync(true);
+            renderFeed();
+          }
+          return;
+        }
         if (q) { st.q = q.getAttribute('data-q'); st.extra = 0; renderFeed(); return; }
         var kd = e.target.closest('[data-kind]');
         if (kd) { st.kind = kd.getAttribute('data-kind'); st.extra = 0; renderFeed(); return; }
@@ -18086,7 +18155,7 @@ window.WB_DATA.quizExtra = {
     return;
   }
   document.body.insertAdjacentHTML("afterbegin",
-    '<div style="background:#FFF3E0;color:#E65100;border-bottom:1px solid #FFCC80;padding:7px 14px;font-size:12.5px;text-align:center">🧪 开发版 · 构建于 2026-11-02 23:55 · 数据独立存储（' + WB.PREFIX + '），不影响正式版</div>');
+    '<div style="background:#FFF3E0;color:#E65100;border-bottom:1px solid #FFCC80;padding:7px 14px;font-size:12.5px;text-align:center">🧪 开发版 · 构建于 2026-11-03 00:23 · 数据独立存储（' + WB.PREFIX + '），不影响正式版</div>');
 })();
 </script>
 </body>
