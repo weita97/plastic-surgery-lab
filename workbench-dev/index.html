@@ -12648,7 +12648,10 @@ window.WB_DATA.quizExtra = {
   var K_DIRS = 'research_dirs';  /* ['方向1', ...] 用户自定义，最多 6 个 */
   var DIR_MAX = 6;
   var YEARS = 3;
-  var PER_TOPIC = 20;
+  var PER_TOPIC = 1000;     /* 每个组合取回上限：PubMed 命中多少要多少 */
+  var POOL_MAX = 600;       /* 单次同步最多入库篇数（再多的按年份均匀取样） */
+  var TR_TOP = 600;         /* 自动翻译篇数上限，其余打开时再翻 */
+  var EF_CHUNK = 120;       /* efetch 每批条数 */
   var TR_CONC = 6;
 
   /* ---------- 期刊白名单（中科院 1 区且 IF >= 10） ---------- */
@@ -12903,10 +12906,11 @@ window.WB_DATA.quizExtra = {
   }
 
   function winTerm() {
-    var d = new Date();
-    d.setFullYear(d.getFullYear() - YEARS);
-    var s = d.getFullYear() + '/' + U.pad2(d.getMonth() + 1) + '/' + U.pad2(d.getDate());
-    return '("' + s + '"[EDAT] : "3000"[EDAT])';
+    /* 近三年 = 含今年在内向前数 3 个自然年，用发表年 [DP] 卡，
+       不用 [EDAT]（入库日）——入库日会把 2024 年发表的文章算成近期。 */
+    var y = new Date().getFullYear();
+    var s = (y - (YEARS - 1)) + '/01/01';
+    return '("' + s + '"[DP] : "3000"[DP])';
   }
 
   var JQ = '(' + JOURNALS.map(function (j) { return '"' + j[0] + '"[TA]'; }).join(' OR ') + ')';
@@ -12953,15 +12957,29 @@ window.WB_DATA.quizExtra = {
   }
 
   /* ---------- 网络 ---------- */
-  function esearch(term, retmax) {
+  function esearch(term, retmax, sort) {
     return fetch('https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: 'db=pubmed&retmode=json&retmax=' + retmax + '&sort=date&tool=workbench&term=' + encodeURIComponent(term)
+      body: 'db=pubmed&retmode=json&retmax=' + retmax +
+        (sort ? '&sort=' + sort : '') +
+        '&tool=workbench&term=' + encodeURIComponent(term)
     }).then(function (r) {
       if (!r.ok) throw new Error('http ' + r.status);
       return r.json();
     });
+  }
+
+  /* 取回这一组条件的「全部」命中：
+     retmax 设成上限，PubMed 仍会返回真实总数 count，按发表日期从新到旧取。 */
+  function esearchAll(term, cap) {
+    cap = cap || PER_TOPIC;
+    return retry(function () { return esearch(term, cap, 'pubdate'); }).then(function (j) {
+      var r = (j && j.esearchresult) || {};
+      var ids = r.idlist || [];
+      var c = parseInt(r.count || ids.length, 10);
+      return { ids: ids, count: isNaN(c) ? ids.length : c };
+    }).catch(function () { return { ids: [], count: 0 }; });
   }
 
   function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
@@ -13126,8 +13144,11 @@ window.WB_DATA.quizExtra = {
 
   /* ---------- 翻译队列 ---------- */
   var trRunning = false;
+  var trIdle = 0;             /* 连续几批没有进展就停，避免接口挂了以后死循环 */
+  var trBudget = TR_TOP;      /* 本次会话最多自动翻这么多篇 */
   function trPump() {
     if (trRunning) return;
+    if (trBudget <= 0) { return; }
     trRunning = true;
     (function step() {
       var pool = U.storeGet(K_POOL, {});
@@ -13138,7 +13159,10 @@ window.WB_DATA.quizExtra = {
         return (pool[b].ts || 0) - (pool[a].ts || 0);
       });
       if (!todo.length) { trRunning = false; notify(); return; }
-      var batch = todo.slice(0, TR_CONC);
+      var batch = todo.slice(0, Math.min(TR_CONC, trBudget));
+      if (!batch.length) { trRunning = false; notify(); return; }
+      trBudget -= batch.length;
+      var doneBefore = Object.keys(pool).filter(function (k) { return !!pool[k].titleZh; }).length;
       Promise.all(batch.map(function (k) {
         var p = pool[k];
         /* 标题与摘要并行翻译，缩短单篇耗时 */
@@ -13152,6 +13176,9 @@ window.WB_DATA.quizExtra = {
         batch.forEach(function (k) { if (pool[k]) cur[k] = pool[k]; });
         U.storeSet(K_POOL, cur);
         notify();
+        var doneAfter = Object.keys(cur).filter(function (k) { return !!cur[k].titleZh; }).length;
+        if (doneAfter <= doneBefore) trIdle++; else trIdle = 0;
+        if (trIdle >= 2) { trRunning = false; notify(); return; }
         setTimeout(step, 150);
       }).catch(function () { trRunning = false; });
     })();
@@ -13216,6 +13243,8 @@ window.WB_DATA.quizExtra = {
     var order = [];
     var queryMap = {};
     dirs.forEach(function (d) { queryMap[d] = queryOf(d) || ('("' + d + '"[tiab])'); });
+    var hitTotal = 0;      /* PubMed 端真实命中总数（未截断前） */
+    var dropped = 0;       /* 超过入库上限被截掉的篇数 */
 
     function takeIds(ids, ds) {
       (ids || []).forEach(function (id) {
@@ -13232,11 +13261,10 @@ window.WB_DATA.quizExtra = {
         chain = chain.then(function () {
           if (stale()) return [];
           var term = '(' + pr.map(function (d) { return queryMap[d]; }).join(' AND ') + ')';
-          return retry(function () {
-            return esearch(JQ + ' AND ' + term + ' AND ' + win, PER_TOPIC);
-          }).then(function (j) {
-            return (j && j.esearchresult && j.esearchresult.idlist) || [];
-          }).catch(function () { return []; });
+          return esearchAll(JQ + ' AND ' + term + ' AND ' + win).then(function (res) {
+            hitTotal += res.count;
+            return res.ids;
+          });
         }).then(function (ids) {
           takeIds(ids, pr);
           onOne(ids);
@@ -13284,11 +13312,10 @@ window.WB_DATA.quizExtra = {
     } else {
       /* ---- 单方向：直接检索该方向 ---- */
       chain = chain.then(function () {
-        return retry(function () {
-          return esearch(JQ + ' AND ' + queryMap[dirs[0]] + ' AND ' + win, PER_TOPIC);
-        }).then(function (j) {
-          return (j && j.esearchresult && j.esearchresult.idlist) || [];
-        }).catch(function () { return []; });
+        return esearchAll(JQ + ' AND ' + queryMap[dirs[0]] + ' AND ' + win).then(function (res) {
+          hitTotal += res.count;
+          return res.ids;
+        });
       }).then(function (ids) {
         takeIds(ids, [dirs[0]]);
         state.done = 1;
@@ -13300,14 +13327,23 @@ window.WB_DATA.quizExtra = {
     return chain.then(function () {
       /* 硬约束：多方向时只保留同时命中 ≥need 个方向的文献，绝不兜底放宽 */
       var ids = multi ? order.filter(function (k) { return seen[k].length >= need; }) : order;
+      if (ids.length > POOL_MAX) {
+        /* ids 是按发表日期从新到旧排的：直接截前 N 篇 = 只剩最新一年。
+           这里改成等距抽样，保证 2024 / 2025 / 2026 都有。 */
+        var stepN = ids.length / POOL_MAX, picked = [];
+        for (var pi = 0; pi < POOL_MAX; pi++) picked.push(ids[Math.floor(pi * stepN)]);
+        dropped = ids.length - POOL_MAX;
+        ids = picked;
+      }
       ids.forEach(function (k) {
         if (!topicMap[k]) topicMap[k] = (seen[k] && seen[k][0]) || dirs[0];
       });
-      state.phase = '读取文献详情…'; notify();
+      state.hitTotal = hitTotal;
+      state.phase = '读取文献详情…（PubMed 命中 ' + hitTotal + ' 篇）'; notify();
       if (!ids.length) throw new Error('empty');
 
       var chunks = [];
-      for (var i = 0; i < ids.length; i += 30) chunks.push(ids.slice(i, i + 30));
+      for (var i = 0; i < ids.length; i += EF_CHUNK) chunks.push(ids.slice(i, i + EF_CHUNK));
       var acc = [];
       return chunks.reduce(function (p, c) {
         return p.then(function () {
@@ -13355,10 +13391,13 @@ window.WB_DATA.quizExtra = {
       U.storeSet(K_META, {
         day: U.todayStr(), lastSync: Date.now(), total: Object.keys(pool).length,
         added: added, sig: sig, mode: 'and', hits: list.length,
+        hitTotal: hitTotal, dropped: dropped,
         combo: need, fellBack: fellBack, dirCount: dirs.length
       });
 
       state.added = added;
+      state.hitTotal = hitTotal;
+      state.dropped = dropped;
       state.lastSync = Date.now();
       state.phase = added ? ('新增 ' + added + ' 篇，正在翻译…') : '已是最新';
       state.running = false;
@@ -13368,6 +13407,7 @@ window.WB_DATA.quizExtra = {
       return added;
     }).catch(function (e) {
       var empty = !!(e && e.message === 'empty');
+      state.lastErr = String((e && (e.stack || e.message)) || e || '');
       /* 空结果同样要清池：用户换了方向但没搜到东西时，界面必须是空白的 */
       if (empty) { U.storeSet(K_POOL, {}); U.storeSet(K_META, {}); }
       state.running = false;
@@ -15629,7 +15669,8 @@ window.WB_DATA.quizExtra = {
           '<div class="row mb8">' +
           '<span class="tag dark">' + list.length + ' 篇</span>' +
           (added ? '<span class="tag g">今日新增 ' + added + ' 篇</span>' : '') +
-          '<span class="muted small">按发表时间从新到旧 · 近三年 CNS 及子刊 / 一区 IF≥10 顶刊 · 库内 ' + ALL.length + ' 篇</span>' +
+          '<span class="muted small">按发表时间从新到旧 · 近三年（' + (new Date().getFullYear() - 2) + ' 年起）CNS 及子刊 / 一区 IF≥10 顶刊 · 库内 ' + ALL.length + ' 篇' +
+          (meta.hitTotal ? ' · PubMed 命中 ' + meta.hitTotal + ' 篇' : '') + '</span>' +
           '</div>' +
           '<div class="chips mb8"><button type="button" class="chip' + (st.q ? '' : ' on') + '" data-q="">全部方向</button>' +
           topicList(ALL).map(function (t) {
@@ -18045,7 +18086,7 @@ window.WB_DATA.quizExtra = {
     return;
   }
   document.body.insertAdjacentHTML("afterbegin",
-    '<div style="background:#FFF3E0;color:#E65100;border-bottom:1px solid #FFCC80;padding:7px 14px;font-size:12.5px;text-align:center">🧪 开发版 · 构建于 2026-11-02 21:50 · 数据独立存储（' + WB.PREFIX + '），不影响正式版</div>');
+    '<div style="background:#FFF3E0;color:#E65100;border-bottom:1px solid #FFCC80;padding:7px 14px;font-size:12.5px;text-align:center">🧪 开发版 · 构建于 2026-11-02 23:55 · 数据独立存储（' + WB.PREFIX + '），不影响正式版</div>');
 })();
 </script>
 </body>
